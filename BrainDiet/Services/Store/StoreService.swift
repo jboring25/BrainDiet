@@ -43,6 +43,15 @@ final class StoreService {
     /// ABSENT = unknown → we treat it as NOT eligible (never over-promise).
     private(set) var introOfferEligibility: [String: Bool] = [:]
 
+    /// ⭐ THE REVENUECAT OFFERING (2026-09-22). The dashboard's `default`
+    /// offering carries `$rc_annual` and `$rc_monthly`. Purchasing the PACKAGE
+    /// rather than a bare product is what attributes the sale to an offering in
+    /// RevenueCat — without it the offering config is decorative and every
+    /// purchase lands unattributed. Nil = offerings unreachable; the purchase
+    /// path then falls back to the wrapped StoreKit product, which still flows
+    /// through RevenueCat, just without attribution.
+    private(set) var offering: Offering?
+
     @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
     init() {
@@ -63,9 +72,60 @@ final class StoreService {
             let loaded = try await Product.products(for: ProductID.all)
             products = loaded.sorted { $0.id == ProductID.annual && $1.id != ProductID.annual }
             await refreshIntroEligibility()
+            publishLivePrices()
         } catch {
             Log.app.error("StoreKit products failed to load: \(error.localizedDescription, privacy: .public)")
         }
+        await loadOffering()
+    }
+
+    /// Fetches the current RevenueCat offering. Never throws upward: a missing
+    /// offering degrades attribution, not the ability to buy.
+    private func loadOffering() async {
+        guard RevenueCatConfig.isConfigured, Purchases.isConfigured, offering == nil else { return }
+        do {
+            offering = try await Purchases.shared.offerings().current
+            if offering != nil { publishLivePrices() }
+            if offering == nil {
+                Log.app.error("RevenueCat returned no current offering — check the dashboard's default offering.")
+            }
+        } catch {
+            Log.app.error("RevenueCat offerings failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// The package backing a plan, by RevenueCat's standard identifiers.
+    func package(for plan: PaywallPlan) -> Package? {
+        plan == .annual ? offering?.annual : offering?.monthly
+    }
+
+    /// ⭐ Publishes the store's OWN localized price strings to the paywall, so
+    /// nothing on screen is a hardcoded number. A customer outside the US sees
+    /// the price their card will actually be charged, in their currency.
+    private func publishLivePrices() {
+        var live: [PaywallPlan: PaywallPricing.Live] = [:]
+        for plan in PaywallPlan.allCases {
+            // RevenueCat's own StoreProduct first: it carries the localized price
+            // whenever the offering loaded, and does not depend on the separate
+            // StoreKit lookup having succeeded. `sk2Product` is deliberately NOT
+            // used here — it is optional, and reaching for it reintroduces the
+            // dependency this is meant to remove.
+            if let rc = package(for: plan)?.storeProduct {
+                live[plan] = PaywallPricing.Live(
+                    display: rc.localizedPriceString,
+                    amount: rc.price,
+                    currencyCode: rc.currencyCode ?? "USD"
+                )
+            } else if let sk2 = product(for: plan) {
+                live[plan] = PaywallPricing.Live(
+                    display: sk2.displayPrice,
+                    amount: sk2.price,
+                    currencyCode: sk2.priceFormatStyle.currencyCode
+                )
+            }
+        }
+        guard !live.isEmpty else { return }
+        PaywallPricing.setLive(live)
     }
 
     /// Asks StoreKit, per subscription, whether THIS Apple Account may still
@@ -130,6 +190,24 @@ final class StoreService {
     /// to direct StoreKit when there's no API key.
     func purchase(_ plan: PaywallPlan) async throws -> Bool {
         if products.isEmpty { await loadProducts() }
+
+        // ⭐ THE PACKAGE IS ENOUGH (2026-09-22). This used to demand a StoreKit
+        // `Product` first and throw `.productUnavailable` if that one lookup had
+        // failed — even when RevenueCat held a perfectly good package. A
+        // transient StoreKit hiccup could therefore block a sale RevenueCat was
+        // ready to make. The package path no longer depends on it.
+        if RevenueCatConfig.isConfigured, Purchases.isConfigured {
+            if offering == nil { await loadOffering() }
+            if let package = package(for: plan) {
+                let result = try await Purchases.shared.purchase(package: package)
+                if result.userCancelled { return false }
+                applyCustomerInfo(result.customerInfo)
+                await refreshIntroEligibility()
+                Log.app.info("Purchase via RevenueCat package \(package.identifier, privacy: .public), pro=\(self.isPro, privacy: .public)")
+                return isPro
+            }
+        }
+
         guard let product = product(for: plan) else {
             throw StoreError.productUnavailable
         }
@@ -138,11 +216,14 @@ final class StoreService {
             return try await purchaseViaStoreKit(product)
         }
 
+        // No package (offerings unreachable): still go through RevenueCat, just
+        // unattributed, so the entitlement and the revenue are never lost.
+        Log.app.error("No RevenueCat package for \(product.id, privacy: .public); purchasing unattributed.")
         let result = try await Purchases.shared.purchase(product: StoreProduct(sk2Product: product))
         if result.userCancelled { return false }
         applyCustomerInfo(result.customerInfo)
         await refreshIntroEligibility()
-        Log.app.info("Purchase succeeded via RevenueCat: \(product.id, privacy: .public)")
+        Log.app.info("Purchase via RevenueCat product \(product.id, privacy: .public), pro=\(self.isPro, privacy: .public)")
         return isPro
     }
 

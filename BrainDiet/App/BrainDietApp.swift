@@ -42,7 +42,14 @@ struct BrainDietApp: App {
         // entitlement, or the first read races the SDK and reports free.
         // No key = skip entirely; StoreService falls back to pure StoreKit.
         if RevenueCatConfig.isConfigured {
-            Purchases.logLevel = .warn          // never log purchase PII at .debug in a shipped build
+            // Never .debug in a shipped build — it logs purchase PII. DEBUG runs
+            // can opt in with BD_RC_DEBUG=1 to watch a sandbox purchase land
+            // (offering fetch, receipt post, entitlement flip) in Console.
+            var level: RevenueCat.LogLevel = .warn
+            #if DEBUG
+            if ProcessInfo.processInfo.environment["BD_RC_DEBUG"] == "1" { level = .debug }
+            #endif
+            Purchases.logLevel = level
             Purchases.configure(withAPIKey: RevenueCatConfig.apiKey)
         }
         #if DEBUG
