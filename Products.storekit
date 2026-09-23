@@ -1,0 +1,73 @@
+{
+  "identifier": "6E4C9A2B-1F3D-4B8A-9C57-BD01A7F52E10",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [
+    {
+      "id": "BD5F1A20",
+      "localizations": [],
+      "name": "Brain Diet Pro",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "39.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "BD5F1A21",
+          "introductoryOffer": {
+            "displayPrice": "0.00",
+            "internalID": "BD5F1A23",
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W"
+          },
+          "localizations": [
+            {
+              "description": "Unlimited goals and unlimited sessions.",
+              "displayName": "Brain Diet Pro \u2014 Annual",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "braindiet.pro.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Pro Annual",
+          "subscriptionGroupID": "BD5F1A20",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "7.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "BD5F1A22",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Unlimited goals and unlimited sessions.",
+              "displayName": "Brain Diet Pro \u2014 Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "braindiet.pro.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Pro Monthly",
+          "subscriptionGroupID": "BD5F1A20",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

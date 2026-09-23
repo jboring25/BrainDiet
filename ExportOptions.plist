@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- TestFlight / App Store distribution. Added 2026-08-12 so builds can be
+	     exported and uploaded from the CLI instead of hand-driven through the
+	     Xcode Organizer, which is how builds 9 and 10 went out and is why the
+	     upload step was never reproducible. -->
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>YHD3BD92S8</string>
+
+	<!-- ⭐ MANUAL, WITH EVERY PROFILE NAMED (fixed 2026-08-12).
+	     This was `automatic`, on the reasoning that letting Xcode pick would
+	     avoid a stale hand-picked profile dropping the Family Controls
+	     entitlement. That reasoning was wrong twice over: the PROJECT signs
+	     manual, so export and build disagreed; and "automatic" made export
+	     reach for a generic "iOS Team Store Provisioning Profile" that carries
+	     neither App Groups nor the extension bundle ids. It survived build 11
+	     only because there was one target and that generic profile happened to
+	     include family-controls. The moment the three extensions and the App
+	     Group arrived it failed on all four targets at once.
+	     Every bundle id below must be listed — export resolves each embedded
+	     binary separately, and an unlisted extension fails the whole export. -->
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>Apple Distribution</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.jackboring.BrainDiet</key>
+		<string>BrainDiet App Store</string>
+		<key>com.jackboring.BrainDiet.Monitor</key>
+		<string>BrainDiet Monitor App Store</string>
+		<key>com.jackboring.BrainDiet.ShieldConfig</key>
+		<string>BrainDiet ShieldConfig App Store</string>
+		<key>com.jackboring.BrainDiet.ShieldAction</key>
+		<string>BrainDiet ShieldAction App Store</string>
+	</dict>
+
+	<!-- Symbols go up so crash reports from TestFlight are readable. -->
+	<key>uploadSymbols</key>
+	<true/>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>destination</key>
+	<string>export</string>
+</dict>
+</plist>

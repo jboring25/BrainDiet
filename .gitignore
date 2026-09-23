@@ -1,0 +1,23 @@
+# Build output
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Design source — 1.2 GB of mockups, renders and .mov files.
+# Kept locally; GitHub's limits are 100 MB per file / 1 GB per repo.
+design/
+marketing/
+
+# macOS
+.DS_Store
+
+# Secrets — the App Store Connect private key lives in ~/.appstoreconnect/
+*.p8
+.env

@@ -1,0 +1,787 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0696BF777D557CDF15F5F6B7 /* BrainDietShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81F166A20AF946B8BE9D4E13 /* BrainDietShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4EB5859A231B516B04AABBFD /* ShieldConfigurationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED79F7C5BD9BE72C545EA36 /* ShieldConfigurationProvider.swift */; };
+		6423B52BE98C630081D0279C /* BrainDietShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		81AA0A92CE3FF0BBE7070645 /* ShieldActionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A8C4FB599E11C2CC172AD7 /* ShieldActionProvider.swift */; };
+		86A4E113A022EE9547B87D7C /* BrainDietMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9D2D8E51F3A17490756A6639 /* BrainDietMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		89C4CE5144F462161D61EF37 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E43F627935893A714414A38C /* Foundation.framework */; };
+		8CA65AAD6FDF1A65E81AC549 /* DeviceActivityMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E6F406068B9EAD377BD7326 /* DeviceActivityMonitorExtension.swift */; };
+		9A11967DDE0E4105BD5487D7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E43F627935893A714414A38C /* Foundation.framework */; };
+		BD0000222F00000000000022 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = BD0000212F00000000000021 /* RevenueCat */; };
+		E55761289A215CDC0D3885DA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E43F627935893A714414A38C /* Foundation.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		43A58967C8276C195C4ADD57 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BD00000A2F0000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4A03E83E0230536F0E8DB403;
+			remoteInfo = BrainDietShieldAction;
+		};
+		A8E9A794659B868631EE5567 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BD00000A2F0000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AE4F749A1589940DAA23FD8;
+			remoteInfo = BrainDietShieldConfig;
+		};
+		B67398A4F2DC3B8F53BF9E80 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BD00000A2F0000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F72FF938A402EAFA065F172C;
+			remoteInfo = BrainDietMonitor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		33B8213A0DD7799A8AFDE2CB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				86A4E113A022EE9547B87D7C /* BrainDietMonitor.appex in Embed Foundation Extensions */,
+				6423B52BE98C630081D0279C /* BrainDietShieldConfig.appex in Embed Foundation Extensions */,
+				0696BF777D557CDF15F5F6B7 /* BrainDietShieldAction.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		13A8C4FB599E11C2CC172AD7 /* ShieldActionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShieldActionProvider.swift; path = BrainDietShield/ShieldActionProvider.swift; sourceTree = "<group>"; };
+		3E6F406068B9EAD377BD7326 /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeviceActivityMonitorExtension.swift; path = BrainDietMonitor/DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
+		78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BrainDietShieldConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		81F166A20AF946B8BE9D4E13 /* BrainDietShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BrainDietShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D2D8E51F3A17490756A6639 /* BrainDietMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BrainDietMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD0000022F00000000000002 /* BrainDiet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BrainDiet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E43F627935893A714414A38C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		FED79F7C5BD9BE72C545EA36 /* ShieldConfigurationProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShieldConfigurationProvider.swift; path = BrainDietShield/ShieldConfigurationProvider.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		BD0000012F00000000000001 /* BrainDiet */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = BrainDiet;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8FCE87CC64FDD236C88888CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89C4CE5144F462161D61EF37 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A205100ACD5CDE8CE0CC591E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A11967DDE0E4105BD5487D7 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD0000032F00000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BD0000222F00000000000022 /* RevenueCat in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F2F1C1BD64982425C39746B0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E55761289A215CDC0D3885DA /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		52EE3203515705931A21CC26 /* BrainDietMonitor */ = {
+			isa = PBXGroup;
+			children = (
+				3E6F406068B9EAD377BD7326 /* DeviceActivityMonitorExtension.swift */,
+			);
+			name = BrainDietMonitor;
+			sourceTree = SOURCE_ROOT;
+		};
+		64236E48075D7E8C9C74745C /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				E43F627935893A714414A38C /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		97D8179FA32BD1B025E7C5CB /* BrainDietShield */ = {
+			isa = PBXGroup;
+			children = (
+				FED79F7C5BD9BE72C545EA36 /* ShieldConfigurationProvider.swift */,
+				13A8C4FB599E11C2CC172AD7 /* ShieldActionProvider.swift */,
+			);
+			name = BrainDietShield;
+			sourceTree = SOURCE_ROOT;
+		};
+		BD0000042F00000000000004 = {
+			isa = PBXGroup;
+			children = (
+				BD0000012F00000000000001 /* BrainDiet */,
+				BD0000052F00000000000005 /* Products */,
+				E2D0D6BFE8D09A0097EBA89C /* Frameworks */,
+				52EE3203515705931A21CC26 /* BrainDietMonitor */,
+				97D8179FA32BD1B025E7C5CB /* BrainDietShield */,
+			);
+			sourceTree = "<group>";
+		};
+		BD0000052F00000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BD0000022F00000000000002 /* BrainDiet.app */,
+				9D2D8E51F3A17490756A6639 /* BrainDietMonitor.appex */,
+				78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */,
+				81F166A20AF946B8BE9D4E13 /* BrainDietShieldAction.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E2D0D6BFE8D09A0097EBA89C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				64236E48075D7E8C9C74745C /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4A03E83E0230536F0E8DB403 /* BrainDietShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C4D3979315A94DC07773EA23 /* Build configuration list for PBXNativeTarget "BrainDietShieldAction" */;
+			buildPhases = (
+				D6DD3E0F9214695086B38513 /* Sources */,
+				F2F1C1BD64982425C39746B0 /* Frameworks */,
+				C9E94391A3BF5ED40A5CA99B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BrainDietShieldAction;
+			productName = BrainDietShieldAction;
+			productReference = 81F166A20AF946B8BE9D4E13 /* BrainDietShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9AE4F749A1589940DAA23FD8 /* BrainDietShieldConfig */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 230CD7E4CED96C2795C2E9F8 /* Build configuration list for PBXNativeTarget "BrainDietShieldConfig" */;
+			buildPhases = (
+				19C29D7D802CC0F70D7276E1 /* Sources */,
+				A205100ACD5CDE8CE0CC591E /* Frameworks */,
+				810079CA1E5FF20F42ACFFA0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BrainDietShieldConfig;
+			productName = BrainDietShieldConfig;
+			productReference = 78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		BD0000062F00000000000006 /* BrainDiet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BD0000072F00000000000007 /* Build configuration list for PBXNativeTarget "BrainDiet" */;
+			buildPhases = (
+				BD0000082F00000000000008 /* Sources */,
+				BD0000032F00000000000003 /* Frameworks */,
+				BD0000092F00000000000009 /* Resources */,
+				33B8213A0DD7799A8AFDE2CB /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BB6CEF5C9F5511AEE805999B /* PBXTargetDependency */,
+				FF1C82098089528E7FCB576B /* PBXTargetDependency */,
+				8FFA20C73CE36067FB1C4948 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				BD0000012F00000000000001 /* BrainDiet */,
+			);
+			name = BrainDiet;
+			packageProductDependencies = (
+				BD0000212F00000000000021 /* RevenueCat */,
+			);
+			productName = BrainDiet;
+			productReference = BD0000022F00000000000002 /* BrainDiet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F72FF938A402EAFA065F172C /* BrainDietMonitor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C721B9760AC7A81D699521BA /* Build configuration list for PBXNativeTarget "BrainDietMonitor" */;
+			buildPhases = (
+				03147221113915E6685D605D /* Sources */,
+				8FCE87CC64FDD236C88888CF /* Frameworks */,
+				85E724310B8E3E6B7D9D840D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BrainDietMonitor;
+			productName = BrainDietMonitor;
+			productReference = 9D2D8E51F3A17490756A6639 /* BrainDietMonitor.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BD00000A2F0000000000000A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					BD0000062F00000000000006 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+				};
+			};
+			buildConfigurationList = BD00000B2F0000000000000B /* Build configuration list for PBXProject "BrainDiet" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BD0000042F00000000000004;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BD0000202F00000000000020 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
+			productRefGroup = BD0000052F00000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BD0000062F00000000000006 /* BrainDiet */,
+				F72FF938A402EAFA065F172C /* BrainDietMonitor */,
+				9AE4F749A1589940DAA23FD8 /* BrainDietShieldConfig */,
+				4A03E83E0230536F0E8DB403 /* BrainDietShieldAction */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		810079CA1E5FF20F42ACFFA0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		85E724310B8E3E6B7D9D840D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD0000092F00000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C9E94391A3BF5ED40A5CA99B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		03147221113915E6685D605D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CA65AAD6FDF1A65E81AC549 /* DeviceActivityMonitorExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19C29D7D802CC0F70D7276E1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4EB5859A231B516B04AABBFD /* ShieldConfigurationProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BD0000082F00000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D6DD3E0F9214695086B38513 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81AA0A92CE3FF0BBE7070645 /* ShieldActionProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8FFA20C73CE36067FB1C4948 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = BrainDietShieldAction;
+			target = 4A03E83E0230536F0E8DB403 /* BrainDietShieldAction */;
+			targetProxy = 43A58967C8276C195C4ADD57 /* PBXContainerItemProxy */;
+		};
+		BB6CEF5C9F5511AEE805999B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = BrainDietMonitor;
+			target = F72FF938A402EAFA065F172C /* BrainDietMonitor */;
+			targetProxy = B67398A4F2DC3B8F53BF9E80 /* PBXContainerItemProxy */;
+		};
+		FF1C82098089528E7FCB576B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = BrainDietShieldConfig;
+			target = 9AE4F749A1589940DAA23FD8 /* BrainDietShieldConfig */;
+			targetProxy = A8E9A794659B868631EE5567 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		04D46CDC67202E9BF76C8C90 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.ShieldAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet ShieldAction App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		23BCAB1E491C2002B3143038 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.Monitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet Monitor App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		43146AF3E357C84B258EE5FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.ShieldConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet ShieldConfig App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9B6B360AC2F884AA786E48AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.ShieldConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet ShieldConfig App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A10BA9528D09ADE15329BA40 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.Monitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet Monitor App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BD00000C2F0000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		BD00000D2F0000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BD00000E2F0000000000000E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 35;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BRAINDIET_FAMILY_CONTROLS";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BD00000F2F0000000000000F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet App Store";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) BRAINDIET_FAMILY_CONTROLS";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		E7D147AE3286B11D0185CC76 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = YHD3BD92S8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jackboring.BrainDiet.ShieldAction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "BrainDiet ShieldAction App Store";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG BRAINDIET_FAMILY_CONTROLS $(inherited)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		230CD7E4CED96C2795C2E9F8 /* Build configuration list for PBXNativeTarget "BrainDietShieldConfig" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B6B360AC2F884AA786E48AD /* Release */,
+				43146AF3E357C84B258EE5FE /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BD0000072F00000000000007 /* Build configuration list for PBXNativeTarget "BrainDiet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD00000E2F0000000000000E /* Debug */,
+				BD00000F2F0000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BD00000B2F0000000000000B /* Build configuration list for PBXProject "BrainDiet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD00000C2F0000000000000C /* Debug */,
+				BD00000D2F0000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C4D3979315A94DC07773EA23 /* Build configuration list for PBXNativeTarget "BrainDietShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				04D46CDC67202E9BF76C8C90 /* Release */,
+				E7D147AE3286B11D0185CC76 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C721B9760AC7A81D699521BA /* Build configuration list for PBXNativeTarget "BrainDietMonitor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				23BCAB1E491C2002B3143038 /* Release */,
+				A10BA9528D09ADE15329BA40 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BD0000202F00000000000020 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BD0000212F00000000000021 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BD0000202F00000000000020 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = BD00000A2F0000000000000A /* Project object */;
+}
