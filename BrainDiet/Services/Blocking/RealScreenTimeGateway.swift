@@ -62,12 +62,25 @@ final class RealScreenTimeGateway: ScreenTimeGateway {
             }
     }
 
+    /// ⭐ `.approvedWithDataAccess` IS APPROVED (2026-09-23). iOS 26 added a
+    /// second approved state, for a grant that also allows reading detailed
+    /// usage data. It was falling into `@unknown default` and being mapped to
+    /// `.notDetermined` — so a user who HAD approved Screen Time read back as
+    /// never having connected, and the connect button sat there looking dead.
+    /// That is the exact symptom Jack reported on device.
+    ///
+    /// The `@unknown default` stays `.notDetermined` deliberately: a status this
+    /// build has never seen must not be assumed to be a grant. But it now logs,
+    /// because the silence is what let this one hide.
     private func syncMode() {
         switch center.authorizationStatus {
-        case .notDetermined: mode = .notDetermined
-        case .approved:      mode = .authorized
-        case .denied:        mode = .denied
-        @unknown default:    mode = .notDetermined
+        case .notDetermined:          mode = .notDetermined
+        case .approved:               mode = .authorized
+        case .approvedWithDataAccess: mode = .authorized
+        case .denied:                 mode = .denied
+        @unknown default:
+            Log.app.error("Blocking: UNKNOWN AuthorizationStatus \(String(describing: self.center.authorizationStatus), privacy: .public) — treating as notDetermined")
+            mode = .notDetermined
         }
     }
 
