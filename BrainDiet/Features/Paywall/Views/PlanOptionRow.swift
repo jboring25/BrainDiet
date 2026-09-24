@@ -5,7 +5,7 @@ import SwiftUI
 struct PlanOptionRow: View {
     let plan: PaywallPlan
     let isSelected: Bool
-    /// ⭐ REAL intro-offer eligibility (StoreService.hasFreeTrial). The "7 days
+    /// ⭐ REAL intro-offer eligibility (StoreService.hasFreeTrial). The "days
     /// free" badge renders ONLY when StoreKit would actually grant the trial —
     /// a returning user who already used theirs never sees trial copy.
     var showsTrial: Bool = false
@@ -24,20 +24,21 @@ struct PlanOptionRow: View {
                         Text(plan.title)
                             .font(BDFont.body(.medium, size: 16, relativeTo: .body))
                             .foregroundStyle(Color.bdTextPrimary)
-                        if plan == .annual, showsTrial {
+                        if plan == .weekly, showsTrial {
                             trialBadge
                         }
                     }
-                    if plan == .annual {
-                        Text("\(PaywallPricing.annualPerMonthDisplay)/mo, billed annually")
-                            .font(.bdCaption)
-                            .foregroundStyle(Color.bdTextSecondary)
-                        // The honest fractional frame — same single price source.
-                        Text("That's \(PaywallPricing.annualPerWeekDisplay)/week")
+                    if plan == .weekly {
+                        Text("Billed weekly. Cancel anytime.")
                             .font(.bdCaption)
                             .foregroundStyle(Color.bdTextSecondary)
                     } else {
-                        Text("Billed monthly")
+                        // The honest frame for a one-time price: what it is worth
+                        // in the currency of the other plan, not a "save 90%".
+                        Text("Pays for itself in \(PaywallPricing.lifetimeBreakEvenWeeks) weeks")
+                            .font(.bdCaption)
+                            .foregroundStyle(Color.bdTextSecondary)
+                        Text("Nothing renews.")
                             .font(.bdCaption)
                             .foregroundStyle(Color.bdTextSecondary)
                     }
@@ -67,10 +68,11 @@ struct PlanOptionRow: View {
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
-    /// The annual plan leads with its 7-day free trial (the honest wedge), not
-    /// a savings percentage — the trial is the offer.
+    /// The weekly plan leads with its free trial (the honest wedge), not a
+    /// savings percentage — the trial is the offer. Length comes from
+    /// PaywallPricing so the badge can never disagree with App Store Connect.
     private var trialBadge: some View {
-        Text("7 days free")
+        Text("\(PaywallPricing.trialDays) days free")
             .font(.bdCaption)
             .foregroundStyle(Color.bdTextOnAccent)
             .padding(.horizontal, Theme.Space.sm)
@@ -83,9 +85,9 @@ struct PlanOptionRow: View {
     ZStack {
         BDBackground()
         VStack(spacing: Theme.Space.sm) {
-            PlanOptionRow(plan: .annual, isSelected: true, showsTrial: true) {}
-            PlanOptionRow(plan: .annual, isSelected: false, showsTrial: false) {}
-            PlanOptionRow(plan: .monthly, isSelected: false) {}
+            PlanOptionRow(plan: .weekly, isSelected: true, showsTrial: true) {}
+            PlanOptionRow(plan: .weekly, isSelected: false, showsTrial: false) {}
+            PlanOptionRow(plan: .lifetime, isSelected: false) {}
         }
         .padding(Theme.Space.screenX)
     }

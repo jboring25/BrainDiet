@@ -422,7 +422,7 @@ struct PaywallTimelinePage: View {
     var body: some View {
         StoryPage(
             title: trialSelected
-                ? String(localized: "Free for 7 days.")
+                ? String(localized: "Free for \(PaywallPricing.trialDays) days.")
                 : String(localized: "Everything on your plan."),
             subtitle: trialSelected
                 ? String(localized: "Here's exactly what happens next.")
@@ -431,11 +431,11 @@ struct PaywallTimelinePage: View {
             VStack(alignment: .leading, spacing: 0) {
                 if trialSelected {
                     row(.forkKnife, .bdLeaf, .bdLeafTint, String(localized: "Today"),
-                        String(localized: "Full access, free for 7 days."), true)
-                    row(.bell, .bdLeaf, .bdLeafTint, String(localized: "Day 5"),
+                        String(localized: "Full access, free for \(PaywallPricing.trialDays) days."), true)
+                    row(.bell, .bdLeaf, .bdLeafTint, String(localized: "Day \(PaywallPricing.trialDays - 1)"),
                         String(localized: "We remind you before you're charged."), true)
-                    row(.sparkle, .bdHoneyText, .bdHoneyTint, String(localized: "Day 7"),
-                        String(localized: "Your plan begins, \(PaywallPricing.annualDisplay)/year."), false)
+                    row(.sparkle, .bdHoneyText, .bdHoneyTint, String(localized: "Day \(PaywallPricing.trialDays)"),
+                        String(localized: "Your plan begins, \(PaywallPricing.weeklyDisplay)/week."), false)
                 } else {
                     row(.forkKnife, .bdLeaf, .bdLeafTint,
                         String(localized: "Every serving on your plan"),

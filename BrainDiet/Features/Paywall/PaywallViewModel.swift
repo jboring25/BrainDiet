@@ -10,7 +10,7 @@ import SwiftUI
 @Observable
 final class PaywallViewModel {
 
-    var selectedPlan: PaywallPlan = .annual   // best value, pre-selected (not a dark pattern: clearly labeled)
+    var selectedPlan: PaywallPlan = .weekly   // the trial rides here, so it is the way in (clearly labeled)
 
     /// ⭐ REAL StoreKit intro-offer eligibility for the ANNUAL plan, refreshed
     /// from StoreService whenever a paywall appears. False = this Apple Account
@@ -25,25 +25,28 @@ final class PaywallViewModel {
     var errorMessage: String?
 
     /// The transparent-billing sentence — built from the single pricing source.
-    /// Annual carries the 7-day free trial (the honest transparency wedge);
-    /// monthly is a direct subscribe. Either way: cancel anytime, no surprises.
+    /// Weekly carries the 3-day free trial (the honest transparency wedge).
+    /// Lifetime is a ONE-TIME purchase: it never renews, so it must never carry
+    /// a "cancel anytime" or a trial word. Saying "cancel" about a thing that
+    /// cannot renew is the same class of lie as promising a trial that does not
+    /// exist.
     var transparentBillingLine: String {
-        if selectedPlan == .annual {
-            guard trialEligible else {
-                // Returning user: no trial exists for them, so no trial word.
-                return String(
-                    format: String(localized: "%1$@/year, billed today. Cancel anytime in 2 taps: Settings ▸ Subscriptions."),
-                    PaywallPricing.annualDisplay
-                )
-            }
+        guard selectedPlan.isRecurring else {
             return String(
-                format: String(localized: "7 days free, then %1$@/year. Cancel anytime in 2 taps. We'll remind you before the trial ends."),
-                PaywallPricing.annualDisplay
+                format: String(localized: "%1$@ once. Not a subscription — nothing renews, nothing to cancel."),
+                PaywallPricing.lifetimeDisplay
+            )
+        }
+        guard trialEligible else {
+            // Returning user: no trial exists for them, so no trial word.
+            return String(
+                format: String(localized: "%1$@/week, billed today. Cancel anytime in 2 taps: Settings ▸ Subscriptions."),
+                PaywallPricing.weeklyDisplay
             )
         }
         return String(
-            format: String(localized: "%1$@/month, billed today. No hidden fees, no auto-upsells. Cancel anytime in 2 taps: Settings ▸ Subscriptions."),
-            PaywallPricing.monthlyDisplay
+            format: String(localized: "%1$d days free, then %2$@/week. Cancel anytime in 2 taps. We'll remind you before the trial ends."),
+            PaywallPricing.trialDays, PaywallPricing.weeklyDisplay
         )
     }
 
@@ -53,7 +56,7 @@ final class PaywallViewModel {
     /// calls this in `.task` before it can promise anything.
     func syncOffer(using store: StoreService) async {
         await store.loadProducts()
-        trialEligible = store.hasFreeTrial(for: .annual)
+        trialEligible = store.hasFreeTrial(for: .weekly)
     }
 
     func purchase(using store: StoreService, onSuccess: @escaping () -> Void) async {

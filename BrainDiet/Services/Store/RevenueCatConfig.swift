@@ -24,8 +24,9 @@ enum RevenueCatConfig {
 
     /// Entitlement lookup key in the RevenueCat dashboard (project `projb9e4bc82`,
     /// entitlement `entl524bf29825`). Both products grant it:
-    /// `braindiet.pro.annual` and `braindiet.pro.monthly`, exposed through the
-    /// `default` offering as `$rc_annual` / `$rc_monthly`.
+    /// `braindiet.weekly` and `braindiet.lifetime`, exposed through the
+    /// `default` offering as `$rc_weekly` / `$rc_lifetime`. There is no free
+    /// tier: the entitlement is what the 3-day trial grants.
     static let entitlementID = "pro"
 
     /// Whether we have a key to configure with.

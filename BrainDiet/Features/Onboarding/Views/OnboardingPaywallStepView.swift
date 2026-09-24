@@ -117,8 +117,9 @@ struct OnboardingPaywallStepView: View {
     /// True only when the CURRENTLY SELECTED plan really carries a free trial.
     /// Every trial element on this screen (timeline, and the trial-bearing
     /// billing line via PaywallViewModel) keys off this — never off eligibility
-    /// alone, because a monthly selection gets no trial either way.
-    private var trialSelected: Bool { pvm.trialEligible && pvm.selectedPlan == .annual }
+    /// alone, because a LIFETIME selection gets no trial either way: a one-time
+    /// purchase cannot carry an introductory offer.
+    private var trialSelected: Bool { pvm.trialEligible && pvm.selectedPlan.isRecurring }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -144,11 +145,11 @@ struct OnboardingPaywallStepView: View {
         .task {
             await pvm.syncOffer(using: store)
             #if DEBUG
-            // Screenshot seam: BD_PAYWALL_PLAN=monthly|annual pre-selects a row
+            // Screenshot seam: BD_PAYWALL_PLAN=weekly|lifetime pre-selects a row
             // so the billing line / timeline swap can be captured.
             switch ProcessInfo.processInfo.environment["BD_PAYWALL_PLAN"] {
-            case "monthly": pvm.selectedPlan = .monthly
-            case "annual":  pvm.selectedPlan = .annual
+            case "weekly":   pvm.selectedPlan = .weekly
+            case "lifetime": pvm.selectedPlan = .lifetime
             default: break
             }
             // ⭐ BD_PAYWALL_PAGE is LIVE AGAIN (2026-08-11). It went inert when

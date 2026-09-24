@@ -123,7 +123,21 @@ struct PaywallView: View {
             else { withAnimation { revealed = true } }
         }
         // Products + REAL intro-offer eligibility before any trial word renders.
-        .task { await vm.syncOffer(using: store) }
+        .task {
+            await vm.syncOffer(using: store)
+            #if DEBUG
+            // Screenshot seam, same contract as OnboardingPaywallStepView:
+            // BD_PAYWALL_PLAN=weekly|lifetime pre-selects a row so the billing
+            // line and timeline swap can actually be reviewed. Without it the
+            // lifetime copy ships unseen — and "nothing renews" is exactly the
+            // sentence that must not be wrong.
+            switch ProcessInfo.processInfo.environment["BD_PAYWALL_PLAN"] {
+            case "weekly":   vm.selectedPlan = .weekly
+            case "lifetime": vm.selectedPlan = .lifetime
+            default: break
+            }
+            #endif
+        }
         .alert(
             "Something didn't go through",
             isPresented: Binding(
@@ -199,35 +213,54 @@ struct PaywallView: View {
     /// bulk of the scroll and were text doing a job that feeling should do.
     private var trialTimeline: some View {
         VStack(alignment: .leading, spacing: 0) {
-            timelineRow(
-                marker: "leaf.fill",
-                title: "Today",
-                line: "Your whole plate unlocks.",
-                filled: true, isLast: false
-            )
-            timelineRow(
-                marker: "bell.fill",
-                title: "Day 5",
-                line: "We remind you. No surprises.",
-                filled: true, isLast: false
-            )
-            timelineRow(
-                marker: "checkmark",
-                title: "Day 7",
-                line: trialEndLine,
-                filled: false, isLast: true
-            )
+            // ⭐ A ONE-TIME PURCHASE HAS NO TRIAL RAIL (2026-09-23). Lifetime
+            // never renews and carries no introductory offer, so a Today →
+            // Day 2 → Day 3 countdown would be describing days that do not
+            // exist for it. It gets the one row that IS true.
+            if vm.selectedPlan.isRecurring {
+                timelineRow(
+                    marker: "leaf.fill",
+                    title: "Today",
+                    line: "Your whole plate unlocks.",
+                    filled: true, isLast: false
+                )
+                timelineRow(
+                    marker: "bell.fill",
+                    title: "Day \(PaywallPricing.trialDays - 1)",
+                    line: "We remind you. No surprises.",
+                    filled: true, isLast: false
+                )
+                timelineRow(
+                    marker: "checkmark",
+                    title: "Day \(PaywallPricing.trialDays)",
+                    line: trialEndLine,
+                    filled: false, isLast: true
+                )
+            } else {
+                timelineRow(
+                    marker: "leaf.fill",
+                    title: "Today",
+                    line: "Your whole plate unlocks.",
+                    filled: true, isLast: false
+                )
+                timelineRow(
+                    marker: "checkmark",
+                    title: "Forever",
+                    line: trialEndLine,
+                    filled: true, isLast: true
+                )
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Honest and exact: the real charge, on the real day, for the real plan.
+    /// Lifetime has no trial and no recurrence, so it gets no "trial ends" line.
     private var trialEndLine: String {
-        let price = vm.selectedPlan == .annual
-            ? PaywallPricing.annualDisplay : PaywallPricing.monthlyDisplay
-        let per = vm.selectedPlan == .annual
-            ? String(localized: "year") : String(localized: "month")
-        return String(localized: "Trial ends. \(price) a \(per).")
+        guard vm.selectedPlan.isRecurring else {
+            return String(localized: "\(PaywallPricing.lifetimeDisplay) once. Nothing renews.")
+        }
+        return String(localized: "Trial ends. \(PaywallPricing.weeklyDisplay) a week.")
     }
 
     private func timelineRow(marker: String, title: LocalizedStringResource,
@@ -295,9 +328,13 @@ struct PaywallView: View {
             // $0.00"). Trial wording still renders ONLY when StoreKit would
             // really grant the trial.
             BDPrimaryButton(
-                title: vm.trialEligible
-                    ? LocalizedStringResource("Start 7 days for $0.00")
-                    : LocalizedStringResource("Unlock BrainDiet Pro"),
+                // The CTA states what THIS tap does. Lifetime charges today and
+                // has no trial, so it must never read "start N days free".
+                title: !vm.selectedPlan.isRecurring
+                    ? LocalizedStringResource("Buy once — \(PaywallPricing.lifetimeDisplay)")
+                    : (vm.trialEligible
+                        ? LocalizedStringResource("Start \(PaywallPricing.trialDays) days for \(PaywallPricing.freeDisplay)")
+                        : LocalizedStringResource("Unlock BrainDiet")),
                 trailingSymbol: "chevron.right",
                 isEnabled: !vm.isPurchasing
             ) {

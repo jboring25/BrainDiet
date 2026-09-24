@@ -29,14 +29,14 @@ import RevenueCat
 final class StoreService {
 
     enum ProductID {
-        static let annual = "braindiet.pro.annual"    // $39.99/yr
-        static let monthly = "braindiet.pro.monthly"  // $7.99/mo
-        static let all: Set<String> = [annual, monthly]
+        static let weekly = "braindiet.weekly"        // $4.99/wk, 3 days free
+        static let lifetime = "braindiet.lifetime"    // $19.99 once, non-consumable
+        static let all: Set<String> = [weekly, lifetime]
     }
 
     /// The one flag the app gates on.
     private(set) var isPro = false
-    /// Live store products (annual first). Empty until loaded / when unavailable.
+    /// Live store products (lifetime first). Empty until loaded / when unavailable.
     private(set) var products: [Product] = []
     private(set) var isLoading = false
     /// Real StoreKit intro-offer eligibility per product id, cached on load.
@@ -44,7 +44,7 @@ final class StoreService {
     private(set) var introOfferEligibility: [String: Bool] = [:]
 
     /// ⭐ THE REVENUECAT OFFERING (2026-09-22). The dashboard's `default`
-    /// offering carries `$rc_annual` and `$rc_monthly`. Purchasing the PACKAGE
+    /// offering carries `$rc_weekly` and `$rc_lifetime`. Purchasing the PACKAGE
     /// rather than a bare product is what attributes the sale to an offering in
     /// RevenueCat — without it the offering config is decorative and every
     /// purchase lands unattributed. Nil = offerings unreachable; the purchase
@@ -70,7 +70,8 @@ final class StoreService {
         defer { isLoading = false }
         do {
             let loaded = try await Product.products(for: ProductID.all)
-            products = loaded.sorted { $0.id == ProductID.annual && $1.id != ProductID.annual }
+            // Lifetime first: it is the offer, the weekly is the way in.
+            products = loaded.sorted { $0.id == ProductID.lifetime && $1.id != ProductID.lifetime }
             await refreshIntroEligibility()
             publishLivePrices()
         } catch {
@@ -96,7 +97,7 @@ final class StoreService {
 
     /// The package backing a plan, by RevenueCat's standard identifiers.
     func package(for plan: PaywallPlan) -> Package? {
-        plan == .annual ? offering?.annual : offering?.monthly
+        plan == .weekly ? offering?.weekly : offering?.lifetime
     }
 
     /// ⭐ Publishes the store's OWN localized price strings to the paywall, so
@@ -142,7 +143,7 @@ final class StoreService {
     }
 
     func product(for plan: PaywallPlan) -> Product? {
-        let id = plan == .annual ? ProductID.annual : ProductID.monthly
+        let id = plan == .weekly ? ProductID.weekly : ProductID.lifetime
         return products.first { $0.id == id }
     }
 
@@ -163,16 +164,19 @@ final class StoreService {
     ///
     /// Unknown (products unavailable, eligibility not yet answered) = NOT
     /// eligible in release: we would rather under-promise than lie. DEBUG
-    /// assumes the annual trial so the shipping variant is screenshot-able on
+    /// assumes the weekly trial so the shipping variant is screenshot-able on
     /// a simulator with no StoreKit configuration attached; `BD_TRIAL_INELIGIBLE=1`
     /// forces the returning-user variant.
     func hasFreeTrial(for plan: PaywallPlan) -> Bool {
+        // A one-time purchase cannot carry an introductory offer. The trial
+        // rides on the weekly plan only — never promise it on lifetime.
+        guard plan.isRecurring else { return false }
         #if DEBUG
         if ProcessInfo.processInfo.environment["BD_TRIAL_INELIGIBLE"] == "1" { return false }
         #endif
         guard let product = product(for: plan) else {
             #if DEBUG
-            return plan == .annual
+            return true
             #else
             return false
             #endif
