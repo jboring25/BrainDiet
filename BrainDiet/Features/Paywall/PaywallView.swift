@@ -156,13 +156,7 @@ struct PaywallView: View {
     /// FINDING 1 — the viewer's OWN number and OWN goal, on the plate.
     private var hero: some View {
         VStack(alignment: .leading, spacing: Theme.Space.sm) {
-            HStack(spacing: Theme.Space.sm) {
-                BrandWordmark(tone: .onDark, size: 13)
-                Text("PRO")
-                    .font(.bdEyebrow)
-                    .kerning(3)
-                    .foregroundStyle(Color.bdAccentDeep)
-            }
+            BrandWordmark(tone: .onDark, size: 13)
 
             // The plate is the brand's one living object. It belongs on the
             // screen that asks for money more than anywhere else.

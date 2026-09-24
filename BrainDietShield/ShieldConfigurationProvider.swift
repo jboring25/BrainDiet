@@ -100,7 +100,7 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
         let d = UserDefaults(suiteName: ShieldKeys.suite)
 
         let headline  = d?.string(forKey: ShieldKeys.headline)  ?? "You wanted your time back."
-        let body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still room on your plate today. Here's 20 minutes, protected. Go spend it on you."
+        let body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still time today. Here's 20 minutes, protected. Go spend it on you."
         let primary   = d?.string(forKey: ShieldKeys.primary)   ?? "Feed my brain"
         let secondary = d?.string(forKey: ShieldKeys.secondary) ?? "Not now"
         let symbolName = d?.string(forKey: ShieldKeys.symbol)   ?? "sparkles"

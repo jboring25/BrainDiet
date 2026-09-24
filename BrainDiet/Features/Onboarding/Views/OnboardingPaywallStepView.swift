@@ -192,13 +192,7 @@ struct OnboardingPaywallStepView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: Theme.Space.sm) {
-                BrandWordmark(tone: .onDark, size: 13)
-                Text("PRO")
-                    .font(.bdEyebrow)
-                    .kerning(3)
-                    .foregroundStyle(Color.bdAccentDeep)
-            }
+            BrandWordmark(tone: .onDark, size: 13)
             Spacer()
             // ⭐ 2026-07-22 UX audit: the glyph's frame had no contentShape, so
             // only the small "X" itself was hittable, and it sat tight against
@@ -369,7 +363,7 @@ private struct FreeTierHandoffSheet: View {
             BDPrimaryButton(title: "Start free", action: onStartFree)
 
             Button(action: onSeePro) {
-                Text("See Pro again")
+                Text("See plans again")
                     .font(.bdCaption)
                     .foregroundStyle(Color.bdTextSecondary)
                     .frame(maxWidth: .infinity, minHeight: Theme.Size.minTouch)

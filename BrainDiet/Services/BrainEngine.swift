@@ -410,9 +410,9 @@ struct MentalDiet: Equatable {
         if nourishing >= 60 {
             return String(localized: "A well-fed mind today.")
         } else if isJunkHeavy {
-            return String(localized: "Heavier on the junk today. Tomorrow's a fresh plate.")
+            return String(localized: "Heavier on the junk today. Tomorrow starts fresh.")
         } else if nourishing >= junk {
-            return String(localized: "A balanced plate today.")
+            return String(localized: "A balanced day.")
         } else {
             return String(localized: "Room for more that feeds you.")
         }

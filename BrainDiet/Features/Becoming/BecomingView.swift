@@ -119,11 +119,26 @@ struct BecomingView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, Theme.Space.xs)
                     .padding(.bottom, Theme.Space.xxl)
                 }
                 .scrollIndicators(.hidden)
                 .modifier(DebugBottomAnchor())
+                // Becoming has no header row, so scrolled cards ran straight
+                // under the clock (build 38). Same cream fade Home uses.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    Color.clear.frame(height: 10)
+                        .background {
+                            LinearGradient(
+                                stops: [
+                                    .init(color: Color.bdBackground, location: 0),
+                                    .init(color: Color.bdBackground, location: 0.7),
+                                    .init(color: Color.bdBackground.opacity(0), location: 1)
+                                ],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                            .ignoresSafeArea(edges: .top)
+                        }
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
         }

@@ -108,9 +108,10 @@ struct SettingsView: View {
                         }
 
                         section(title: "Account") {
-                            // The quiet Pro entry — the paywall's only standing home.
+                            // The paywall's only standing home. There is no "Pro":
+                            // one version, kept weekly or bought once (2026-09-24).
                             row(icon: "sparkles",
-                                title: "BrainDiet Pro",
+                                title: "Membership",
                                 value: store.isPro ? String(localized: "Active") : nil) {
                                 showPaywall = true
                             }

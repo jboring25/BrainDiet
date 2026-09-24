@@ -59,12 +59,8 @@ struct InterceptPreviewView: View {
             Color.bdBackground.ignoresSafeArea()   // the cream canvas, full bleed
 
             VStack(spacing: 0) {
-                // `.eyebrow` — 11/800, .14em tracking, sub ink.
-                Text("YOUR PLATE TODAY")
-                    .font(BDFont.display(.extraBold, size: 11, relativeTo: .caption2))
-                    .kerning(1.5)
-                    .foregroundStyle(Color.bdTextSecondary)
-                    .padding(.top, 6)
+                // "YOUR PLATE TODAY" removed 2026-09-24 (Jack): the plate is not
+                // the object on this screen, the brain is.
 
                 plateBlock
 
@@ -130,7 +126,7 @@ struct InterceptPreviewView: View {
             .padding(.horizontal, -M.plateOverhang)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { plateWidth = $0 }
             .accessibilityElement()
-            .accessibilityLabel("Your plate today: \(plate.balanceWord())")
+            .accessibilityLabel("Today: \(plate.balanceWord())")
     }
 
     /// The honey caption tells the plate's TRUTH — derived from the engine,
