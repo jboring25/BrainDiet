@@ -380,6 +380,8 @@ struct BecomingViewModel {
         case .learning: noun = count == 1 ? String(localized: "study session")    : String(localized: "study sessions")
         case .outdoors: noun = count == 1 ? String(localized: "session outside")  : String(localized: "sessions outside")
         case .creating: noun = count == 1 ? String(localized: "creative session") : String(localized: "creative sessions")
+        case .social:   noun = count == 1 ? String(localized: "real conversation") : String(localized: "real conversations")
+        case .mindful:  noun = count == 1 ? String(localized: "quiet session")    : String(localized: "quiet sessions")
         }
         return "\(count) \(noun)"
     }

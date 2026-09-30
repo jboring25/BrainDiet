@@ -536,8 +536,11 @@ final class PlateEngine {
         switch id {
         case "read", "study":                                   return .learning
         case "build", "lift", "run", "ride", "walk", "meditate": return .focus
-        case "create", "write", "guitar", "cook":               return .creativity
-        case "rest", "connect":                                 return .entertainment
+        // "connect" moved from dessert to creativity 2026-09-30 when Social
+        // became a goal domain: its sessions must feed the same category the
+        // domain's tile promises.
+        case "create", "write", "guitar", "cook", "connect":    return .creativity
+        case "rest":                                            return .entertainment
         default:                                                return nil
         }
     }
@@ -545,8 +548,8 @@ final class PlateEngine {
     nonisolated static func category(forDomain domain: ActivityDomain) -> PlateCategory {
         switch domain {
         case .reading, .learning:            return .learning
-        case .building, .fitness, .outdoors: return .focus
-        case .music, .writing, .creating:    return .creativity
+        case .building, .fitness, .outdoors, .mindful: return .focus
+        case .music, .writing, .creating, .social:     return .creativity
         }
     }
 

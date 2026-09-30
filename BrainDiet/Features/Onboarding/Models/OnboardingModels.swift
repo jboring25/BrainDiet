@@ -201,7 +201,7 @@ enum AttentionHijacker: String, CaseIterable, Identifiable, Sendable {
 // the identity language + base step seeds the HeuristicGoalPlanner turns into a plan.
 
 enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
-    case reading, fitness, music, building, writing, learning, outdoors, creating
+    case reading, fitness, music, building, writing, learning, outdoors, creating, social, mindful
 
     var id: String { rawValue }
 
@@ -216,6 +216,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return String(localized: "Learning")
         case .outdoors: return String(localized: "Outdoors")
         case .creating: return String(localized: "Creating")
+        case .social:   return String(localized: "Social")
+        case .mindful:  return String(localized: "Mindful")
         }
     }
 
@@ -229,6 +231,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return "graduationcap.fill"
         case .outdoors: return "figure.hiking"
         case .creating: return "paintbrush.pointed.fill"
+        case .social:   return "person.2.fill"
+        case .mindful:  return "figure.mind.and.body"
         }
     }
 
@@ -243,6 +247,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return .bdDomLearning
         case .outdoors: return .bdDomOutdoors
         case .creating: return .bdDomCreating
+        case .social:   return .bdDomSocial
+        case .mindful:  return .bdDomMindful
         }
     }
 
@@ -305,6 +311,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return String(localized: "Keep learning")
         case .outdoors: return String(localized: "Get outside")
         case .creating: return String(localized: "Make things")
+        case .social:   return String(localized: "Be more social")
+        case .mindful:  return String(localized: "Be more mindful")
         }
     }
 
@@ -339,6 +347,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return String(localized: "Learning on purpose.")
         case .outdoors: return String(localized: "Getting outside.")
         case .creating: return String(localized: "Making things.")
+        case .social:   return String(localized: "Showing up for people.")
+        case .mindful:  return String(localized: "Paying attention.")
         }
     }
 
@@ -389,6 +399,10 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
                     String(localized: "Someone who finishes what they start."),
                     String(localized: "Someone whose work makes people feel something."),
                     String(localized: "Someone who has a body of work.")]
+        case .social, .mindful:
+            // Added 2026-09-30, after the third-person wording was retired —
+            // no profile ever stored a legacy sentence for these.
+            return []
         }
     }
 
@@ -487,6 +501,16 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
                     String(localized: "Finishing what I start."),
                     String(localized: "Making something people feel."),
                     String(localized: "Building a body of work.")]
+        case .social:
+            return [String(localized: "Talking to anyone, anywhere."),
+                    String(localized: "Saying yes when I'd rather hide."),
+                    String(localized: "Being present with the people I'm with."),
+                    String(localized: "Being someone people are glad they met.")]
+        case .mindful:
+            return [String(localized: "Noticing where I actually am."),
+                    String(localized: "Keeping my attention for myself."),
+                    String(localized: "Being fully there with people."),
+                    String(localized: "Staying calm when it counts.")]
         }
     }
 
@@ -502,6 +526,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return "study"
         case .outdoors: return "walk"
         case .creating: return "create"
+        case .social:   return "connect"
+        case .mindful:  return "meditate"
         }
     }
 
@@ -516,6 +542,8 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         case .learning: return "skill"
         case .outdoors: return "fitness"
         case .creating: return "create"
+        case .social:   return "people"
+        case .mindful:  return "mindful"
         }
     }
 
@@ -563,6 +591,14 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
             return [String(localized: "next time you're waiting on something"),
                     String(localized: "after you clear the table"),
                     String(localized: "when you'd normally open a feed")]
+        case .social:
+            return [String(localized: "when you walk into a room today"),
+                    String(localized: "before you put your headphones in"),
+                    String(localized: "when you're waiting in line")]
+        case .mindful:
+            return [String(localized: "when you sit down on the train"),
+                    String(localized: "before you open your laptop"),
+                    String(localized: "when you get into bed")]
         }
     }
 
@@ -600,6 +636,14 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
             return [("Set out your materials", .oneoff),
                     ("Make something small", .recurring),
                     ("Do a real creative session", .recurring)]
+        case .social:
+            return [("Text someone you miss", .oneoff),
+                    ("Start one conversation", .recurring),
+                    ("Make plans with someone", .recurring)]
+        case .mindful:
+            return [("Take your AirPods out", .oneoff),
+                    ("Sit with nothing for a few minutes", .recurring),
+                    ("Take a walk without your phone", .recurring)]
         }
     }
 }

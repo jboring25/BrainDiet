@@ -162,8 +162,18 @@ struct InterceptPreviewView: View {
         return content.goalID
     }
 
+    private var headlineDomain: ActivityDomain? {
+        if let id = serving?.goalID,
+           let goal = goals.first(where: { $0.id == id }),
+           let domain = ActivityDomain(rawValue: goal.domain) {
+            return domain
+        }
+        return nil
+    }
+
     private var headline: some View {
-        let parts = GoalCatalog.becameWishParts(for: headlineGoalID)
+        let parts = headlineDomain?.shieldWishParts
+            ?? GoalCatalog.becameWishParts(for: headlineGoalID)
         return (Text(parts.prefix).foregroundColor(Color.bdTextPrimary)
                 + Text(verbatim: "\n")
                 + Text(parts.emphasis).foregroundColor(Color.bdSalmon))

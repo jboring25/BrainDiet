@@ -120,7 +120,23 @@ enum MenuWhy {
         .init(domain: .creating, course: .full):
             String(localized: "Long enough to stop judging it and just make it."),
         .init(domain: .creating, course: .main):
-            String(localized: "This is the stretch where something actually finishes.")
+            String(localized: "This is the stretch where something actually finishes."),
+
+        // Social
+        .init(domain: .social, course: .quick):
+            String(localized: "One conversation is enough to change the day."),
+        .init(domain: .social, course: .full):
+            String(localized: "Long enough to get past small talk."),
+        .init(domain: .social, course: .main):
+            String(localized: "Real time with real people. A feed can't do this."),
+
+        // Mindful
+        .init(domain: .mindful, course: .quick):
+            String(localized: "A few quiet minutes resets the whole afternoon."),
+        .init(domain: .mindful, course: .full):
+            String(localized: "Long enough for your head to go quiet."),
+        .init(domain: .mindful, course: .main):
+            String(localized: "Nothing to scroll. Just where you are.")
     ]
 
     private static let generic: [Course: String] = [

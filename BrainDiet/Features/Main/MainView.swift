@@ -40,10 +40,19 @@ struct MainView: View {
     private var interceptContent: ShieldContent {
         ShieldContentBuilder.make(
             goalID: profiles.first?.headlineGoalID,
+            domains: shieldDomains,
             servingsDone: plateEngine.doneCount,
             servingsPlanned: plateEngine.planCount,
             suggestedCategory: plateEngine.suggestion?.category
         )
+    }
+
+    /// The user's goals in the order the shield rotates them: primary first.
+    private var shieldDomains: [ActivityDomain] {
+        guard let profile = profiles.first else { return [] }
+        let all = profile.domains
+        guard let primary = profile.primaryDomain, all.contains(primary) else { return all }
+        return [primary] + all.filter { $0 != primary }
     }
 
     var body: some View {
@@ -79,7 +88,8 @@ struct MainView: View {
         // gated ShieldConfiguration extension can render it at the fork. Keyed on
         // the rendered body + primary so a day going slop-heavy (or the plate
         // completing into dessert) re-syncs on next foreground.
-        .task(id: interceptContent.headline + interceptContent.body + interceptContent.primary) {
+        .task(id: interceptContent.variants.map(\.headline).joined()
+                  + interceptContent.headline + interceptContent.body + interceptContent.primary) {
             interceptContent.writeToAppGroup()
         }
         // ⭐ RE-ARM THE STANDING SHIELD (2026-08-13). `BlockingService` is

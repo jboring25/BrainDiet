@@ -311,6 +311,7 @@ enum GoalCatalog {
         case "create":   return String(localized: "the things you'll make")
         case "people":   return String(localized: "the people who matter")
         case "sleep":    return String(localized: "real rest")
+        case "mindful":  return String(localized: "a quieter mind")
         case "money":    return String(localized: "your money goals")
         default:         return String(localized: "the life you want")
         }
@@ -368,6 +369,7 @@ enum GoalCatalog {
         case "create":   return (String(localized: "You're"), String(localized: "someone who makes things."))
         case "people":   return (String(localized: "You're"), String(localized: "there for the people who matter."))
         case "sleep":    return (String(localized: "You're"), String(localized: "someone who actually rests."))
+        case "mindful":  return (String(localized: "You're"), String(localized: "present."))
         case "money":    return (String(localized: "You're"), String(localized: "someone who does the real work."))
         default:         return (String(localized: "This time"), String(localized: "is yours."))
         }
@@ -385,6 +387,7 @@ enum GoalCatalog {
         case "create":   return String(localized: "create")
         case "people":   return String(localized: "be present")
         case "sleep":    return String(localized: "rest")
+        case "mindful":  return String(localized: "slow down")
         case "money":    return String(localized: "get to work")
         default:         return String(localized: "go live it")
         }
@@ -400,6 +403,7 @@ enum GoalCatalog {
         case "create":   return "paintbrush.pointed.fill"
         case "people":   return "person.2.fill"
         case "sleep":    return "moon.stars.fill"
+        case "mindful":  return "figure.mind.and.body"
         case "money":    return "chart.line.uptrend.xyaxis"
         default:         return "sparkles"
         }
@@ -426,6 +430,7 @@ enum GoalCatalog {
         case "fitness":  return Unit(singular: String(localized: "workout"), plural: String(localized: "workouts"), minutesPer: 45)
         case "people":   return Unit(singular: String(localized: "real conversation"), plural: String(localized: "real conversations"), minutesPer: 30)
         case "sleep":    return Unit(singular: String(localized: "early night"), plural: String(localized: "early nights"), minutesPer: 60)
+        case "mindful":  return Unit(singular: String(localized: "quiet session"), plural: String(localized: "quiet sessions"), minutesPer: 20)
         case "money":    return Unit(singular: String(localized: "focused sprint"), plural: String(localized: "focused sprints"), minutesPer: 50)
         default:         return Unit(singular: String(localized: "hour"), plural: String(localized: "hours"), minutesPer: 60)
         }

@@ -35,6 +35,17 @@ struct ShieldContent: Equatable {
     let minutes: Int
     /// Headline goal id — lets the ShieldAction arm the right block.
     let goalID: String?
+    /// ⭐ ONE LINE PER GOAL, ROTATED (Jack, 2026-09-30). The Shipaton video has
+    /// the shield speak to a different goal at each interrupt — mindful on the
+    /// couch, social on the train, strength outside the gym. The extension shows
+    /// `variants[cursor % count]` and the action extension advances the cursor
+    /// each time the user takes the primary choice. Empty = headline/body only.
+    var variants: [Variant] = []
+
+    struct Variant: Equatable {
+        let headline: String
+        let body: String
+    }
 
     /// A safe, on-brand fallback used before the app has synced anything (or if
     /// the read fails) — still identity-framed, never a bare error.
@@ -65,6 +76,7 @@ extension ShieldContent {
         static let symbol    = "shield.symbol"
         static let minutes   = "shield.minutes"
         static let goalID    = "shield.goalID"
+        static let variants  = "shield.variants"
     }
 
     /// Write the rendered shield strings into the shared App Group. No-ops safely
@@ -81,6 +93,12 @@ extension ShieldContent {
         d.set(symbol, forKey: Keys.symbol)
         d.set(minutes, forKey: Keys.minutes)
         d.set(goalID ?? "", forKey: Keys.goalID)
+        if variants.isEmpty {
+            d.removeObject(forKey: Keys.variants)
+        } else {
+            d.set(variants.map { ["headline": $0.headline, "body": $0.body] },
+                  forKey: Keys.variants)
+        }
     }
 }
 
@@ -101,6 +119,7 @@ enum ShieldContentBuilder {
     /// every surface now speaks the one possibility voice.
     static func make(
         goalID: String?,
+        domains: [ActivityDomain] = [],
         minutes: Int = BlockingConfig.shieldSuggestedMinutes,
         servingsDone: Int = 0,
         servingsPlanned: Int = 3,
@@ -134,9 +153,19 @@ enum ShieldContentBuilder {
         } else {
             body = String(localized: "There's still time today. \(minutes) minutes is enough to \(action).")
         }
+        // ⭐ THE VIDEO IS THE SPEC (Jack, 2026-09-30: "If I say the video has
+        // this feature then make it a reality"). "You wanted to be social. Go
+        // talk to a stranger." One wish, one thing to do right now, in words a
+        // person would say. This supersedes the present-tense "You're a
+        // reader." headline (2026-09-21) on the shield only.
+        let dayDone = servingsPlanned > 0 && servingsDone >= servingsPlanned
+        let variants = domains.map { d in
+            ShieldContent.Variant(headline: d.shieldWish,
+                                  body: dayDone ? body : d.shieldGo)
+        }
         return ShieldContent(
-            headline: GoalCatalog.becameWish(for: goalID),
-            body: body,
+            headline: variants.first?.headline ?? GoalCatalog.becameWish(for: goalID),
+            body: variants.first?.body ?? body,
             // Serving-aware (PlateCategory.ctaTitle, the ONE source shared
             // with Home's card + the in-app preview): when the plate is
             // complete and the engine suggests dessert, the shield serves it.
@@ -144,7 +173,50 @@ enum ShieldContentBuilder {
             secondary: String(localized: "Not now"),
             symbol: GoalCatalog.symbol(for: goalID),
             minutes: minutes,
-            goalID: goalID
+            goalID: goalID,
+            variants: variants
         )
+    }
+}
+
+// MARK: - The shield's words, per goal.
+
+extension ActivityDomain {
+
+    /// "You wanted to" + "be social." — split so the in-app preview can set
+    /// the goal in the accent color. `shieldWish` joins them for the shield.
+    var shieldWishParts: (prefix: String, emphasis: String) {
+        let lead = String(localized: "You wanted to")
+        switch self {
+        case .reading:  return (lead, String(localized: "read more."))
+        case .fitness:  return (lead, String(localized: "get stronger."))
+        case .music:    return (lead, String(localized: "play more."))
+        case .building: return (lead, String(localized: "build something."))
+        case .writing:  return (lead, String(localized: "write more."))
+        case .learning: return (lead, String(localized: "keep learning."))
+        case .outdoors: return (lead, String(localized: "get outside."))
+        case .creating: return (lead, String(localized: "make things."))
+        case .social:   return (lead, String(localized: "be social."))
+        case .mindful:  return (lead, String(localized: "become more mindful."))
+        }
+    }
+
+    var shieldWish: String { shieldWishParts.prefix + " " + shieldWishParts.emphasis }
+
+    /// The one thing to do right now, doable from wherever the shield caught
+    /// you — a train, a sidewalk, a desk.
+    var shieldGo: String {
+        switch self {
+        case .reading:  return String(localized: "Go read ten pages.")
+        case .fitness:  return String(localized: "Go touch some iron.")
+        case .music:    return String(localized: "Go pick it up and play.")
+        case .building: return String(localized: "Go get back to it.")
+        case .writing:  return String(localized: "Go write one paragraph.")
+        case .learning: return String(localized: "Go do one lesson.")
+        case .outdoors: return String(localized: "Go take a walk.")
+        case .creating: return String(localized: "Go make something small.")
+        case .social:   return String(localized: "Go talk to a stranger.")
+        case .mindful:  return String(localized: "Take your AirPods out. Look around.")
+        }
     }
 }

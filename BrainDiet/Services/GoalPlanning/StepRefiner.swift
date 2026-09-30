@@ -143,6 +143,14 @@ extension ActivityDomain {
             return [String(localized: "\(m) minutes on \(o)"),
                     String(localized: "One piece of \(o)"),
                     String(localized: "Just start \(o)")]
+        case .social:
+            return [String(localized: "Talk to \(o) today"),
+                    String(localized: "\(m) minutes with \(o)"),
+                    String(localized: "Just say hi to \(o)")]
+        case .mindful:
+            return [String(localized: "\(m) minutes of \(o)"),
+                    String(localized: "One round of \(o)"),
+                    String(localized: "Just start \(o)")]
         }
     }
 
@@ -159,6 +167,8 @@ extension ActivityDomain {
         case .learning: return String(localized: "What are you learning?")
         case .outdoors: return String(localized: "Where do you go?")
         case .creating: return String(localized: "What are you making?")
+        case .social:   return String(localized: "Who do you want to talk to?")
+        case .mindful:  return String(localized: "How do you slow down?")
         }
     }
 }

@@ -69,6 +69,15 @@ struct DomainMilestone: Equatable, Sendable {
             return .init(title: String(localized: "First thing made"),
                          projectionPhrase: String(localized: "make your first thing"),
                          costMinutes: 420)
+        case .social:
+            // Ten conversations at ~30 minutes.
+            return .init(title: String(localized: "Ten real conversations"),
+                         projectionPhrase: String(localized: "have your tenth real conversation"),
+                         costMinutes: 300)
+        case .mindful:
+            return .init(title: String(localized: "Ten quiet hours"),
+                         projectionPhrase: String(localized: "bank your tenth quiet hour"),
+                         costMinutes: 600)
         }
     }
 }

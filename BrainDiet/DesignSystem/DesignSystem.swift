@@ -156,6 +156,8 @@ extension Color {
     static let bdDomLearning  = Color(hex: "#6FA8DB")  // blue
     static let bdDomOutdoors  = Color(hex: "#86B98F")  // forest-sage
     static let bdDomCreating  = Color(hex: "#E7A968")  // apricot / gold
+    static let bdDomSocial    = Color(hex: "#E8977A")  // warm coral
+    static let bdDomMindful   = Color(hex: "#8FB8C9")  // still-water blue
 
     // Hijackers — cooler + one step MORE desaturated than the domains, so the
     // "junk to set aside" reads deliberately less alive than the goals.

@@ -207,6 +207,14 @@ struct MirrorStepView: View {
             let n = count(per: 3)
             return n == 1 ? String(localized: "1 thing you actually made, a month")
                           : String(localized: "\(n) things you actually made, a month")
+        case .social:
+            let n = count(per: 0.75)
+            return n == 1 ? String(localized: "1 more real conversation a month")
+                          : String(localized: "\(n) more real conversations a month")
+        case .mindful:
+            let n = count(per: 1)
+            return n == 1 ? String(localized: "1 hour fully present, a month")
+                          : String(localized: "\(n) hours fully present, a month")
         case .building:
             // Weekly cadence: this domain's monthly share → weekly hours ÷ ~2.
             let weekly = hours / 4.345

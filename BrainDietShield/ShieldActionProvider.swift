@@ -28,6 +28,7 @@ private enum ShieldActionKeys {
     static let suite         = "group.com.jackboring.braindiet.shared"
     static let lastProtectAt = "shield.lastProtectAt"
     static let junkStore     = "BrainDietJunk"
+    static let cursor        = "shield.cursor"
 }
 
 // Mirrors InterceptPass in the app (separate target → duplicated on purpose,
@@ -102,8 +103,14 @@ final class ShieldActionProvider: ShieldActionDelegate {
         switch action {
         case .primaryButtonPressed:
             // Chose real life: stamp the intent, then leave the feed.
-            UserDefaults(suiteName: ShieldActionKeys.suite)?
-                .set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
+            let d = UserDefaults(suiteName: ShieldActionKeys.suite)
+            d?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
+            // Next interrupt speaks to the next goal. Re-assigning the same
+            // shield set asks iOS to redraw it rather than reuse the last one.
+            d?.set((d?.integer(forKey: ShieldActionKeys.cursor) ?? 0) + 1,
+                   forKey: ShieldActionKeys.cursor)
+            let store = ManagedSettingsStore(named: .init(ShieldActionKeys.junkStore))
+            store.shield.applications = store.shield.applications
             return .close
         case .secondaryButtonPressed:
             // Only reachable for web/category shields, where there is no

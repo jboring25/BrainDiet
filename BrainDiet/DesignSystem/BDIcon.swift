@@ -103,6 +103,8 @@ extension ActivityDomain {
         case .learning: return .graduationCap
         case .outdoors: return .treeEvergreen
         case .creating: return .palette
+        case .social:   return .usersThree
+        case .mindful:  return .flowerLotus
         }
     }
 }

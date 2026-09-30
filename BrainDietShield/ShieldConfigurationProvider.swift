@@ -64,6 +64,8 @@ private enum ShieldKeys {
     static let primary   = "shield.primary"
     static let secondary = "shield.secondary"
     static let symbol    = "shield.symbol"
+    static let variants  = "shield.variants"
+    static let cursor    = "shield.cursor"
 }
 
 // Design-system colors, duplicated as UIColors for the extension (no SwiftUI here).
@@ -99,8 +101,16 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
     private func bridge() -> ShieldConfiguration {
         let d = UserDefaults(suiteName: ShieldKeys.suite)
 
-        let headline  = d?.string(forKey: ShieldKeys.headline)  ?? "You wanted your time back."
-        let body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still time today. Here's 20 minutes, protected. Go spend it on you."
+        var headline  = d?.string(forKey: ShieldKeys.headline)  ?? "You wanted your time back."
+        var body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still time today. Here's 20 minutes, protected. Go spend it on you."
+
+        // One goal per interrupt, rotated by the action extension's cursor.
+        if let variants = d?.array(forKey: ShieldKeys.variants) as? [[String: String]],
+           !variants.isEmpty {
+            let v = variants[max(0, d?.integer(forKey: ShieldKeys.cursor) ?? 0) % variants.count]
+            headline = v["headline"] ?? headline
+            body     = v["body"] ?? body
+        }
         let primary   = d?.string(forKey: ShieldKeys.primary)   ?? "Feed my brain"
         let secondary = d?.string(forKey: ShieldKeys.secondary) ?? "Not now"
         let symbolName = d?.string(forKey: ShieldKeys.symbol)   ?? "sparkles"

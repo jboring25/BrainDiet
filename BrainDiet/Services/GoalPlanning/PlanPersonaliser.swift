@@ -117,6 +117,14 @@ extension ActivityDomain {
         case (.creating, .setup): return String(localized: "Set out what you need for \(o)")
         case (.creating, .short): return String(localized: "\(m) minutes of \(o)")
         case (.creating, .deep):  return String(localized: "Finish one piece of \(o)")
+
+        case (.social, .setup):   return String(localized: "Pick when you'll see \(o)")
+        case (.social, .short):   return String(localized: "\(m) minutes with \(o), phone away")
+        case (.social, .deep):    return String(localized: "A real conversation with \(o)")
+
+        case (.mindful, .setup):  return String(localized: "Pick a spot for \(o)")
+        case (.mindful, .short):  return String(localized: "\(m) minutes of \(o)")
+        case (.mindful, .deep):   return String(localized: "A longer stretch of \(o)")
         }
     }
 
@@ -132,6 +140,8 @@ extension ActivityDomain {
         case .learning: return String(localized: "Japanese")
         case .outdoors: return String(localized: "the river path")
         case .creating: return String(localized: "pottery")
+        case .social:   return String(localized: "my roommate")
+        case .mindful:  return String(localized: "a morning sit")
         }
     }
 
@@ -156,6 +166,10 @@ extension ActivityDomain {
                                 String(localized: "the beach"), String(localized: "the gym track")]
         case .creating: return [String(localized: "drawing"), String(localized: "painting"),
                                 String(localized: "photography"), String(localized: "video")]
+        case .social:   return [String(localized: "a friend"), String(localized: "someone new"),
+                                String(localized: "family"), String(localized: "a stranger")]
+        case .mindful:  return [String(localized: "breathing"), String(localized: "a phone-free walk"),
+                                String(localized: "sitting quietly"), String(localized: "journaling")]
         }
     }
 }
