@@ -6,6 +6,8 @@ BrainDiet is an iOS app that blocks distracting apps — and then does the part
 blockers skip. It takes the time it gave back and spends it on one concrete step
 toward a goal you set, then shows you what that time bought.
 
+*You feed your body well. Your brain eats too.*
+
 Most screen-time apps end at the block. You get a grey shield, a number that goes
 down, and no idea what the reduction was *for*. BrainDiet treats the recovered
 time as a budget: every intercepted open becomes a prompt to do one small,
@@ -22,10 +24,17 @@ them through Apple's Family Controls framework, so the block holds at the OS
 level rather than inside the app. Hold an app tile to release it for three
 minutes; hold again to re-block it.
 
-**The intercept.** Opening a shielded app does not show a wall. It shows one
-step, chosen for the goal you are furthest behind on and the hour of the day —
-"Read four pages", not "You have been blocked". Three passes a day exist for the
-times the answer really is *not now*.
+**The intercept.** Opening a shielded app does not show a wall. It names the
+person you said you wanted to be, and gives you one thing you can do from
+wherever you are standing:
+
+> **You wanted to be social.** Go talk to a stranger.
+> **You wanted to get stronger.** Go touch some iron.
+> **You wanted to become more mindful.** Take your AirPods out. Look around.
+
+Each time you take the way out, the next interrupt speaks to your next goal, so
+the shield rotates through everything you picked instead of repeating one line.
+Three passes a day exist for the times the answer really is *not now*.
 
 **Becoming — the point.** A running total of hours converted from scrolling into
 goal work, drawn from two sources: measured usage via DeviceActivity, and what
@@ -63,7 +72,7 @@ talking about their goals instead of doing them.
 | Language | Swift 6, SwiftUI |
 | Minimum | iOS 26 |
 | Blocking | FamilyControls, ManagedSettings, DeviceActivity |
-| Extensions | `BrainDietMonitor` (DeviceActivityMonitor), `BrainDietShield` (ShieldConfiguration) |
+| Extensions | `BrainDietMonitor` (DeviceActivityMonitor), `BrainDietShield` (ShieldConfiguration + ShieldAction) |
 | Purchases | [RevenueCat](https://www.revenuecat.com) `purchases-ios-spm` |
 | Persistence | App Group shared container, UserDefaults |
 | Dependencies | One. RevenueCat. |
@@ -75,9 +84,19 @@ constraint rather than fighting it.
 
 ### RevenueCat
 
-RevenueCat owns the purchase call, the entitlement check, and restore.
-StoreKit 2 is kept for product loading and introductory-offer eligibility, which
-is App Review sensitive and already correct. One engine per job — see
+One version of the app, no feature tiers. A 3-day free trial, then **$4.99 a
+week** or **$19.99 once**, for people who are tired of subscriptions.
+
+- Products live in a RevenueCat **Offering** (`default`) with `$rc_weekly` and
+  `$rc_lifetime` packages, both unlocking one entitlement, `pro`.
+- The paywall reads its prices from the Offering at runtime
+  (`package.storeProduct.localizedPriceString`), so a price change in App Store
+  Connect never needs an app update, and every currency shows correctly.
+- Purchases go through `Purchases.shared.purchase(package:)`; restore and the
+  entitlement check are RevenueCat's too. The trial copy only appears on the
+  recurring plan, so the lifetime button never promises a trial it can't give.
+
+See [`StoreService.swift`](BrainDiet/Services/Store/StoreService.swift) and
 [`RevenueCatConfig.swift`](BrainDiet/Services/Store/RevenueCatConfig.swift).
 
 ## Building
