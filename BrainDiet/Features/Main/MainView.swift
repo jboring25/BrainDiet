@@ -91,6 +91,12 @@ struct MainView: View {
         .task(id: interceptContent.variants.map(\.headline).joined()
                   + interceptContent.headline + interceptContent.body + interceptContent.primary) {
             interceptContent.writeToAppGroup()
+            // New words only show once the shield is re-applied; iOS keeps
+            // drawing the old configuration otherwise.
+            if blocking.hasSelection {
+                blocking.clearStandingShield()
+                blocking.applyStandingShield()
+            }
         }
         // ⭐ RE-ARM THE STANDING SHIELD (2026-08-13). `BlockingService` is
         // created fresh on every launch with an EMPTY selection — it holds the

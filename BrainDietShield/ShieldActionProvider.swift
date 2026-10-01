@@ -110,7 +110,12 @@ final class ShieldActionProvider: ShieldActionDelegate {
             d?.set((d?.integer(forKey: ShieldActionKeys.cursor) ?? 0) + 1,
                    forKey: ShieldActionKeys.cursor)
             let store = ManagedSettingsStore(named: .init(ShieldActionKeys.junkStore))
-            store.shield.applications = store.shield.applications
+            // Build 40 on device: re-assigning the same set did not redraw (the
+            // second open showed the first goal again). Clearing first makes
+            // it a real change.
+            let apps = store.shield.applications
+            store.shield.applications = nil
+            store.shield.applications = apps
             return .close
         case .secondaryButtonPressed:
             // Only reachable for web/category shields, where there is no

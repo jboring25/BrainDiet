@@ -158,10 +158,11 @@ enum ShieldContentBuilder {
         // talk to a stranger." One wish, one thing to do right now, in words a
         // person would say. This supersedes the present-tense "You're a
         // reader." headline (2026-09-21) on the shield only.
-        let dayDone = servingsPlanned > 0 && servingsDone >= servingsPlanned
+        // Always the "Go" line, even once the day's steps are done: build 40
+        // on device swapped in "You've already done what you set out to do
+        // today" and the shield lost the one thing it is for.
         let variants = domains.map { d in
-            ShieldContent.Variant(headline: d.shieldWish,
-                                  body: dayDone ? body : d.shieldGo)
+            ShieldContent.Variant(headline: d.shieldWish, body: d.shieldGo)
         }
         return ShieldContent(
             headline: variants.first?.headline ?? GoalCatalog.becameWish(for: goalID),
