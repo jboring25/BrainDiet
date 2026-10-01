@@ -104,16 +104,18 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
         var headline  = d?.string(forKey: ShieldKeys.headline)  ?? "You wanted your time back."
         var body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still time today. Here's 20 minutes, protected. Go spend it on you."
 
+        var symbolName = d?.string(forKey: ShieldKeys.symbol)   ?? "sparkles"
+
         // One goal per interrupt, rotated by the action extension's cursor.
         if let variants = d?.array(forKey: ShieldKeys.variants) as? [[String: String]],
            !variants.isEmpty {
             let v = variants[max(0, d?.integer(forKey: ShieldKeys.cursor) ?? 0) % variants.count]
             headline = v["headline"] ?? headline
             body     = v["body"] ?? body
+            symbolName = v["symbol"] ?? symbolName
         }
         let primary   = d?.string(forKey: ShieldKeys.primary)   ?? "Feed my brain"
         let secondary = d?.string(forKey: ShieldKeys.secondary) ?? "Not now"
-        let symbolName = d?.string(forKey: ShieldKeys.symbol)   ?? "sparkles"
 
         // Doctrine: the shield carries NO marketing copy — "Your brain eats too."
         // lives only on the PlanShareCard. The subtitle is the bridge, nothing else.

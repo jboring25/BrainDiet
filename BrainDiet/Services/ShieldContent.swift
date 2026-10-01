@@ -45,6 +45,7 @@ struct ShieldContent: Equatable {
     struct Variant: Equatable {
         let headline: String
         let body: String
+        let symbol: String
     }
 
     /// A safe, on-brand fallback used before the app has synced anything (or if
@@ -96,7 +97,7 @@ extension ShieldContent {
         if variants.isEmpty {
             d.removeObject(forKey: Keys.variants)
         } else {
-            d.set(variants.map { ["headline": $0.headline, "body": $0.body] },
+            d.set(variants.map { ["headline": $0.headline, "body": $0.body, "symbol": $0.symbol] },
                   forKey: Keys.variants)
         }
     }
@@ -162,7 +163,7 @@ enum ShieldContentBuilder {
         // on device swapped in "You've already done what you set out to do
         // today" and the shield lost the one thing it is for.
         let variants = domains.map { d in
-            ShieldContent.Variant(headline: d.shieldWish, body: d.shieldGo)
+            ShieldContent.Variant(headline: d.shieldWish, body: d.shieldGo, symbol: d.symbol)
         }
         return ShieldContent(
             headline: variants.first?.headline ?? GoalCatalog.becameWish(for: goalID),
