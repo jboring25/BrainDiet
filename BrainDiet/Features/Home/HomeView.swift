@@ -60,6 +60,7 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var drop = PlateDropController()
     @State private var heroDropPoint: CGPoint?
+    @State private var focusCardCentre: CGPoint = .zero
     @State private var showReportSheet = false
     /// One Home-wide coordinate space so the plate rect and the drag translation
     /// are measured against the same origin.
@@ -148,12 +149,8 @@ struct HomeView: View {
 
                         // The drag lesson only while there is nothing plated —
                         // it stops the moment it is no longer needed.
-                        if plate.doneCount == 0, !reduceMotion {
-                            Text("drag anything you've done into your brain")
-                                .font(BDFont.body(.regular, size: 12, relativeTo: .caption))
-                                .foregroundStyle(Color.bdTextSecondary)
-                                .stageIn(phase.atLeastMeaning)
-                        }
+                        // (The "drag anything you've done into your brain" line was
+                        // removed 2026-10-08: the card itself now says it moves.)
 
                         if let focus {
                             TodaysFocusCard(
@@ -167,12 +164,21 @@ struct HomeView: View {
                                 onTimer: { startFocus(focus) },
                                 onDragChanged: { value in
                                     if !drop.isDragging {
-                                        drop.begin(focusDraggable(focus), rowID: nil, origin: value.startLocation)
+                                        drop.begin(focusDraggable(focus), rowID: focus.step.id, origin: focusCardCentre == .zero ? value.startLocation : focusCardCentre)
                                     }
                                     drop.update(value)
                                 },
                                 onDragEnded: {
-                                    if let landed = drop.end() { dropReport(landed) }
+                                    if let landed = drop.end() {
+                                        UserDefaults.standard.set(true, forKey: "bd.hasFedByDrag")
+                                        dropReport(landed)
+                                    }
+                                },
+                                isLifted: drop.isDragging && drop.liftedRowID == focus.step.id)
+                                .background(GeometryReader { g in
+                                    Color.clear
+                                        .onAppear { focusCardCentre = CGPoint(x: g.frame(in: .named(Self.space)).midX, y: g.frame(in: .named(Self.space)).midY) }
+                                        .onChange(of: g.frame(in: .named(Self.space))) { _, f in focusCardCentre = CGPoint(x: f.midX, y: f.midY) }
                                 })
                                 .stageIn(phase.atLeastMeaning)
                         }
@@ -193,7 +199,10 @@ struct HomeView: View {
                             // pt apart. The serving card survives for the cases
                             // the plan can't cover — dessert, catalog defaults,
                             // plate complete — where there is no row to raise.
-                            if goalRows.isEmpty || suggestedGoalStepID == nil {
+                            // Never print the same step twice: the focus card above
+                            // already carries it (Jack's screenshot, 2026-10-08).
+                            if (goalRows.isEmpty || suggestedGoalStepID == nil),
+                               plate.suggestion?.title != focus?.step.title {
                                 TodaysServingCard(
                                     serving: plate.suggestion,
                                     onFeed: feedMyBrain,

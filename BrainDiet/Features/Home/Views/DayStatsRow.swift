@@ -135,92 +135,130 @@ struct TodaysFocusCard: View {
     var onDragChanged: ((DragGesture.Value) -> Void)? = nil
     var onDragEnded: (() -> Void)? = nil
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Today's one thing")
-                .font(.bdEyebrow)
-                .kerning(1.5)
-                .foregroundStyle(Color.bdGoldText)
+    /// True while this card is in the user's hand (the overlay is drawn instead).
+    var isLifted: Bool = false
 
-            HStack(alignment: .top, spacing: 11) {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
+    // ⭐ THE CARD IS THE OBJECT (Jack, 2026-10-08): "the overall box for the task
+    // [is] what is dragged... the user [should] feel the need to drag it... so
+    // nothing needs to be explicitly stated." No "drag" label anywhere. The
+    // card says it moves the way physical things on iOS do:
+    //
+    //   • A GRABBER at the top edge — the same capsule a sheet uses, the one
+    //     signifier every iPhone user already reads as "this lifts".
+    //   • It sits HIGHER than every other card — a deeper, directional shadow —
+    //     so it reads as a loose object resting on the page, not part of it.
+    //   • It LIFTS ON TOUCH (scale + shadow + light haptic) before you move,
+    //     exactly like a Home Screen icon or a reorderable row.
+    //   • Until the first drag, it NUDGES toward the brain every few seconds —
+    //     a short spring hop and settle, the same trick the Lock Screen uses to
+    //     teach the swipe up to the camera. It stops for good once learned.
+    //
+    // Compact on purpose: one icon, the step, one meta line, and the timer as a
+    // round button. The specific action is the biggest type on the card.
+
+    @State private var pressing = false
+    @State private var nudge: CGFloat = 0
+    @AppStorage("bd.hasFedByDrag") private var hasFedByDrag = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(Color.bdTextSecondary.opacity(0.28))
+                .frame(width: 34, height: 4)
+                .padding(.top, 7)
+                .padding(.bottom, 8)
+
+            HStack(alignment: .center, spacing: 12) {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(tint.opacity(0.3))
-                    .frame(width: 38, height: 38)
+                    .frame(width: 42, height: 42)
                     .overlay {
                         Image(systemName: symbol)
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundStyle(Color.bdTextPrimary.opacity(0.75))
                     }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(BDFont.serif(size: 20, relativeTo: .title3))
+                        .font(BDFont.serif(size: 19, relativeTo: .title3))
                         .foregroundStyle(Color.bdTextPrimary)
+                        .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
-                    if !cue.isEmpty {
-                        Text(cue)
-                            .font(BDFont.body(.regular, size: 13, relativeTo: .footnote))
-                            .foregroundStyle(Color.bdTextSecondary)
-                    }
+                    Text(cue.isEmpty ? "\(minutes)m" : "\(minutes)m · \(cue)")
+                        .font(BDFont.body(.regular, size: 12.5, relativeTo: .footnote))
+                        .foregroundStyle(Color.bdTextSecondary)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 4)
-                Text("\(minutes)m")
-                    .font(BDFont.body(.bold, size: 13, relativeTo: .caption))
-                    .foregroundStyle(Color.bdTextSecondary)
-            }
-            .padding(.top, 9)
-
-            Text(reason)
-                .font(BDFont.body(.regular, size: 12, relativeTo: .caption))
-                .foregroundStyle(Color.bdTextSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 9)
-
-            // ⭐ TWO WAYS IN, NOT ONE (Jack: "I don't think they're going to use
-            // the timer"). Self-report is the wide, filled, default path; the
-            // timer is the smaller one beside it. Neither is hidden.
-            HStack(spacing: 9) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("Drag into your brain")
-                        .font(BDFont.body(.bold, size: 15, relativeTo: .subheadline))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 13)
-                .background(Color.bdLeafDeep, in: Capsule())
-                .foregroundStyle(.white)
-                .contentShape(Capsule())
-                .gesture(
-                    DragGesture(minimumDistance: 0, coordinateSpace: .named("homePlate"))
-                        .onChanged { onDragChanged?($0) }
-                        .onEnded { _ in onDragEnded?() }
-                )
-                .accessibilityLabel("I did this")
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction { onSelfReport() }
 
                 Button(action: onTimer) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "timer").font(.system(size: 13, weight: .bold))
-                        Text("Time it").font(BDFont.body(.bold, size: 13, relativeTo: .caption))
-                    }
-                    .foregroundStyle(Color.bdLeafDeep)
-                    .padding(.vertical, 13)
-                    .padding(.horizontal, 15)
-                    .background {
-                        Capsule().strokeBorder(Color.bdLeafDeep.opacity(0.35), lineWidth: 1.2)
-                    }
+                    Image(systemName: "timer")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color.bdLeafDeep)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().strokeBorder(Color.bdLeafDeep.opacity(0.3), lineWidth: 1.2))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Time it")
             }
-            .padding(.top, 13)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
-        .padding(15)
-        .background(Color.bdSurface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color.bdSurface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Color.bdCardBorder, lineWidth: 1)
+        }
+        // Resting higher than the page: a directional shadow, deeper on touch.
+        .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+        .shadow(color: Color(hex: "#2F5E3C").opacity(pressing ? 0.22 : 0.12),
+                radius: pressing ? 18 : 12, y: pressing ? 12 : 7)
+        .scaleEffect(pressing ? 1.025 : 1)
+        .offset(y: nudge)
+        .opacity(isLifted ? 0 : 1)
+        .animation(.spring(response: 0.28, dampingFraction: 0.7), value: pressing)
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .gesture(dragGesture)
+        .accessibilityElement(children: .contain)
+        .accessibilityAction(named: "I did this") { onSelfReport() }
+        .task(id: hasFedByDrag) { await teach() }
+    }
+
+    /// A short hold arms it (so a scroll that starts on the card still scrolls),
+    /// but the card answers the instant the finger lands.
+    private var dragGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.16)
+            .onChanged { _ in
+                if !pressing {
+                    pressing = true
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.6)
+                }
+            }
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .named("homePlate")))
+            .onChanged { value in
+                if case .second(true, let drag?) = value { onDragChanged?(drag) }
+            }
+            .onEnded { _ in
+                pressing = false
+                onDragEnded?()
+            }
+    }
+
+    /// The Lock Screen's lesson: hop toward the target, settle, wait. Only until
+    /// the user has fed their brain by dragging once.
+    private func teach() async {
+        guard !hasFedByDrag, !reduceMotion else { return }
+        try? await Task.sleep(for: .seconds(2.2))
+        while !Task.isCancelled, !hasFedByDrag {
+            withAnimation(.spring(response: 0.26, dampingFraction: 0.5)) { nudge = -11 }
+            try? await Task.sleep(for: .milliseconds(170))
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.45)) { nudge = 0 }
+            try? await Task.sleep(for: .milliseconds(420))
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.55)) { nudge = -5 }
+            try? await Task.sleep(for: .milliseconds(150))
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.5)) { nudge = 0 }
+            try? await Task.sleep(for: .seconds(5.5))
         }
     }
 }
