@@ -66,6 +66,8 @@ struct HomeHeroView: View {
     let nourishment: Double
     /// The current stage of the open choreography.
     let phase: HomeRevealPhase
+    /// Where the user dropped their step, in brain units. Nil = the old entry.
+    var dropPoint: CGPoint? = nil
     /// ⭐ THE TIERED WIN (Jack, 2026-08-15). The signature used to fire
     /// IDENTICALLY on every completion — the first serving of the day and the
     /// seventh got the same treatment. That spent the biggest beat on the
@@ -188,10 +190,11 @@ struct HomeHeroView: View {
     private var culture: some View {
         CultureCloudView(model: cultureModel)
             .frame(height: 300)
+            .reportsCultureRect(in: .named("homePlate"))
             .onAppear { cultureModel.seed(fraction: max(0.04, growth)) }
             .onChange(of: win) { _, now in
                 guard now != nil else { return }
-                cultureModel.feed()
+                if let p = dropPoint { cultureModel.feed(at: p) } else { cultureModel.feed() }
             }
     }
 

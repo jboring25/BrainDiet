@@ -56,6 +56,8 @@ final class CultureCloudModel {
         var age: Double
         var inside: Bool
         var yield: Int
+        /// Dropped by the user: absorb where it landed instead of drifting to centre.
+        var anchored: Bool = false
     }
 
     // Tuning, in brain units (matched to cloud.js line for line).
@@ -232,6 +234,16 @@ final class CultureCloudModel {
         serving = Serving(pos: start, target: target, radius: 17, age: 0, inside: false, yield: 18)
     }
 
+    /// ⭐ DROPPED, NOT SENT (Jack, 2026-10-07). The user dragged their step in and
+    /// let go at `point` (brain units): the SAME serving appears there already
+    /// inside and is absorbed in place. Same ball, same absorb, same wave — only
+    /// the entry path and the landing spot change.
+    func feed(at point: CGPoint) {
+        guard serving == nil else { return }
+        serving = Serving(pos: point, target: point, radius: 17, age: 0,
+                          inside: true, yield: 18, anchored: true)
+    }
+
     // MARK: One fixed step
 
     func step() {
@@ -245,8 +257,10 @@ final class CultureCloudModel {
                 if hypot(f.target.x - f.pos.x, f.target.y - f.pos.y) < 7 { f.inside = true; f.age = 0 }
                 serving = f
             } else {
-                f.pos.x += (centre.x - f.pos.x) * 0.03
-                f.pos.y += (centre.y - f.pos.y) * 0.03
+                if !f.anchored {
+                    f.pos.x += (centre.x - f.pos.x) * 0.03
+                    f.pos.y += (centre.y - f.pos.y) * 0.03
+                }
                 f.radius *= 0.986
                 if f.age > 1.0 {
                     absorb(at: f.pos, yield: f.yield)

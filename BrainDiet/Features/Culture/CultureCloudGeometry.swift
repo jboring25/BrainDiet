@@ -45,6 +45,9 @@ enum CultureCloudGeometry {
         return p
     }()
 
+    /// True when `p` (brain units) lands inside the brain outline.
+    static func contains(_ p: CGPoint) -> Bool { outline.contains(p) }
+
     /// Scale + centre the authored box into a view of `size`.
     static func transform(in size: CGSize, headroom: CGFloat = 1.06) -> CGAffineTransform {
         let s = min(size.width / box.width, size.height / (box.height * headroom)) * 0.985

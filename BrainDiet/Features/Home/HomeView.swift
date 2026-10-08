@@ -59,6 +59,7 @@ struct HomeView: View {
     // ⭐ SELF-REPORT PLATING (2026-08-20). See Features/Home/PlateDrop.swift.
     @Environment(\.modelContext) private var modelContext
     @State private var drop = PlateDropController()
+    @State private var heroDropPoint: CGPoint?
     @State private var showReportSheet = false
     /// One Home-wide coordinate space so the plate rect and the drag translation
     /// are measured against the same origin.
@@ -138,7 +139,8 @@ struct HomeView: View {
                         // midnight, one never does — see DayStatsRow.
                         DayStatsRow(fedWeek: week.fed,
                                     protectedWeek: week.minutes,
-                                    connections: connectionCount,
+                                    daysToWired: wired.days,
+                                    wiredHabit: wired.habit,
                                     fedToday: plate.doneCount,
                                     protectedToday: plate.protectedMinutesToday)
                             .padding(.top, 2)
@@ -162,7 +164,16 @@ struct HomeView: View {
                                 symbol: focus.domain.symbol,
                                 tint: focus.domain.tint,
                                 onSelfReport: { reportFocus(focus) },
-                                onTimer: { startFocus(focus) })
+                                onTimer: { startFocus(focus) },
+                                onDragChanged: { value in
+                                    if !drop.isDragging {
+                                        drop.begin(focusDraggable(focus), rowID: nil, origin: value.startLocation)
+                                    }
+                                    drop.update(value)
+                                },
+                                onDragEnded: {
+                                    if let landed = drop.end() { dropReport(landed) }
+                                })
                                 .stageIn(phase.atLeastMeaning)
                         }
 
@@ -236,6 +247,7 @@ struct HomeView: View {
                 }
                 .scrollIndicators(.hidden)
                 .onPreferenceChange(PlateRectKey.self) { drop.plateRect = $0 }
+                .onPreferenceChange(CultureRectKey.self) { drop.cultureRect = $0 }
                 .safeAreaInset(edge: .top, spacing: 0) {
                     headerRow
                         .padding(.horizontal, Metrics.screenX)
@@ -286,11 +298,21 @@ struct HomeView: View {
             // by the scroll bounds and never scrolls with the content it left.
             .overlay(alignment: .topLeading) {
                 if let item = drop.payload {
-                    PlateDragCard(item: item, near: drop.isOverPlate)
-                        .frame(width: 292)
+                    let m = drop.morph
+                    let s = CultureCloudGeometry.transform(in: drop.cultureRect.size).a
+                    ZStack {
+                        PlateDragCard(item: item, near: drop.isOverPlate)
+                            .frame(width: 292)
+                            .scaleEffect(1 - 0.9 * m)
+                            .opacity(Double(max(0, 1 - m * 1.5)))
+                            .blur(radius: m * 5)
+                        ServingBall(radius: max(4, 17 * s))
+                            .opacity(Double(max(0, min(1, (m - 0.3) / 0.45))))
+                            .scaleEffect(0.5 + 0.5 * m)
+                    }
                         .position(x: drop.cardOrigin.x + drop.translation.width,
                                   y: drop.cardOrigin.y + drop.translation.height)
-                        .rotationEffect(.degrees(tiltDegrees), anchor: .center)
+                        .rotationEffect(.degrees(tiltDegrees * Double(1 - drop.morph)), anchor: .center)
                         // NO animation on the offset: the card must track the
                         // finger frame-for-frame. Any easing here reads as lag,
                         // which is the single most common way a drag feels cheap.
@@ -385,7 +407,7 @@ struct HomeView: View {
             suggestedStepID: suggestedGoalStepID,
             ctaTitle: plate.suggestion?.category.ctaTitle ?? "",
             drop: drop,
-            onReport: report(_:),
+            onReport: dropReport(_:),
             onAddSomething: { showReportSheet = true },
             onStart: start,
             onFeed: feedMyBrain,
@@ -404,6 +426,7 @@ struct HomeView: View {
             secondary: Text(""),
             nourishment: plate.completeness,
             phase: phase,
+            dropPoint: heroDropPoint,
             win: win,
             // One session = one thing the user actually reported. Seventy fills
             // the brain, which is the same arc the mockups were tuned against.
@@ -448,8 +471,32 @@ struct HomeView: View {
 
     /// Points currently drawn INSIDE the brain — the same figure the hero draws,
     /// so the number and the picture can never disagree.
-    private var connectionCount: Int {
-        Int((Double(CultureCloudModel.fillSiteCount) * min(1, Double(sessions.count) / 70)).rounded())
+    /// Days left until the main habit is automatic: 66 (Lally et al., 2010)
+    /// minus the distinct days the user did their most-practised goal.
+    private var wired: (days: Int, habit: String) {
+        let cal = Calendar.current
+        var byGoal: [UUID: Set<Date>] = [:]
+        for s in sessions { if let g = s.goalID { byGoal[g, default: []].insert(cal.startOfDay(for: s.startedAt)) } }
+        let top = byGoal.max { $0.value.count < $1.value.count }
+        let goal = goals.first { $0.id == top?.key } ?? goals.first
+        let domain = goal.flatMap { ActivityDomain(rawValue: $0.domain) }
+        let habit = domain?.label.lowercased() ?? "your habit"
+        return (max(0, 66 - (top?.value.count ?? 0)), habit)
+    }
+
+    private func focusDraggable(_ f: TodaysFocus) -> PlateDraggable {
+        PlateDraggable(title: f.step.title, subtitle: f.step.cue,
+                       activityID: f.domain.activityID,
+                       goalID: f.goal.id, stepID: f.step.id,
+                       minutes: f.step.suggestedMinutes,
+                       icon: .leaf, tint: f.domain.tint, ink: .bdTextPrimary)
+    }
+
+    /// A drag that landed: the brain feeds at the drop spot, then the report runs.
+    private func dropReport(_ item: PlateDraggable) {
+        heroDropPoint = drop.lastDrop
+        report(item)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { heroDropPoint = nil }
     }
 
     /// The one thing, ranked. Recomputed as sessions land so it never offers

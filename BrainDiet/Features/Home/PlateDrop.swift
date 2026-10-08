@@ -46,6 +46,15 @@ final class PlateDropController {
 
     /// The hero's rect in the Home coordinate space. Empty until it lands.
     var plateRect: CGRect = .zero
+    /// The brain's own rect (culture view), for mapping a drop to brain units.
+    var cultureRect: CGRect = .zero
+    /// The pointer, in Home space.
+    var point: CGPoint = .zero
+    /// 0 at pickup → 1 at the brain: how far the card has turned into the ball.
+    var morph: CGFloat = 0
+    /// Where the last successful drop landed, in brain units.
+    var lastDrop: CGPoint?
+    private var startDistance: CGFloat = 1
     /// The dragged payload, non-nil for the whole gesture.
     var payload: PlateDraggable?
     /// Where the lifted card sits, in the Home coordinate space.
@@ -67,6 +76,9 @@ final class PlateDropController {
         cardOrigin = origin
         translation = .zero
         isOverPlate = false
+        point = origin
+        morph = 0
+        startDistance = max(80, hypot(origin.x - cultureRect.midX, origin.y - cultureRect.midY))
         let lift = UIImpactFeedbackGenerator(style: .light)
         lift.prepare(); lift.impactOccurred(intensity: 0.55)
     }
@@ -79,11 +91,14 @@ final class PlateDropController {
         translation = value.translation
         let centre = CGPoint(x: cardOrigin.x + value.translation.width,
                              y: cardOrigin.y + value.translation.height)
+        point = centre
+        if !cultureRect.isEmpty {
+            let d = hypot(centre.x - cultureRect.midX, centre.y - cultureRect.midY)
+            morph = max(0, min(1, 1 - (d - cultureRect.height * 0.32) / max(1, startDistance - cultureRect.height * 0.32)))
+        }
         // A generous inset: the bowl render is full-bleed and mostly empty at the
         // corners, so hit-testing the raw rect would accept drops over blank cream.
-        let target = plateRect.insetBy(dx: plateRect.width * 0.14,
-                                       dy: plateRect.height * 0.10)
-        let now = !target.isEmpty && target.contains(centre)
+        let now = brainPoint(for: centre) != nil
         guard now != isOverPlate else { return false }
         isOverPlate = now
         if now {
@@ -93,9 +108,18 @@ final class PlateDropController {
         return true
     }
 
+    /// The drop spot in brain units, or nil when it is outside the brain.
+    func brainPoint(for p: CGPoint) -> CGPoint? {
+        guard !cultureRect.isEmpty else { return nil }
+        let local = CGPoint(x: p.x - cultureRect.minX, y: p.y - cultureRect.minY)
+        let b = local.applying(CultureCloudGeometry.transform(in: cultureRect.size).inverted())
+        return CultureCloudGeometry.contains(b) ? b : nil
+    }
+
     /// Ends the gesture. Returns the payload when it landed on the plate.
     func end() -> PlateDraggable? {
         defer { clear() }
+        lastDrop = isOverPlate ? brainPoint(for: point) : nil
         return isOverPlate ? payload : nil
     }
 
@@ -104,6 +128,7 @@ final class PlateDropController {
         liftedRowID = nil
         translation = .zero
         isOverPlate = false
+        morph = 0
     }
 }
 
@@ -190,6 +215,44 @@ struct VacatedSlot: View {
                     .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
             )
             .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Culture rect — where the brain is drawn, so a drop maps to brain units.
+
+struct CultureRectKey: PreferenceKey {
+    static var defaultValue: CGRect { .zero }
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if !next.isEmpty { value = next }
+    }
+}
+
+extension View {
+    func reportsCultureRect(in space: CoordinateSpace) -> some View {
+        background(GeometryReader { geo in
+            Color.clear.preference(key: CultureRectKey.self, value: geo.frame(in: space))
+        })
+    }
+}
+
+// MARK: - The serving ball — the same green ball the brain draws, for the drag.
+
+struct ServingBall: View {
+    /// Radius in points (the brain's 17 units × its scale).
+    var radius: CGFloat
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(RadialGradient(colors: [Color(hex: "#7DB68B").opacity(0.34), Color(hex: "#7DB68B").opacity(0)],
+                                     center: .center, startRadius: 0, endRadius: radius * 3.4))
+                .frame(width: radius * 6.8, height: radius * 6.8)
+            Circle().fill(Color(hex: "#7DB68B").opacity(0.95))
+                .overlay(Circle().strokeBorder(Color(hex: "#3E7A4E").opacity(0.65), lineWidth: 1.8))
+                .frame(width: radius * 2, height: radius * 2)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

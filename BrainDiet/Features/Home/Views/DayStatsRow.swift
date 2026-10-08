@@ -42,8 +42,10 @@ struct DayStatsRow: View {
     let fedWeek: Int
     /// Protected minutes in the last seven days.
     let protectedWeek: Int
-    /// Points inside the brain — all time.
-    let connections: Int
+    /// Days of practice left until the habit is automatic (see `wiredFoot`).
+    let daysToWired: Int
+    /// Which habit the number is about ("reading").
+    let wiredHabit: String
     /// Today's contribution, shown small so the day is legible without the day
     /// being the scoreboard.
     let fedToday: Int
@@ -59,8 +61,14 @@ struct DayStatsRow: View {
                  foot: protectedToday > 0 ? "+\(clock(protectedToday)) today" : "none yet today",
                  lit: protectedToday > 0, tint: .bdGoldText)
             divider
-            stat(value: "\(connections)", label: "connections",
-                 foot: "all time", lit: false, tint: .bdLeaf)
+            // ⭐ NEUROPLASTICITY, AS A NUMBER (Jack, 2026-10-07: "286 connections
+            // means genuinely nothing"). Lally et al. (2010, EJSP): a new daily
+            // behaviour took a median of 66 days of repetition to become
+            // automatic. Each day the user actually does their main habit counts
+            // one; this is how many such days remain.
+            stat(value: daysToWired == 0 ? "wired" : "\(daysToWired)",
+                 label: "days to wired",
+                 foot: wiredHabit, lit: false, tint: .bdLeaf)
         }
         .frame(maxWidth: .infinity)
     }
@@ -121,6 +129,11 @@ struct TodaysFocusCard: View {
     let tint: Color
     let onSelfReport: () -> Void
     let onTimer: () -> Void
+    /// ⭐ DRAG, DON'T TAP (Jack, 2026-10-07): "I did this" is now a handle you
+    /// drag into your brain. It turns into the serving ball and lands where you
+    /// let go. The tap-only path survives as an accessibility action.
+    var onDragChanged: ((DragGesture.Value) -> Void)? = nil
+    var onDragEnded: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -167,15 +180,25 @@ struct TodaysFocusCard: View {
             // the timer"). Self-report is the wide, filled, default path; the
             // timer is the smaller one beside it. Neither is hidden.
             HStack(spacing: 9) {
-                Button(action: onSelfReport) {
-                    Text("I did this")
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("Drag into your brain")
                         .font(BDFont.body(.bold, size: 15, relativeTo: .subheadline))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(Color.bdLeafDeep, in: Capsule())
-                        .foregroundStyle(.white)
                 }
-                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 13)
+                .background(Color.bdLeafDeep, in: Capsule())
+                .foregroundStyle(.white)
+                .contentShape(Capsule())
+                .gesture(
+                    DragGesture(minimumDistance: 0, coordinateSpace: .named("homePlate"))
+                        .onChanged { onDragChanged?($0) }
+                        .onEnded { _ in onDragEnded?() }
+                )
+                .accessibilityLabel("I did this")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { onSelfReport() }
 
                 Button(action: onTimer) {
                     HStack(spacing: 5) {

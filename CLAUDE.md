@@ -1,5 +1,10 @@
 # BrainDiet
 
+> **⭐ MOCKUPS START FROM THE REAL APP (Jack, 2026-10-07, "make it permanent").**
+> Any mockup of an existing screen is built ON a fresh screenshot of that screen
+> (`design/_current/`, captured with ios-sim-review), never re-drawn from
+> scratch. Paint out only what changes; reuse the real elements.
+>
 > ## ⭐ STATE OF THE APP — 2026-08-29
 >
 > **Read this block. Everything below it is history, and much of it is stale.**
