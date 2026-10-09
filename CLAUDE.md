@@ -12,7 +12,7 @@
 > menuHero. `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
 > paywall. AI plan = PlanService → braindietapp.com/.netlify/functions/plan (Claude Haiku
 > 4.5, tool-forced JSON, no chat); any failure falls back to the heuristic planner.
-> OPEN: schedule enforcement + the "Do it now" lock (answers collected, not enforced).
+> Schedules + Do it now lock built 3897091 (FeedWindow → BrainDietMonitor; BrainDietDoItNow store). iOS can only exempt picked APPS (not Messages by default, not categories).
 >
 > ## ⭐ STATE OF THE APP — 2026-08-29
 >

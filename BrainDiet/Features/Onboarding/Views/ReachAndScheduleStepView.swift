@@ -32,13 +32,10 @@ struct ReachAndScheduleStepView: View {
                             .font(BDFont.body(.semiBold, size: 14, relativeTo: .subheadline))
                             .foregroundStyle(Color.bdLeaf)
                     }
-                    row(symbol: "message.fill", label: String(localized: "Messages")) {
-                        check
-                    }
                     Button { showPicker = true } label: {
                         row(symbol: vm.allowSelectionData == nil ? "plus" : "square.grid.2x2.fill",
                             label: vm.allowSelectionData == nil
-                                ? String(localized: "Choose apps")
+                                ? String(localized: "Choose apps, like Messages")
                                 : String(localized: "Your chosen apps"),
                             muted: vm.allowSelectionData == nil) {
                             if vm.allowSelectionData != nil { check }
