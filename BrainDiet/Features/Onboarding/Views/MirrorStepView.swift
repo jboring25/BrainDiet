@@ -128,7 +128,7 @@ struct MirrorStepView: View {
             ? [vm.primaryDomain ?? .reading] : vm.goalWordDomains
         return domains.map { d in
             let w = (vm.goalWords[d] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return w.isEmpty ? d.goalTitle : w
+            return w.isEmpty ? d.goalTitle : GoalSentenceText.display(w)
         }
     }
 

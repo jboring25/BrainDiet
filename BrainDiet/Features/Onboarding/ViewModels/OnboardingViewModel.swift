@@ -47,12 +47,31 @@ final class OnboardingViewModel {
     var timeLostBand: ShortFormBand? {
         timeLostHours.map(ShortFormBand.nearest(toHours:))
     }
-    /// Q3 — domains to pour time into (order preserved = pick order).
+    /// The goals' domains in pick order. DERIVED from `pickedScenes` by the
+    /// goal builder (2026-10-09); kept as storage because the planner, the
+    /// mirror, the paywall and the persist path all read it.
     var selectedDomains: [ActivityDomain] = []
-    /// Q4 — the one that matters most.
+    /// Pick #1's domain.
     var primaryDomain: ActivityDomain? = nil
-    /// Q5 — free-text aspiration ("who are you trying to become?").
+    /// The identity line anything that still reads `aspiration` gets: the
+    /// primary goal's `GoalReason.aspiration` since the goal builder.
     var aspiration: String = ""
+
+    // MARK: ⭐ Goal builder (Jack approved 2026-10-09, design/goal-builder/mock4).
+
+    /// The scenes they picked, in pick order (≤ `maxScenes`). Pick #1 = primary.
+    var pickedScenes: [GoalScene] = []
+    static let maxScenes = 3
+    /// Which pick the per-goal steps (sentence → sharpen → why) are on.
+    var builderIndex: Int = 0
+    /// Each goal's sentence in progress.
+    var drafts: [GoalScene: GoalDraft] = [:]
+    /// The sharpen call per goal, keyed to the sentence it was asked about.
+    var sharpen: [GoalScene: SharpenState] = [:]
+    /// Which sharper version they took. Absent = "Keep mine".
+    var sharpenPick: [GoalScene: Int] = [:]
+    /// Why each goal matters.
+    var goalReasons: [ActivityDomain: GoalReason] = [:]
     /// Q6 (slide 7) — the obstacle question ("What's stopped you before?").
     /// Reverted 2026-07-21 to a plain nil default; the question sets it before
     /// .blocker can advance. Shapes the planner's step sizing.
@@ -94,9 +113,9 @@ final class OnboardingViewModel {
     // longer fed from onboarding: their templates take a noun, and a sentence
     // dropped into "Read 10 pages of {o}" reads as broken English.
 
-    /// The goal in their own words, per goal. REQUIRED (≥ `minGoalWords`).
+    /// The goal in their own words, per goal: the sentence they built in the
+    /// goal builder, or the sharper version they took.
     var goalWords: [ActivityDomain: String] = [:]
-    static let minGoalWords = 8
     /// Where they are with the primary goal today. Nil until tapped.
     var baseline: GoalBaseline? = nil
     /// "What's the next real piece?" Optional.
@@ -123,13 +142,6 @@ final class OnboardingViewModel {
 
     /// The goals that get a words field — the plan holds at most three.
     var goalWordDomains: [ActivityDomain] { Array(rankedDomains.prefix(3)) }
-
-    /// Each goal's words, trimmed, and whether every field clears the floor.
-    var goalWordsComplete: Bool {
-        goalWordDomains.allSatisfy {
-            (goalWords[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).count >= Self.minGoalWords
-        }
-    }
 
     /// Encoded FamilyActivitySelection from the real picker (entitled only).
     /// ⭐ Written for the first time 2026-08-13 by `PickAppsStepView`. Until then
@@ -171,7 +183,14 @@ final class OnboardingViewModel {
         triedBefore = [.screenTimeLimits, .willpower]
         // The mockup's own answers (design/onboarding-v2/screens.html), so the
         // hero and every v2 screen reviews real words, not placeholders.
-        selectedDomains = [.reading, .building, .fitness]
+        // Jack's mock4 picks: launched (1), a book a month (2), strongest (3).
+        pickedScenes = [.launched, .readMonth, .strongest]
+        syncDomainsFromScenes()
+        drafts = [.launched: Self.mockDraft(.launched),
+                  .readMonth: Self.mockDraft(.readMonth),
+                  .strongest: Self.mockDraft(.strongest)]
+        goalReasons = [.building: .prove, .reading: .years, .fitness: .tired]
+        aspiration = GoalReason.prove.aspiration
         goalWords = [.reading: "Finish Dune, then read 12 books by next summer",
                      .building: "Launch BrainDiet on the App Store and get 100 users at ASU",
                      .fitness: "Upper body twice a week, bench 225 by May"]
@@ -207,15 +226,30 @@ final class OnboardingViewModel {
         let filled = ProcessInfo.processInfo.environment["BD_OB_FILLED"] == "1"
         switch raw {
         case "hijack":        selectedHijackers = Self.defaultHijackers
-        case "domains":       selectedDomains = []; primaryDomain = nil
-        case "primaryDomain": primaryDomain = selectedDomains.first   // the derived default
-        case "aspiration":    aspiration = ""
-        // v2 steps open at their real defaults unless BD_OB_FILLED=1, which
-        // keeps the mockup's answers for a side-by-side with screens.png.
-        case "goalWords" where !filled:
-            goalWords = [:]
-        case "goalWords":
-            goalWords[.fitness] = nil       // the mockup shows Fitness empty
+        // Goal builder: real defaults unless BD_OB_FILLED=1 (mock4's answers).
+        case "goalScenes" where !filled:
+            pickedScenes = []; syncDomainsFromScenes()
+        case "goalSentence":
+            builderIndex = 0
+            drafts[.launched] = filled
+                ? GoalDraft(choices: [.option(0), .option(1), nil], active: 1)
+                : GoalDraft(blankCount: 3)
+        case "goalSharpen":
+            builderIndex = 0
+            let mine = builtSentence(for: .launched) ?? ""
+            if filled {
+                let opts = SharpenService.stub(for: sharpenRequest(scene: .launched, sentence: mine))
+                sharpen[.launched] = .ready(mine, opts)
+                pickSharpen(0)
+            } else {
+                sharpen[.launched] = .loading(mine)
+            }
+        case "goalWhy":
+            builderIndex = 0
+            let mine = builtSentence(for: .launched) ?? ""
+            sharpen[.launched] = .ready(mine, SharpenService.stub(for: sharpenRequest(scene: .launched, sentence: mine)))
+            pickSharpen(0)
+            if !filled { goalReasons[.building] = nil }
         case "baseline" where !filled:
             baseline = nil; nextPiece = ""
         case "baseline":
@@ -240,10 +274,10 @@ final class OnboardingViewModel {
         case "welcome":       step = .welcome
         case "hijack":        step = .hijack
         case "timeLost":      timeLostHours = nil; step = .timeLost
-        case "domains":       selectedDomains = [.reading, .fitness]; step = .domains
-        case "primaryDomain": step = .primaryDomain
-        case "aspiration":    step = .aspiration
-        case "goalWords":     step = .goalWords
+        case "goalScenes":    step = .goalScenes
+        case "goalSentence":  step = .goalSentence
+        case "goalSharpen":   step = .goalSharpen
+        case "goalWhy":       step = .goalWhy
         case "baseline":      step = .baseline
         case "timeAndDay":    step = .timeAndDay
         case "reachAndSchedule": step = .reachAndSchedule
@@ -339,7 +373,9 @@ final class OnboardingViewModel {
             sleepMinutes: sleepMinutes,
             whenItGets: orderedWhenItGets,
             feelAfter: feelAfter,
-            triedBefore: orderedTriedBefore
+            triedBefore: orderedTriedBefore,
+            goalScenes: pickedScenes,
+            goalReasons: goalReasons.filter { goalWordDomains.contains($0.key) }
         )
     }
 
@@ -374,7 +410,7 @@ final class OnboardingViewModel {
 
         let profile = UserProfile(
             goalIDs: derivedGoalIDs,
-            why: aspiration,
+            why: primaryAspiration,
             baselineJunkMinutes: baselineJunkMinutes,
             junkAppIDs: derivedJunkAppIDs,
             familySelectionData: familySelectionData,
@@ -407,6 +443,12 @@ final class OnboardingViewModel {
         profile.whenItGetsRaw = orderedWhenItGets.map(\.rawValue).joined(separator: ",")
         profile.feelAfterRaw = feelAfter?.rawValue ?? ""
         profile.triedBeforeRaw = orderedTriedBefore.map(\.rawValue).joined(separator: ",")
+        // Goal builder.
+        profile.goalScenesRaw = pickedScenes.map(\.rawValue).joined(separator: ",")
+        profile.goalReasons = goalReasons.filter { goalWordDomains.contains($0.key) }
+        var shorts: [ActivityDomain: String] = [:]
+        for scene in pickedScenes { shorts[scene.domain] = shortGoal(for: scene) }
+        profile.goalShorts = shorts
 
         // Materialise the plan (fall back to the deterministic floor if generation
         // never ran — e.g. jumped state).
@@ -425,12 +467,10 @@ final class OnboardingViewModel {
         case .whenItGets:    return !whenItGets.isEmpty
         case .feelAfter:     return feelAfter != nil
         case .triedBefore:   return !triedBefore.isEmpty
-        case .domains:       return !selectedDomains.isEmpty
-        case .primaryDomain: return primaryDomain != nil
-        case .aspiration:    return !aspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        // ⭐ REQUIRED, on purpose (Jack, 2026-10-08): the plan is only as
-        // specific as these words, and every later screen builds on them.
-        case .goalWords:     return goalWordsComplete
+        case .goalScenes:    return !pickedScenes.isEmpty
+        // Every blank filled: the plan is only as specific as this sentence.
+        case .goalSentence:  return currentScene.map { draft(for: $0).isComplete } ?? false
+        case .goalWhy:       return currentScene.map { goalReasons[$0.domain] != nil } ?? false
         case .baseline:      return baseline != nil
         case .blocker:       return blocker != nil   // slide 7 = the obstacle question
         // timeLost always advances: an untouched scrubber commits the honest
@@ -461,9 +501,9 @@ final class OnboardingViewModel {
         // for a life they never chose — and personalization is the entire
         // product, so buying conversion with it is buying it with the thing
         // being sold.
-        if step == .domains {
-            if let p = primaryDomain, !selectedDomains.contains(p) { primaryDomain = nil }
-            if primaryDomain == nil { primaryDomain = selectedDomains.first }
+        if step == .goalScenes || step.isPerGoal {
+            advanceGoalBuilder()
+            return
         }
         guard let next = nextRoutedStep(after: step) else {
             didFinish = true          // ran off the end = done
@@ -474,6 +514,9 @@ final class OnboardingViewModel {
     }
 
     func back() {
+        if step == .goalScenes || step.isPerGoal || step == .baseline {
+            if backGoalBuilder() { return }
+        }
         var prev = OnboardingStep(rawValue: step.rawValue - 1)
         while let p = prev, !isRouted(p) { prev = OnboardingStep(rawValue: p.rawValue - 1) }
         guard let prev else { return }
@@ -497,7 +540,7 @@ final class OnboardingViewModel {
         }
     }
 
-    private func nextRoutedStep(after s: OnboardingStep) -> OnboardingStep? {
+    func nextRoutedStep(after s: OnboardingStep) -> OnboardingStep? {
         var next = OnboardingStep(rawValue: s.rawValue + 1)
         while let n = next, !isRouted(n) { next = OnboardingStep(rawValue: n.rawValue + 1) }
         return next
@@ -541,15 +584,6 @@ final class OnboardingViewModel {
         if triedBefore.contains(f) { triedBefore.remove(f); return }
         if f == .nothing { triedBefore = [.nothing] }
         else { triedBefore.remove(.nothing); triedBefore.insert(f) }
-    }
-
-    func toggleDomain(_ d: ActivityDomain) {
-        if let idx = selectedDomains.firstIndex(of: d) {
-            selectedDomains.remove(at: idx)
-            if primaryDomain == d { primaryDomain = nil }
-        } else {
-            selectedDomains.append(d)
-        }
     }
 
     // MARK: Build → mirror — runs the planner once, then hands to the mirror.

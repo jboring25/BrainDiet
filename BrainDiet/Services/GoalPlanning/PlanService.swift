@@ -31,6 +31,11 @@ struct PlanRequest: Encodable, Sendable {
         let domain: String
         let words: String
         let isPrimary: Bool
+        // Goal builder (2026-10-09): the built sentence (same as `words`), the
+        // scene it came from, and why it matters ("Prove it to myself").
+        var sentence: String = ""
+        var scene: String = ""
+        var reason: String = ""
     }
     let domains: [Domain]
     let baseline: String
@@ -81,13 +86,19 @@ enum PlanService {
     @MainActor
     static func request(for profile: UserProfile) -> PlanRequest {
         let words = profile.goalWords
+        let reasons = profile.goalReasons
+        let scenes = profile.goalScenes
         let ranked: [ActivityDomain] = {
             guard let p = profile.primaryDomain else { return profile.domains }
             return [p] + profile.domains.filter { $0 != p }
         }()
         return PlanRequest(
             domains: ranked.prefix(3).map {
-                .init(domain: $0.rawValue, words: words[$0] ?? "", isPrimary: $0 == profile.primaryDomain)
+                let d = $0
+                return .init(domain: d.rawValue, words: words[d] ?? "", isPrimary: d == profile.primaryDomain,
+                             sentence: words[d] ?? "",
+                             scene: scenes.first { $0.domain == d }?.label ?? "",
+                             reason: reasons[d]?.label ?? "")
             },
             baseline: profile.baselineRaw,
             nextPiece: profile.nextPiece,

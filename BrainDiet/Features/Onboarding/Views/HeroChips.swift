@@ -42,7 +42,7 @@ final class HeroChips {
     func load(from vm: OnboardingViewModel) {
         guard items.isEmpty else { return }
         var texts: [(String, Bool)] = vm.goalWordDomains.compactMap { d in
-            vm.goalWords[d].map { (Self.short($0), true) }
+            vm.goalWords[d].map { (Self.short(GoalSentenceText.display($0)), true) }
         }
         texts.append(("\(vm.minutesPerDay >= 120 ? "2h+" : "\(vm.minutesPerDay) min") a day", false))
         if let b = vm.baseline { texts.append((b.shortLabel, false)) }

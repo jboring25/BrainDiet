@@ -106,7 +106,7 @@ struct OnboardingPaywallStepView: View {
     /// "Launch BrainDiet on the App Store.\nKeep the time it needs."
     private var headline: String {
         let domain = vm.primaryDomain ?? vm.selectedDomains.first
-        guard let domain, let clause = Self.firstClause(vm.goalWords[domain] ?? "") else {
+        guard let domain, let clause = Self.firstClause(GoalSentenceText.display(vm.goalWords[domain] ?? "")) else {
             return personalizedHeadline
         }
         return clause + "\n" + String(localized: "Keep the time it needs.")

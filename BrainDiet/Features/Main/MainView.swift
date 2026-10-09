@@ -49,7 +49,8 @@ struct MainView: View {
             servingsDone: plateEngine.doneCount,
             servingsPlanned: plateEngine.planCount,
             suggestedCategory: plateEngine.suggestion?.category,
-            customLines: profiles.first?.shieldLines ?? [:]
+            customLines: profiles.first?.shieldLines ?? [:],
+            reasonLines: profiles.first?.reasonShieldLines ?? [:]
         )
     }
 

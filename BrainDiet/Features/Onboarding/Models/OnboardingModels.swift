@@ -31,16 +31,18 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// v3 — replaces the old `interstitial` beat (same layout): why the fixes
     /// they just named never stuck. Blocking frees the time; nothing fills it.
     case emptyTimeInsight
-    case domains         // 3 — what to pour time into (multi) → goal seeds
-    case primaryDomain   // 4 — which matters most (single) → primary anchor
-    /// ⭐ ONBOARDING V2 (Jack approved 2026-10-08). The goal in the user's own
-    /// words, one field per goal, REQUIRED. Replaces the object half of the
-    /// retired `specifics` step: a noun ("Dune") told the planner what, never
-    /// how far or by when. "Finish Dune, then read 12 books by next summer" does.
-    case goalWords
+    /// ⭐ THE GUIDED GOAL BUILDER (Jack approved 2026-10-09, design/goal-builder/mock4).
+    /// Replaces domains → primaryDomain → goalWords → aspiration. Pick up to
+    /// three scenes of the person a year from now; then, for EACH pick in
+    /// order: build the sentence → (sharper AI versions, only if the call
+    /// succeeded) → why it matters. The three per-goal steps repeat; the VM's
+    /// `builderIndex` says which goal is on screen.
+    case goalScenes
+    case goalSentence
+    case goalSharpen
+    case goalWhy
     /// v2 — where they are with the primary goal today. Sizes the first step.
     case baseline
-    case aspiration      // who are you becoming → identity raw material
     /// v2 — real minutes per day + the real shape of the day (wake, class or
     /// work, sleep) + the existing DayAnchor chips. Replaces the anchors half of
     /// the retired `specifics` step; the planner stops guessing when they are free.
@@ -108,8 +110,8 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     var showsProgress: Bool {
         switch self {
         case .hijack, .whenItGets, .timeLost, .feelAfter, .triedBefore,
-             .domains, .primaryDomain, .goalWords, .baseline,
-             .aspiration, .timeAndDay, .blocker,
+             .goalScenes, .goalSentence, .goalSharpen, .goalWhy, .baseline,
+             .timeAndDay, .blocker,
              .pause, .screenAccess, .pickApps, .reachAndSchedule: return true
         default: return false
         }
@@ -138,13 +140,10 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
         }
     }
 
-    /// 1-based position among the steps that count toward progress.
-    var progressIndex: Int {
-        OnboardingStep.allCases.filter(\.countsTowardProgress).firstIndex(of: self).map { $0 + 1 } ?? 0
-    }
-
-    static var progressTotal: Int {
-        OnboardingStep.allCases.filter(\.countsTowardProgress).count
+    /// The goal builder's per-goal steps: they repeat once per picked scene,
+    /// so the progress bar counts them per goal (`OnboardingViewModel.progress`).
+    var isPerGoal: Bool {
+        self == .goalSentence || self == .goalSharpen || self == .goalWhy
     }
 }
 
@@ -858,6 +857,10 @@ struct OnboardingAnswers: Sendable {
     var whenItGets: [PullMoment] = []
     var feelAfter: AfterFeeling? = nil
     var triedBefore: [TriedFix] = []
+
+    // MARK: Goal builder (2026-10-09). `goalWords` carries each built sentence.
+    var goalScenes: [GoalScene] = []
+    var goalReasons: [ActivityDomain: GoalReason] = [:]
 }
 
 // MARK: - ⭐ DayAnchor — the fixed points a cue can hang on (2026-09-15).

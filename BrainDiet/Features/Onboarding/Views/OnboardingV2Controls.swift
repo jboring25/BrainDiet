@@ -93,6 +93,9 @@ struct OBValueRow: View {
 struct OBPillChip: View {
     let label: String
     let isSelected: Bool
+    /// Selected fill. Nil = leaf-deep; the goal builder passes the goal's
+    /// domain hue (mock4).
+    var tint: Color? = nil
     let action: () -> Void
 
     var body: some View {
@@ -102,8 +105,8 @@ struct OBPillChip: View {
                 .foregroundStyle(isSelected ? Color.white : Color.bdTextPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(isSelected ? Color.bdLeafDeep : Color.bdSurface, in: Capsule())
-                .overlay(Capsule().strokeBorder(isSelected ? Color.bdLeafDeep : Color.bdCardBorder,
+                .background(isSelected ? (tint ?? Color.bdLeafDeep) : Color.bdSurface, in: Capsule())
+                .overlay(Capsule().strokeBorder(isSelected ? (tint ?? Color.bdLeafDeep) : Color.bdCardBorder,
                                                 lineWidth: 1))
         }
         .buttonStyle(.plain)

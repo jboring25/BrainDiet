@@ -136,7 +136,8 @@ enum ShieldContentBuilder {
         servingsDone: Int = 0,
         servingsPlanned: Int = 3,
         suggestedCategory: PlateCategory? = nil,
-        customLines: [ActivityDomain: ShieldLine] = [:]
+        customLines: [ActivityDomain: ShieldLine] = [:],
+        reasonLines: [ActivityDomain: ShieldLine] = [:]
     ) -> ShieldContent {
         // ⭐ THE SHIELD SPEAKS IN ACTIONS, NOT FOOD (Jack, build 15 on device:
         // "the language is leaning too much into the food motif and actually
@@ -176,10 +177,14 @@ enum ShieldContentBuilder {
         // today" and the shield lost the one thing it is for.
         // The planner's own line for a goal wins over the stock copy; the
         // rotation itself is unchanged (one variant per goal, primary first).
+        // Goal builder (2026-10-09): the user's own REASON wins the headline
+        // (reason line > server wish > stock); the server's concrete "go"
+        // still wins the body, then the reason's "Go get back to ___.".
         let variants = domains.map { d in
             let custom = customLines[d]
-            return ShieldContent.Variant(headline: custom?.wish ?? d.shieldWish,
-                                         body: custom?.go ?? d.shieldGo,
+            let reason = reasonLines[d]
+            return ShieldContent.Variant(headline: reason?.wish ?? custom?.wish ?? d.shieldWish,
+                                         body: custom?.go ?? reason?.go ?? d.shieldGo,
                                          symbol: d.symbol)
         }
         return ShieldContent(

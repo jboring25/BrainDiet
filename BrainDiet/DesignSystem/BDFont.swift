@@ -49,6 +49,7 @@ enum BDFont {
         case medium   = "Manrope-Medium"
         case semiBold = "Manrope-SemiBold"
         case bold     = "Manrope-Bold"
+        case extraBold = "Manrope-ExtraBold"
     }
 
     private static let allFiles: [(name: String, ext: String)] = [

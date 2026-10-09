@@ -61,7 +61,8 @@ struct OnboardingView: View {
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
-                    .id(vm.step)
+                    // Per-goal builder steps repeat, so the goal is part of the identity.
+                    .id("\(vm.step.rawValue)-\(vm.step.isPerGoal ? vm.builderIndex : 0)")
 
                 if showsBottomCTA {
                     bottomCTA
@@ -114,8 +115,8 @@ struct OnboardingView: View {
             .accessibilityLabel("Back")
 
             BDProgressBar(
-                current: vm.step.progressIndex,
-                total: OnboardingStep.progressTotal,
+                current: vm.progress.current,
+                total: vm.progress.total,
                 grayWorld: grayWorld
             )
         }
@@ -142,14 +143,14 @@ struct OnboardingView: View {
             TriedBeforeStepView(vm: vm)
         case .emptyTimeInsight:
             EmptyTimeInsightStepView(vm: vm)
-        case .domains:
-            DomainsStepView(vm: vm)
-        case .primaryDomain:
-            PrimaryDomainStepView(vm: vm)
-        case .aspiration:
-            AspirationStepView(vm: vm)
-        case .goalWords:
-            GoalWordsStepView(vm: vm)
+        case .goalScenes:
+            GoalScenesStepView(vm: vm)
+        case .goalSentence:
+            GoalSentenceStepView(vm: vm)
+        case .goalSharpen:
+            GoalSharpenStepView(vm: vm)
+        case .goalWhy:
+            GoalWhyStepView(vm: vm)
         case .baseline:
             BaselineStepView(vm: vm)
         case .timeAndDay:

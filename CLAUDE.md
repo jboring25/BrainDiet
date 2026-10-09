@@ -6,12 +6,17 @@
 > scratch. Paint out only what changes; reuse the real elements.
 >
 > **Onboarding v3 (approved 2026-10-09, problem-first):** welcome → hijack → whenItGets →
-> timeLost → feelAfter → triedBefore → emptyTimeInsight → domains → primaryDomain →
-> goalWords (required, top 3 goals) → baseline → aspiration → timeAndDay → cueInsight →
+> timeLost → feelAfter → triedBefore → emptyTimeInsight → goalScenes (pick ≤3; #1 = primary)
+> → per pick: goalSentence → goalSharpen (only if the AI "sharpen" call answered) → goalWhy
+> → baseline → timeAndDay → cueInsight →
 > blocker → pause → screenAccess → pickApps → reachAndSchedule → building → mirror
 > (cost shown against their goalWords) → commit → onboardingPaywall (headline = first
 > clause of primary goalWords; X + "Not now" fade in at 4s; proof row; no break-even
-> copy) → dinnerBell → menuHero. `interstitial` is gone (InsightStepView). whenItGets /
+> copy) → dinnerBell → menuHero. **Goal builder (approved 2026-10-09, design/goal-builder/mock4,
+> built in GoalBuilderModels + OnboardingViewModel+GoalBuilder):** domains/primaryDomain/goalWords/aspiration
+> screens are DELETED. The built sentence IS goalWords; the reason (GoalReason) is persisted per goal and
+> its line wins the shield headline (reason > server wish > stock); `aspiration`/`why` = primary reason's
+> gerund. Sharpen = POST {"mode":"sharpen"} to braindietapp.com plan fn, 6s, fails silent. `interstitial` is gone (InsightStepView). whenItGets /
 > feelAfter / triedBefore persist on UserProfile and ride PlanService's JSON. Do it now
 > lock has "End early" (releases, feeds nothing). `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
 > paywall. AI plan = PlanService → braindietapp.com/.netlify/functions/plan (Claude Haiku

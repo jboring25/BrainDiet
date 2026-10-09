@@ -61,6 +61,8 @@ extension Color {
     static let bdLeafDeep     = Color(hex: "#2F5E3C")   // the CTA pill fill (white text)
     static let bdSalmon       = Color(hex: "#E8735A")   // Focus — brain protein (+ the appetite display accent)
     static let bdSalmonTint   = Color(hex: "#FBEAE5")
+    static let bdSalmonText   = Color(hex: "#B4492F")   // salmon-as-TEXT (the goalScenes echo chip)
+    static let bdSalmonWash   = Color(hex: "#F6E2DB")   // the echo chip's fill
     static let bdHoney        = Color(hex: "#D9A441")   // Entertainment — dessert
     static let bdHoneyTint    = Color(hex: "#FAF0DC")
     static let bdHoneyText    = Color(hex: "#8A6A2E")   // honey-as-TEXT (contrast-safe)
@@ -213,6 +215,7 @@ extension Color {
     // Text on the cream base — warm near-black + warm taupe (mockup --ink/--sub).
     static let bdTextPrimary   = Color(hex: "#2A231A")  // ink
     static let bdTextSecondary = Color(hex: "#8A7E6F")  // sub — mockup value
+    static let bdTextTertiary  = Color(hex: "#9C9384")  // group labels, placeholders (goal builder)
     static let bdTextOnAccent  = Color(hex: "#FFFFFF")  // white on the leaf-deep pill
 
     // The Do it now lock (design/rewiring/feed-prototype.html `.lock`): the
@@ -220,6 +223,13 @@ extension Color {
     static let bdLockGround    = Color(hex: "#132A1C")  // lock background
     static let bdLockInk       = Color(hex: "#F6F1E7")  // headline + countdown
     static let bdMint          = Color(hex: "#A8D5B2")  // eyebrow, ring, button fill
+
+    // The in-onboarding shield preview (goalWhy, design/goal-builder/mock4):
+    // the shield as the user will meet it, warm near-black.
+    static let bdShieldGround  = Color(hex: "#211E1C")
+    static let bdShieldInk     = Color(hex: "#F2EDE4")
+    static let bdShieldSub     = Color(hex: "#9C9384")
+    static let bdShieldEyebrow = Color(hex: "#8FB89A")
 }
 
 // MARK: - Theme namespace (material, spacing, shape, motion)

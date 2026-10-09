@@ -104,6 +104,16 @@ final class UserProfile {
     var feelAfterRaw: String = ""
     var triedBeforeRaw: String = ""
 
+    // MARK: ⭐ Goal builder (Jack approved 2026-10-09). Defaulted: lightweight
+    // migration. Each goal's sentence lives in `goalWordsRaw` as before.
+    /// GoalScene.rawValue in pick order, comma-joined. First = primary.
+    var goalScenesRaw: String = ""
+    /// JSON map ActivityDomain.rawValue → GoalReason.rawValue.
+    var goalReasonsRaw: String = ""
+    /// JSON map ActivityDomain.rawValue → "BrainDiet" / "your app" (the
+    /// shield's "Go get back to ___.").
+    var goalShortsRaw: String = ""
+
     init(
         goalIDs: [String],
         why: String,
@@ -174,6 +184,31 @@ final class UserProfile {
     var feelAfter: AfterFeeling? { AfterFeeling(rawValue: feelAfterRaw) }
     var triedBefore: [TriedFix] {
         triedBeforeRaw.split(separator: ",").compactMap { TriedFix(rawValue: String($0)) }
+    }
+
+    var goalScenes: [GoalScene] {
+        goalScenesRaw.split(separator: ",").compactMap { GoalScene(rawValue: String($0)) }
+    }
+    var goalReasons: [ActivityDomain: GoalReason] {
+        get { Self.decodeDomainMap(goalReasonsRaw, as: String.self).compactMapValues(GoalReason.init(rawValue:)) }
+        set { goalReasonsRaw = Self.encodeDomainMap(newValue.mapValues(\.rawValue)) }
+    }
+    var goalShorts: [ActivityDomain: String] {
+        get { Self.decodeDomainMap(goalShortsRaw, as: String.self) }
+        set { goalShortsRaw = Self.encodeDomainMap(newValue) }
+    }
+
+    /// The shield line each goal's REASON writes ("You wanted to prove it to
+    /// yourself." / "Go get back to BrainDiet."). Wins the headline over the
+    /// server's wish; see `ShieldContentBuilder.make`.
+    var reasonShieldLines: [ActivityDomain: ShieldLine] {
+        let shorts = goalShorts
+        var out: [ActivityDomain: ShieldLine] = [:]
+        for (d, r) in goalReasons {
+            let short = shorts[d] ?? d.sentenceTemplate().fallbackShort
+            out[d] = ShieldLine(wish: r.shieldWish, go: String(localized: "Go get back to \(short)."))
+        }
+        return out
     }
 
     /// The planner's shield lines, per domain. Empty until PlanService answers.
@@ -351,7 +386,9 @@ final class UserProfile {
             sleepMinutes: sleepMinutes >= 0 ? sleepMinutes : nil,
             whenItGets: whenItGets,
             feelAfter: feelAfter,
-            triedBefore: triedBefore
+            triedBefore: triedBefore,
+            goalScenes: goalScenes,
+            goalReasons: goalReasons
         )
     }
 

@@ -16,7 +16,7 @@ struct BaselineStepView: View {
     private var subtitle: LocalizedStringResource? {
         guard let domain else { return nil }
         let words = (vm.goalWords[domain] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return words.isEmpty ? "\(domain.label)" : "\(domain.label) · \(words)"
+        return words.isEmpty ? "\(domain.label)" : "\(domain.label) · \(GoalSentenceText.display(words))"
     }
 
     var body: some View {
