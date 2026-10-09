@@ -18,6 +18,8 @@
 > 4.5, tool-forced JSON, no chat); any failure falls back to the heuristic planner.
 > Schedules + Do it now lock built 3897091 (FeedWindow → BrainDietMonitor; BrainDietDoItNow store). iOS can only exempt picked APPS (not Messages by default, not categories).
 >
+> **Food imagery cut app-wide (2026-10-09):** no meal photos, no plate images, no "brain vegetables/protein/fruit", no dessert. Kept: logo (plate-shaped D), tagline, "Feed my brain", welcome "Feed your brain in line with...". Any doc/comment describing meal or plate artwork is stale.
+>
 > ## ⭐ STATE OF THE APP — 2026-08-29
 >
 > **Read this block. Everything below it is history, and much of it is stale.**
