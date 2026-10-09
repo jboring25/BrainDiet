@@ -124,7 +124,8 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
             return ShieldConfiguration(
                 backgroundBlurStyle: .systemUltraThinMaterialDark,
                 backgroundColor: ShieldPalette.lock.withAlphaComponent(0.96),
-                icon: UIImage(named: "PlateInviteCard"),
+                icon: UIImage(systemName: "timer")?
+                    .withTintColor(ShieldPalette.mint, renderingMode: .alwaysOriginal),
                 title: .init(text: "Do it now.", color: ShieldPalette.lockInk),
                 subtitle: .init(text: step, color: ShieldPalette.mint),
                 primaryButtonLabel: .init(text: "Back to it", color: ShieldPalette.lock),
@@ -151,19 +152,11 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
         // lives only on the PlanShareCard. The subtitle is the bridge, nothing else.
         let subtitleText = body
 
-        // ⭐ THE ATTRACTION LAW (Jack, 2026-07-18 — supersedes the gray slop
-        // card): the shield shows what the user COULD HAVE, never what they're
-        // avoiding. `PlateInviteCard` is the nearly-complete midday plate baked
-        // as a rounded card on white (from the aligned PlateMidday render),
-        // designed to sit on the warm off-black shield bg — the beautiful meal,
-        // one serving from done. The old `PlateSlopCard` asset stays on disk,
-        // unused (same precedent as BDBrainMark/PlateSlop). It lives in this
-        // extension target's own asset catalog (BrainDietShield/Assets.xcassets)
-        // since the extension has no access to the app's catalog. Defensive
-        // fallback to the synced SF Symbol if the asset is somehow unavailable.
-        let icon = UIImage(named: "PlateInviteCard")
-            ?? UIImage(systemName: symbolName)?
-                .withTintColor(ShieldPalette.sage, renderingMode: .alwaysOriginal)
+        // The goal's own domain symbol (meal photos cut app-wide, Jack 2026-10-09:
+        // "Cut the meal photos and brain vegetables"; the PlateInviteCard salmon
+        // render is gone).
+        let icon = UIImage(systemName: symbolName)?
+            .withTintColor(ShieldPalette.sage, renderingMode: .alwaysOriginal)
 
         // ⭐ THE SECONDARY BUTTON IS BACK, CONDITIONALLY (Jack, 2026-08-27).
         // It was removed in build 15 for being a dead control. It returns only

@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - PlanServing — one goal's daily serving line on the meal-plan document.
 //
-// "[dish] Read more · brain vegetables — 35m." A pure value type so the card
+// "[icon] Read a few pages — 35m." A pure value type so the card
 // renders the same from persisted Goals (Home / Your Plan sheet) and from the
 // onboarding planner's value-type output (plan reveal), and stays
 // ImageRenderer-safe.
@@ -10,7 +10,7 @@ import SwiftUI
 struct PlanServing: Identifiable, Equatable {
     var id: String { title }
     /// SF Symbol for the goal's domain (never emoji). Retained for
-    /// accessibility/legacy callers — the card itself now plates DISH ART.
+    /// the row's icon tile.
     let symbol: String
     /// The concrete daily action — "Read a few pages", NOT the goal title
     /// "Read more". Locke & Latham (2002): specific goals beat "do your best",
@@ -23,7 +23,7 @@ struct PlanServing: Identifiable, Equatable {
     /// The serving size in minutes (the goal's everyday recurring step).
     let minutes: Int
     /// ⭐ The domain this serving belongs to (2026-07-22). Carries the CATEGORY
-    /// through to the card so every row can wear its colour + its dish. Optional
+    /// through to the card so every row can wear its colour. Optional
     /// only so legacy/mock call sites keep compiling; real plans always set it.
     var domain: ActivityDomain? = nil
 
@@ -91,13 +91,10 @@ extension PlanServing {
 //     day" meta, the hero "Time for you — N hrs/day" line, a DAILY SERVINGS
 //     section label, one row per serving. That readability IS the share trigger.
 //   • COLOUR RETURNS. This card was the ONE screen in the app with zero colour,
-//     in open violation of the CATEGORY-COLOR LAW. Every row's food word now
-//     carries its category ink (leaf / salmon / berry / honey-text).
-//   • DISH ART. Each row plates a 44pt circular MealLibrary render — the same
-//     asset family the first-serving step plates — cropped so the FOOD reads,
-//     not the rim, and melted onto the card through the SAME multiply chain
-//     BDPlateMark uses (no white-box seam). This is what makes the plan look
-//     APPETISING instead of like a tax form.
+//     in open violation of the CATEGORY-COLOR LAW. Every row's tile now
+//     carries its domain tint.
+//   • ICON TILES. Each row wears its domain's icon tile (the meal-photo dish
+//     art was cut 2026-10-09).
 //   • THE HEAVY FDA RULES ARE GONE. Black 8pt/4pt printed rules → the appetite
 //     hairline (#EFE7DA) on a warm white card with a soft shadow, Radius.card.
 //   • THE CARD CLOSES ON A TOTAL: "A FULL PLATE" + the summed time, on the leaf
@@ -193,44 +190,34 @@ struct PlanCard: View {
         .onChange(of: animate) { _, _ in runAnimation() }
     }
 
-    // MARK: Rows — serving + its category + the dish it plates.
+    // MARK: Rows — one per serving, wearing the domain's icon tile.
+    //
+    // Meal photos cut app-wide (Jack, 2026-10-09: "Cut the meal photos and
+    // brain vegetables"). The tile is the SAME one Home's focus card uses:
+    // domain tint at 30% behind the domain's SF Symbol.
 
     private struct Row: Identifiable {
         let id: String
         let serving: PlanServing
-        let category: PlateCategory?
-        let dish: String?
     }
 
-    /// Deterministic dish per row, never repeating the row directly above it
-    /// (two near-identical thumbnails stacked is exactly what got rejected).
     private var rows: [Row] {
-        var previous: String?
-        return servings.enumerated().map { index, serving in
-            let category = serving.domain?.displayCategory
-            let dish = category.flatMap { MealLibrary.thumbnail(for: $0, excluding: previous) }
-            previous = dish
-            return Row(id: "\(index)-\(serving.id)", serving: serving,
-                       category: category, dish: dish)
+        servings.enumerated().map { index, serving in
+            Row(id: "\(index)-\(serving.id)", serving: serving)
         }
     }
 
     private func servingRow(_ row: Row) -> some View {
         HStack(spacing: 12) {
-            if let dish = row.dish {
-                DishThumb(name: dish)
-            } else {
-                // No dish for this category (shouldn't happen for a real plan) —
-                // fall back to the category chip rather than a hole in the row.
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(row.category?.wash ?? Color.bdLeafTint)
-                    .frame(width: 44, height: 44)
-                    .overlay(
-                        Image(systemName: row.serving.symbol)
-                            .font(.system(size: 17, weight: .medium))
-                            .foregroundStyle(row.category?.ink ?? Color.bdLeaf)
-                    )
-            }
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill((row.serving.domain?.tint ?? Color.bdLeafTint).opacity(0.3))
+                .frame(width: 42, height: 42)
+                .overlay(
+                    Image(systemName: row.serving.symbol)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.bdTextPrimary.opacity(0.75))
+                )
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 1.5) {
                 Text(row.serving.title)
@@ -238,24 +225,6 @@ struct PlanCard: View {
                     .foregroundStyle(Color.bdTextPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                // ⛔️ THE FOOD WORD IS GONE HERE TOO (2026-08-18).
-                //
-                // This printed "brain vegetables" / "brain protein" under every
-                // row of the plan reveal — the same nutrition-vocabulary-as-label
-                // already stripped from Home's serving card and the shield
-                // (build 15: "it reads off as, what the fuck am I reading, it's
-                // a bunch of food shit"). Onboarding simply never got the change,
-                // so the last screen before the paywall was the densest food
-                // writing left in the product.
-                //
-                // It fails the remove-the-word test outright: the row above says
-                // "Read a few pages" and the cue below says "after you brush your
-                // teeth". "brain vegetables" between them adds no insight and no
-                // surprise — the CATEGORY COLOUR was carrying that signal anyway,
-                // which is why nothing needs to replace it.
-                //
-                // KEPT on the domain chips in PrimaryDomainStepView: that is the
-                // one moment the metaphor is being TAUGHT rather than repeated.
                 // ⭐ THE CUE LINE — the "if" of the implementation intention. Set in
                 // the CATEGORY ink so it reads as part of the serving rather than as
                 // metadata, and phrased as the tail of a sentence ("after you brush
@@ -281,8 +250,7 @@ struct PlanCard: View {
         .padding(.vertical, 11)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            "\(row.serving.title), \(row.serving.domain?.foodSubtitle ?? ""): "
-            + "\(row.serving.count) serving of \(row.serving.minutes) minutes daily"
+            "\(row.serving.title): \(row.serving.minutes) minutes daily"
         )
     }
 
@@ -328,47 +296,6 @@ struct PlanCard: View {
     private func runAnimation() {
         guard doAnimate else { return } // static path is already fully populated
         withAnimation(Theme.Motion.plate) { animatedPlated = true }
-    }
-}
-
-// MARK: - DishThumb — a MealLibrary render, cropped to the FOOD, on a card.
-//
-// The renders are 1024×559 plates on a white backdrop, so a naive fit shows
-// mostly empty rim. Matching the mockup's `background-size:185%; background-
-// position:center 47%`, the render is scaled to 1.85× the thumbnail's width and
-// centre-cropped — the food fills the circle. The backdrop melts through the
-// SAME chain BDPlateMark uses (local destination + compositingGroup + multiply),
-// with the 2%-alpha twin that forces real offscreen compositing (iOS 26 silently
-// drops blendMode when a group has a single visible layer → white-box seam).
-
-private struct DishThumb: View {
-    let name: String
-    var size: CGFloat = 44
-
-    var body: some View {
-        ZStack {
-            // Local destination for the multiply — the card's own white.
-            Color.bdSurface
-
-            ZStack {
-                render
-                render.opacity(0.02)   // forces real offscreen compositing
-            }
-            .compositingGroup()
-        }
-        .frame(width: size, height: size)
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
-        .overlay(Circle().strokeBorder(Color.bdCardBorder, lineWidth: 1))
-        .shadow(color: Color(hex: "#2A231A", alpha: 0.28), radius: 3, y: 2)
-        .accessibilityHidden(true)
-    }
-
-    private var render: some View {
-        Image(name)
-            .resizable()
-            .scaledToFit()
-            .frame(width: size * 1.85)
     }
 }
 

@@ -40,22 +40,8 @@ enum PlateCategory: String, CaseIterable, Identifiable, Codable, Sendable {
         case .learning:      return String(localized: "Learning")
         case .focus:         return String(localized: "Focus")
         case .creativity:    return String(localized: "Creativity")
-        case .entertainment: return String(localized: "Dessert")
+        case .entertainment: return String(localized: "Entertainment")
         case .emptyCalories: return String(localized: "Slop")
-        }
-    }
-
-    /// The food explanation (subtitle voice, never the primary name).
-    var food: String {
-        switch self {
-        case .learning:      return String(localized: "brain vegetables")
-        case .focus:         return String(localized: "brain protein")
-        case .creativity:    return String(localized: "brain fruit")
-        // ⭐ NOT "guilt-free" (2026-09-14). The app does not hand out permission.
-        // It still NAMES entertainment honestly where it happened — it just does
-        // not editorialise that it was fine.
-        case .entertainment: return String(localized: "what was left")
-        case .emptyCalories: return String(localized: "empty calories")
         }
     }
 

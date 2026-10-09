@@ -72,46 +72,6 @@ struct BecomingViewModel {
         return (String(claim[..<space]) + " ", String(claim[claim.index(after: space)...]))
     }
 
-    // MARK: Your week, plated — 7 real days as plate states.
-    //
-    // (The "days in color" streak was removed 2026-07-23 — see BecomingView.
-    // Progress now lives entirely in the honest week-of-plates strip below.)
-
-    struct DayPlate: Identifiable {
-        let date: Date
-        /// Asset name — the day's plate state (empty/morning/midday/nourished/slop).
-        let asset: String
-        let isSlop: Bool
-        let isFed: Bool
-        let isToday: Bool
-        var id: Date { date }
-        var label: String {
-            isToday ? String(localized: "today")
-                    : date.formatted(.dateTime.weekday(.narrow))
-        }
-    }
-
-    var week: [DayPlate] {
-        (0..<7).reversed().map { ago in
-            let day = calendar.date(byAdding: .day, value: -ago, to: engine.now) ?? engine.now
-            let servings = sessions.filter { calendar.isDate($0.startedAt, inSameDayAs: day) }.count
-            // Junk-heavy + zero servings = the honest gray day (the one place
-            // PlateSlop still renders — a record, small, never a spotlight).
-            let junkHeavy = servings == 0 && (engine.mentalDiet(on: day)?.isJunkHeavy ?? false)
-            let asset: String
-            switch (servings, junkHeavy) {
-            case (0, true):  asset = "PlateSlop"
-            case (0, false): asset = "PlateEmpty"
-            case (1, _):     asset = "PlateMorning"
-            case (2, _):     asset = "PlateMidday"
-            default:         asset = "PlateNourished"
-            }
-            return DayPlate(date: day, asset: asset, isSlop: junkHeavy,
-                            isFed: servings > 0,
-                            isToday: calendar.isDateInToday(day))
-        }
-    }
-
     // MARK: The ongoing mirror — baseline vs. this week's REAL junk average.
 
     /// TRUE only when the baseline is the user's OWN onboarding answer (a
@@ -349,9 +309,7 @@ struct BecomingViewModel {
             guard let activity = ActivityCatalog.activity(id: activityID) else { continue }
             let minutes = group.reduce(0) { $0 + $1.minutes }
             let cat = PlateEngine.category(forActivityID: activityID) ?? .focus
-            let subtitle = cat == .entertainment
-                ? String(localized: "\(Self.hoursDisplay(minutes)) of dessert")
-                : String(localized: "\(Self.hoursDisplay(minutes)) of \(activity.gerund)")
+            let subtitle = String(localized: "\(Self.hoursDisplay(minutes)) of \(activity.gerund)")
             rows.append(Outcome(
                 id: "activity.\(activityID)",
                 icon: activity.phIcon,
@@ -581,7 +539,7 @@ struct BecomingViewModel {
         let tint: Color
         /// "24 reading sessions" — count × the domain's honest session noun.
         let title: String
-        /// "11h 05m", or "2h 10m of dessert" for the entertainment row.
+        /// "11h 05m".
         let subtitle: String
         let minutes: Int
         /// Change in session COUNT against the same slice of last month.
@@ -631,9 +589,7 @@ struct BecomingViewModel {
                 title: group.count == 1
                     ? String(localized: "1 \(activity.label.lowercased()) session")
                     : String(localized: "\(group.count) \(activity.label.lowercased()) sessions"),
-                subtitle: isDessert
-                    ? String(localized: "\(Self.hoursDisplay(minutes)) of dessert")
-                    : Self.hoursDisplay(minutes),
+                subtitle: Self.hoursDisplay(minutes),
                 minutes: minutes,
                 deltaCount: isDessert ? nil : group.count - was
             ))

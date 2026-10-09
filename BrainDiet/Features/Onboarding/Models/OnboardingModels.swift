@@ -365,19 +365,6 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
     /// The category color as TEXT (honey drops to its contrast-safe ink).
     var categoryTextInk: Color { displayCategory.textInk }
 
-    /// The food-language subtitle (appetite mockup, screen 3). Qualified food
-    /// vocabulary ONLY — "brain vegetables / brain protein / brain fruit /
-    /// dessert, guilt-free" — matching Home's plate card and the Menu rows.
-    var foodSubtitle: String {
-        switch displayCategory {
-        case .learning:      return String(localized: "brain vegetables")
-        case .focus:         return String(localized: "brain protein")
-        case .creativity:    return String(localized: "brain fruit")
-        case .entertainment: return String(localized: "dessert, guilt-free")
-        case .emptyCalories: return ""
-        }
-    }
-
     /// The plan-row goal title.
     var goalTitle: String {
         switch self {
