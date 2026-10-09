@@ -103,6 +103,17 @@ extension ShieldContent {
     }
 }
 
+// MARK: - ShieldLine — the planner's own wish + go for one goal (v2, 2026-10-08).
+//
+// PlanService can return a line per goal written from the user's own words
+// ("You wanted to launch BrainDiet." / "Go finish the App Store listing.").
+// Stored on UserProfile; preferred over the stock per-domain copy.
+
+struct ShieldLine: Codable, Equatable, Sendable {
+    let wish: String
+    let go: String
+}
+
 // MARK: - ShieldContentBuilder — build the intercept from the user's real goal.
 
 enum ShieldContentBuilder {
@@ -124,7 +135,8 @@ enum ShieldContentBuilder {
         minutes: Int = BlockingConfig.shieldSuggestedMinutes,
         servingsDone: Int = 0,
         servingsPlanned: Int = 3,
-        suggestedCategory: PlateCategory? = nil
+        suggestedCategory: PlateCategory? = nil,
+        customLines: [ActivityDomain: ShieldLine] = [:]
     ) -> ShieldContent {
         // ⭐ THE SHIELD SPEAKS IN ACTIONS, NOT FOOD (Jack, build 15 on device:
         // "the language is leaning too much into the food motif and actually
@@ -162,8 +174,13 @@ enum ShieldContentBuilder {
         // Always the "Go" line, even once the day's steps are done: build 40
         // on device swapped in "You've already done what you set out to do
         // today" and the shield lost the one thing it is for.
+        // The planner's own line for a goal wins over the stock copy; the
+        // rotation itself is unchanged (one variant per goal, primary first).
         let variants = domains.map { d in
-            ShieldContent.Variant(headline: d.shieldWish, body: d.shieldGo, symbol: d.symbol)
+            let custom = customLines[d]
+            return ShieldContent.Variant(headline: custom?.wish ?? d.shieldWish,
+                                         body: custom?.go ?? d.shieldGo,
+                                         symbol: d.symbol)
         }
         return ShieldContent(
             headline: variants.first?.headline ?? GoalCatalog.becameWish(for: goalID),

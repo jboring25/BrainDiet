@@ -66,22 +66,52 @@ final class OnboardingViewModel {
     /// this would be answering the only question on the flow that requires
     /// someone to be honest with themselves.
     var blocker: Blocker? = nil
-    /// The concrete thing they are working toward, in their words. Optional.
-    var specificGoal: String = ""
     /// Anchors that exist in their day — what cues get attached to.
     var dayAnchors: Set<DayAnchor> = []
-    /// ⭐ THE THING ITSELF, per chosen domain (2026-09-21) — "Dune", "your app",
-    /// "Spanish". The one fact the planner could never know, and the reason the
-    /// plan used to hand every reader the same three lines. One tap on a
-    /// suggestion is enough; typing is only for people who want their exact
-    /// thing. Empty for a domain = that domain's steps stay generic.
-    var domainObjects: [ActivityDomain: String] = [:]
 
-    /// The plan with each domain's thing named in it — see `PlanPersonaliser`.
-    /// Every path that produces a plan goes through here, so the reveal, the
-    /// fallback and the persisted rows can never disagree about what it says.
-    private func personalised(_ plan: GoalPlan) -> GoalPlan {
-        PlanPersonaliser.apply(plan, objects: domainObjects)
+    // MARK: ⭐ Onboarding v2 answers (Jack approved 2026-10-08).
+    //
+    // The retired `specifics` step asked for a NOUN per goal ("Dune"); v2 asks
+    // for the goal itself in the user's words, which is what a planner can
+    // actually size steps against. `domainObjects` / `PlanPersonaliser` are no
+    // longer fed from onboarding: their templates take a noun, and a sentence
+    // dropped into "Read 10 pages of {o}" reads as broken English.
+
+    /// The goal in their own words, per goal. REQUIRED (≥ `minGoalWords`).
+    var goalWords: [ActivityDomain: String] = [:]
+    static let minGoalWords = 8
+    /// Where they are with the primary goal today. Nil until tapped.
+    var baseline: GoalBaseline? = nil
+    /// "What's the next real piece?" Optional.
+    var nextPiece: String = ""
+    /// Honest minutes a day, 15…120 in steps of 5 (120 reads "2h+").
+    var minutesPerDay: Int = 45
+    /// The day, in minutes after midnight. Class or work is optional.
+    var wakeMinutes: Int = 7 * 60 + 30
+    var busyStartMinutes: Int? = 9 * 60
+    var busyEndMinutes: Int? = 17 * 60
+    var sleepMinutes: Int = 23 * 60 + 30
+    /// Encoded FamilyActivitySelection — the "Do it now" allow-list.
+    var allowSelectionData: Data? = nil
+    /// When the standing feed block runs. Pre-selected Always (the mockup).
+    var feedSchedule: FeedSchedule = .always
+    var feedCustomStart: Int = 21 * 60
+    var feedCustomEnd: Int = 7 * 60
+    /// Calendar weekdays, 1 = Sunday.
+    var feedCustomWeekdays: Set<Int> = Set(1...7)
+    /// Shield lines PlanService wrote; persisted with the profile.
+    var shieldLines: [ActivityDomain: ShieldLine] = [:]
+    /// What the menu hero serves, in order. Set once the plan is final.
+    private(set) var servedSteps: [ServedStep] = []
+
+    /// The goals that get a words field — the plan holds at most three.
+    var goalWordDomains: [ActivityDomain] { Array(rankedDomains.prefix(3)) }
+
+    /// Each goal's words, trimmed, and whether every field clears the floor.
+    var goalWordsComplete: Bool {
+        goalWordDomains.allSatisfy {
+            (goalWords[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).count >= Self.minGoalWords
+        }
     }
 
     /// Encoded FamilyActivitySelection from the real picker (entitled only).
@@ -119,9 +149,16 @@ final class OnboardingViewModel {
         primaryDomain = .reading
         aspiration = "Reading every night."
         blocker = .distracted
-        // Real users name their thing now, so the fixture does too — otherwise
-        // every reveal screenshot reviews the generic fallback, not the product.
-        domainObjects = [.reading: "Dune", .fitness: "lifting", .building: "your app"]
+        // The mockup's own answers (design/onboarding-v2/screens.html), so the
+        // hero and every v2 screen reviews real words, not placeholders.
+        selectedDomains = [.reading, .building, .fitness]
+        goalWords = [.reading: "Finish Dune, then read 12 books by next summer",
+                     .building: "Launch BrainDiet on the App Store and get 100 users at ASU",
+                     .fitness: "Upper body twice a week, bench 225 by May"]
+        baseline = .inconsistent
+        nextPiece = "Finish the App Store listing"
+        busyEndMinutes = 15 * 60
+        dayAnchors = [.morningCoffee, .bedtime]
         // BD_DOMAINS=reading+creating+music — override the seeded domain set so a
         // shot can prove the surfaces that vary BY CATEGORY (the plan card's four
         // row colours + its dish art). PLUS-separated (the screenshot helper
@@ -147,12 +184,27 @@ final class OnboardingViewModel {
         // `DemoSeed`: no self-reported sessions, and a profile dated today beside
         // thirty days of history). **A fixture that does not resemble a real user
         // turns every screenshot review into a guess.**
+        let filled = ProcessInfo.processInfo.environment["BD_OB_FILLED"] == "1"
         switch raw {
         case "hijack":        selectedHijackers = Self.defaultHijackers
         case "domains":       selectedDomains = []; primaryDomain = nil
         case "primaryDomain": primaryDomain = selectedDomains.first   // the derived default
         case "aspiration":    aspiration = ""
-        case "specifics":     specificGoal = ""; dayAnchors = []; domainObjects = [:]
+        // v2 steps open at their real defaults unless BD_OB_FILLED=1, which
+        // keeps the mockup's answers for a side-by-side with screens.png.
+        case "goalWords" where !filled:
+            goalWords = [:]
+        case "goalWords":
+            goalWords[.fitness] = nil       // the mockup shows Fitness empty
+        case "baseline" where !filled:
+            baseline = nil; nextPiece = ""
+        case "baseline":
+            primaryDomain = .building
+        case "timeAndDay" where !filled:
+            minutesPerDay = 45; wakeMinutes = 450; busyStartMinutes = 540
+            busyEndMinutes = 1020; sleepMinutes = 1410; dayAnchors = []
+        case "timeAndDay":
+            sleepMinutes = 30           // 12:30, the mockup
         case "blocker":       blocker = nil
         default:              break
         }
@@ -164,7 +216,11 @@ final class OnboardingViewModel {
         case "domains":       selectedDomains = [.reading, .fitness]; step = .domains
         case "primaryDomain": step = .primaryDomain
         case "aspiration":    step = .aspiration
-        case "specifics":     step = .specifics
+        case "goalWords":     step = .goalWords
+        case "baseline":      step = .baseline
+        case "timeAndDay":    step = .timeAndDay
+        case "reachAndSchedule": step = .reachAndSchedule
+        case "menuHero":      step = .menuHero
         case "blocker":       step = .blocker
         case "interstitial":  step = .interstitial
         case "pause":         step = .pause
@@ -238,9 +294,18 @@ final class OnboardingViewModel {
             blocker: blocker,
             // The named things go to the on-device model as its "in their own
             // words" block, so where the model runs its wording already names them.
+            // The goal words ARE the "in their own words" block now.
             dreamDetails: DreamDetails.normalise(
-                rankedDomains.compactMap { domainObjects[$0] } + [specificGoal]),
-            dailyAnchors: DayAnchor.allCases.filter(dayAnchors.contains).map(\.rawValue)
+                goalWordDomains.compactMap { goalWords[$0] } + [nextPiece]),
+            dailyAnchors: DayAnchor.allCases.filter(dayAnchors.contains).map(\.rawValue),
+            goalWords: goalWords,
+            baseline: baseline,
+            nextPiece: nextPiece,
+            minutesPerDay: minutesPerDay,
+            wakeMinutes: wakeMinutes,
+            busyStartMinutes: busyStartMinutes,
+            busyEndMinutes: busyEndMinutes,
+            sleepMinutes: sleepMinutes
         )
     }
 
@@ -261,7 +326,7 @@ final class OnboardingViewModel {
     /// The goals the reveal's "Your Brain Diet" document prints as DAILY SERVINGS
     /// — the generated plan, or the deterministic floor for jumped/edge states.
     var revealGoals: [PlannedGoal] {
-        (generatedPlan ?? answers.map { personalised(HeuristicGoalPlanner.plan(from: $0)) })?.goals ?? []
+        (generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) })?.goals ?? []
     }
 
     // MARK: Persistence
@@ -287,15 +352,27 @@ final class OnboardingViewModel {
             planIdentityLine: (generatedPlan?.identityLine ?? aspiration).trimmingCharacters(in: .whitespacesAndNewlines)
         )
         context.insert(profile)
-        // Remember each named thing, so "Make it yours" offers it back as the
-        // first chip instead of asking the same question a second time.
-        for (domain, object) in domainObjects {
-            profile.rememberStepObject(object, for: domain)
-        }
+        // v2 answers.
+        profile.goalWords = goalWords.filter { goalWordDomains.contains($0.key) }
+        profile.dreamDetails = answers?.dreamDetails ?? []
+        profile.baselineRaw = baseline?.rawValue ?? ""
+        profile.nextPiece = nextPiece.trimmingCharacters(in: .whitespacesAndNewlines)
+        profile.minutesPerDay = minutesPerDay
+        profile.wakeMinutes = wakeMinutes
+        profile.busyStartMinutes = busyStartMinutes ?? -1
+        profile.busyEndMinutes = busyEndMinutes ?? -1
+        profile.sleepMinutes = sleepMinutes
+        profile.dayAnchorsRaw = DayAnchor.allCases.filter(dayAnchors.contains).map(\.rawValue).joined(separator: ",")
+        profile.allowSelectionData = allowSelectionData
+        profile.feedScheduleRaw = feedSchedule.rawValue
+        profile.feedCustomStart = feedCustomStart
+        profile.feedCustomEnd = feedCustomEnd
+        profile.feedCustomWeekdaysRaw = feedCustomWeekdays.sorted().map(String.init).joined(separator: ",")
+        profile.shieldLines = shieldLines
 
         // Materialise the plan (fall back to the deterministic floor if generation
         // never ran — e.g. jumped state).
-        let plan = generatedPlan ?? answers.map { personalised(HeuristicGoalPlanner.plan(from: $0)) }
+        let plan = generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) }
         plan?.persist(into: context)
 
         try? context.save()
@@ -310,9 +387,10 @@ final class OnboardingViewModel {
         case .domains:       return !selectedDomains.isEmpty
         case .primaryDomain: return primaryDomain != nil
         case .aspiration:    return !aspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        // The text is OPTIONAL — anchors alone already make the cues real, and a
-        // required keyboard in the middle of onboarding is how you lose people.
-        case .specifics:     return true
+        // ⭐ REQUIRED, on purpose (Jack, 2026-10-08): the plan is only as
+        // specific as these words, and every later screen builds on them.
+        case .goalWords:     return goalWordsComplete
+        case .baseline:      return baseline != nil
         case .blocker:       return blocker != nil   // slide 7 = the obstacle question
         // timeLost always advances: an untouched scrubber commits the honest
         // "I don't know" default (Opal's friction-free escape).
@@ -346,24 +424,8 @@ final class OnboardingViewModel {
             if let p = primaryDomain, !selectedDomains.contains(p) { primaryDomain = nil }
             if primaryDomain == nil { primaryDomain = selectedDomains.first }
         }
-        guard var next = OnboardingStep(rawValue: step.rawValue + 1) else {
+        guard let next = nextRoutedStep(after: step) else {
             didFinish = true          // ran off the end = done
-            return
-        }
-        // ⭐ Nothing to pick without Screen Time access (2026-08-13). A user who
-        // declined at the system sheet would otherwise land on a picker that
-        // returns an empty selection no matter what they tap — a dead screen
-        // that also teaches them the app is broken. `screenAccess` advances
-        // unconditionally on grant OR denial, so this is the only guard.
-        if next == .pickApps, !screenTimeAuthorized {
-            next = .building
-        }
-        // ⭐ The cancel-reminder step exists only for people who really started a
-        // trial. Everyone else (monthly, restore, "Not now"/free tier, or an
-        // account StoreKit wouldn't grant a trial) goes straight to the first
-        // serving — we never promise a reminder for a trial that isn't running.
-        if next == .dinnerBell, !startedFreeTrial {
-            didFinish = true          // no trial → no reminder step → done
             return
         }
         withAnimation(Theme.Motion.snappy) { step = next }
@@ -371,9 +433,55 @@ final class OnboardingViewModel {
     }
 
     func back() {
-        guard let prev = OnboardingStep(rawValue: step.rawValue - 1) else { return }
+        var prev = OnboardingStep(rawValue: step.rawValue - 1)
+        while let p = prev, !isRouted(p) { prev = OnboardingStep(rawValue: p.rawValue - 1) }
+        guard let prev else { return }
         withAnimation(Theme.Motion.snappy) { step = prev }
     }
+
+    /// ⭐ THE ONE PLACE A STEP IS SKIPPED. Forward and back both read it, so the
+    /// back chevron can never land on a step the flow would not show.
+    func isRouted(_ s: OnboardingStep) -> Bool {
+        switch s {
+        // ⭐ Nothing to pick without Screen Time access (2026-08-13). A user who
+        // declined at the system sheet would otherwise land on a picker that
+        // returns an empty selection no matter what they tap.
+        case .pickApps:   return screenTimeAuthorized
+        // v2 (2026-10-08): the plan is served after the paywall by `menuHero`.
+        case .planReveal: return false
+        // ⭐ The cancel-reminder step exists only for people who really started a
+        // trial — we never promise a reminder for a trial that isn't running.
+        case .dinnerBell: return startedFreeTrial
+        default:          return true
+        }
+    }
+
+    private func nextRoutedStep(after s: OnboardingStep) -> OnboardingStep? {
+        var next = OnboardingStep(rawValue: s.rawValue + 1)
+        while let n = next, !isRouted(n) { next = OnboardingStep(rawValue: n.rawValue + 1) }
+        return next
+    }
+
+    // MARK: Menu hero — the served plan.
+
+    /// Fold the server's plan into the plan the app already has and remember
+    /// its shield lines. Nil = server failed: the heuristic plan stands.
+    func applyServed(_ served: ServedPlan?) {
+        let base = generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) }
+        if let served {
+            generatedPlan = base?.merging(served)
+            shieldLines = served.shield
+            servedSteps = served.steps
+        } else {
+            generatedPlan = base
+            // Fallback menu: each goal's first step, primary first.
+            servedSteps = (base?.goals ?? []).prefix(3).compactMap { g in
+                g.steps.first.map { ServedStep(domain: g.domain, step: $0, why: "") }
+            }
+        }
+    }
+
+    func finishOnboarding() { didFinish = true }
 
     // MARK: Toggles
 
@@ -399,7 +507,7 @@ final class OnboardingViewModel {
     func runBuildingThenMirror() async {
         if let answers {
             let planner = GoalPlannerFactory.make()
-            generatedPlan = personalised(await planner.makePlan(from: answers))
+            generatedPlan = await planner.makePlan(from: answers)
         }
         // Let the honest assembly lines land in full (~3 × 0.8s) even when the
         // heuristic planner returns instantly.

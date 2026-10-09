@@ -137,8 +137,12 @@ struct OnboardingView: View {
             PrimaryDomainStepView(vm: vm)
         case .aspiration:
             AspirationStepView(vm: vm)
-        case .specifics:
-            SpecificsStepView(vm: vm)
+        case .goalWords:
+            GoalWordsStepView(vm: vm)
+        case .baseline:
+            BaselineStepView(vm: vm)
+        case .timeAndDay:
+            TimeAndDayStepView(vm: vm)
         case .blocker:
             BlockerStepView(vm: vm)
         case .interstitial:
@@ -149,6 +153,8 @@ struct OnboardingView: View {
             ScreenAccessStepView(vm: vm)
         case .pickApps:
             PickAppsStepView(vm: vm)
+        case .reachAndSchedule:
+            ReachAndScheduleStepView(vm: vm)
         case .building:
             BuildingStepView(vm: vm)
         case .mirror:
@@ -168,6 +174,8 @@ struct OnboardingView: View {
             })
         case .dinnerBell:
             DinnerBellStepView(vm: vm)
+        case .menuHero:
+            MenuHeroStepView(vm: vm)
         }
     }
 
@@ -178,7 +186,7 @@ struct OnboardingView: View {
         // the shared Continue.
         switch vm.step {
         case .screenAccess, .pickApps, .building, .mirror, .commit, .planReveal,
-             .onboardingPaywall, .dinnerBell:
+             .onboardingPaywall, .dinnerBell, .menuHero:
             return false
         default: return true
         }

@@ -123,6 +123,13 @@ struct HeuristicGoalPlanner: GoalPlanner {
     /// how much time the user is reclaiming, then get clamped by the blocker so we
     /// never prescribe more than they can sustain.
     private static func minutes(forStepIndex index: Int, kind: GoalStepKind, answers: OnboardingAnswers) -> Int {
+        // v2: the honest minutes-a-day answer is a ceiling on every step.
+        let raw = rawMinutes(forStepIndex: index, kind: kind, answers: answers)
+        guard let cap = answers.minutesPerDay else { return raw }
+        return max(5, min(raw, cap))
+    }
+
+    private static func rawMinutes(forStepIndex index: Int, kind: GoalStepKind, answers: OnboardingAnswers) -> Int {
         if kind == .oneoff { return 10 }
 
         // Base by time available (more reclaimed time → room for longer blocks).

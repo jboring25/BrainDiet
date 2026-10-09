@@ -43,7 +43,8 @@ struct MainView: View {
             domains: shieldDomains,
             servingsDone: plateEngine.doneCount,
             servingsPlanned: plateEngine.planCount,
-            suggestedCategory: plateEngine.suggestion?.category
+            suggestedCategory: plateEngine.suggestion?.category,
+            customLines: profiles.first?.shieldLines ?? [:]
         )
     }
 

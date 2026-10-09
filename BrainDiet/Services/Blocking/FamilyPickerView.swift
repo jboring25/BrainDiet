@@ -10,6 +10,8 @@ import SwiftUI
 import FamilyControls
 
 struct FamilyPickerView: View {
+    /// v2: the allow-list picker reuses this with its own title.
+    var title: LocalizedStringKey = "Pick your junk apps"
     /// Called with the encoded selection when the user confirms.
     let onConfirm: (BlockingSelection) -> Void
 
@@ -19,7 +21,7 @@ struct FamilyPickerView: View {
     var body: some View {
         NavigationStack {
             FamilyActivityPicker(selection: $selection)
-                .navigationTitle("Pick your junk apps")
+                .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -40,6 +42,7 @@ struct FamilyPickerView: View {
 
 // Degraded stand-in — keeps call sites compiling without FamilyControls.
 struct FamilyPickerView: View {
+    var title: LocalizedStringKey = "Pick your junk apps"
     let onConfirm: (BlockingSelection) -> Void
     @Environment(\.dismiss) private var dismiss
 

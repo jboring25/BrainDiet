@@ -68,6 +68,36 @@ final class UserProfile {
     // Fully qualified — the @Model macro cannot resolve `.distantPast` shorthand.
     var planWindowStart: Date = Date.distantPast
 
+    // MARK: ⭐ Onboarding v2 (Jack approved 2026-10-08). Every field defaulted:
+    // lightweight SwiftData migration, existing installs keep their row.
+
+    /// JSON map ActivityDomain.rawValue → the goal in their own words.
+    var goalWordsRaw: String = ""
+    /// GoalBaseline.rawValue for the primary goal.
+    var baselineRaw: String = ""
+    /// "What's the next real piece?" Optional.
+    var nextPiece: String = ""
+    /// Honest minutes a day (15…120). 0 = never answered.
+    var minutesPerDay: Int = 0
+    /// Minutes after midnight. -1 = never answered.
+    var wakeMinutes: Int = -1
+    var busyStartMinutes: Int = -1
+    var busyEndMinutes: Int = -1
+    var sleepMinutes: Int = -1
+    /// DayAnchor.rawValue, comma-joined.
+    var dayAnchorsRaw: String = ""
+    /// Encoded FamilyActivitySelection: the apps "Do it now" leaves reachable.
+    var allowSelectionData: Data?
+    /// FeedSchedule.rawValue. Empty reads as `.always`.
+    var feedScheduleRaw: String = ""
+    /// Custom schedule window (minutes after midnight) + weekdays (1 = Sunday).
+    var feedCustomStart: Int = 1260
+    var feedCustomEnd: Int = 420
+    var feedCustomWeekdaysRaw: String = "1,2,3,4,5,6,7"
+    /// JSON map ActivityDomain.rawValue → {"wish","go"} from PlanService. When a
+    /// domain has a line here the shield speaks it instead of the stock copy.
+    var shieldLinesRaw: String = ""
+
     init(
         goalIDs: [String],
         why: String,
@@ -116,6 +146,41 @@ final class UserProfile {
     }
     var primaryDomain: ActivityDomain? { ActivityDomain(rawValue: primaryDomainRaw) }
     var blocker: Blocker? { Blocker(rawValue: blockerRaw) }
+
+    // MARK: v2 accessors
+
+    var goalWords: [ActivityDomain: String] {
+        get { Self.decodeDomainMap(goalWordsRaw, as: String.self) }
+        set { goalWordsRaw = Self.encodeDomainMap(newValue) }
+    }
+    var baseline: GoalBaseline? { GoalBaseline(rawValue: baselineRaw) }
+    var dayAnchors: [DayAnchor] {
+        dayAnchorsRaw.split(separator: ",").compactMap { DayAnchor(rawValue: String($0)) }
+    }
+    var feedSchedule: FeedSchedule { FeedSchedule(rawValue: feedScheduleRaw) ?? .always }
+    var feedCustomWeekdays: [Int] {
+        feedCustomWeekdaysRaw.split(separator: ",").compactMap { Int($0) }
+    }
+
+    /// The planner's shield lines, per domain. Empty until PlanService answers.
+    var shieldLines: [ActivityDomain: ShieldLine] {
+        get { Self.decodeDomainMap(shieldLinesRaw, as: ShieldLine.self) }
+        set { shieldLinesRaw = Self.encodeDomainMap(newValue) }
+    }
+
+    private static func decodeDomainMap<V: Decodable>(_ raw: String, as: V.Type) -> [ActivityDomain: V] {
+        guard let map = try? JSONDecoder().decode([String: V].self, from: Data(raw.utf8)) else { return [:] }
+        var out: [ActivityDomain: V] = [:]
+        for (k, v) in map { if let d = ActivityDomain(rawValue: k) { out[d] = v } }
+        return out
+    }
+
+    private static func encodeDomainMap<V: Encodable>(_ map: [ActivityDomain: V]) -> String {
+        var raw: [String: V] = [:]
+        for (k, v) in map { raw[k.rawValue] = v }
+        guard let data = try? JSONEncoder().encode(raw) else { return "" }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
 
     // MARK: Remembered step objects ("Make it mine")
 
@@ -260,7 +325,16 @@ final class UserProfile {
             primaryDomain: primaryDomain,
             aspiration: why,
             blocker: blocker,
-            dreamDetails: dreamDetails
+            dreamDetails: dreamDetails,
+            dailyAnchors: dayAnchors.map(\.rawValue),
+            goalWords: goalWords,
+            baseline: baseline,
+            nextPiece: nextPiece,
+            minutesPerDay: minutesPerDay > 0 ? minutesPerDay : nil,
+            wakeMinutes: wakeMinutes >= 0 ? wakeMinutes : nil,
+            busyStartMinutes: busyStartMinutes >= 0 ? busyStartMinutes : nil,
+            busyEndMinutes: busyEndMinutes >= 0 ? busyEndMinutes : nil,
+            sleepMinutes: sleepMinutes >= 0 ? sleepMinutes : nil
         )
     }
 

@@ -23,20 +23,18 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     case timeLost        // 2 — hours-a-day scrubber (Opal's self-quantification ask)
     case domains         // 3 — what to pour time into (multi) → goal seeds
     case primaryDomain   // 4 — which matters most (single) → primary anchor
-    case aspiration      // 5 — who are you becoming → identity raw material
-    /// 6 — ⭐ THE SPECIFICS (Jack, 2026-09-15). The audit found the planner reads
-    /// domain, blocker, time band and step index — and never `aspiration`. So two
-    /// builders with different dreams got a byte-identical plan. This step is the
-    /// raw material that makes a plan theirs: the concrete thing they are working
-    /// toward, and the anchors that actually exist in their day.
-    ///
-    /// ⚠️ It puts a keyboard back in the flow, which `AspirationStepView` argued
-    /// against. That argument still holds for the IDENTITY question — four buttons
-    /// are right there. It does not hold here: there is no roster of four that can
-    /// contain "a landing page for my app" and "finishing Dune", and without it the
-    /// model has nothing to be specific ABOUT. The field is optional; the anchors
-    /// are taps.
-    case specifics
+    /// ⭐ ONBOARDING V2 (Jack approved 2026-10-08). The goal in the user's own
+    /// words, one field per goal, REQUIRED. Replaces the object half of the
+    /// retired `specifics` step: a noun ("Dune") told the planner what, never
+    /// how far or by when. "Finish Dune, then read 12 books by next summer" does.
+    case goalWords
+    /// v2 — where they are with the primary goal today. Sizes the first step.
+    case baseline
+    case aspiration      // who are you becoming → identity raw material
+    /// v2 — real minutes per day + the real shape of the day (wake, class or
+    /// work, sleep) + the existing DayAnchor chips. Replaces the anchors half of
+    /// the retired `specifics` step; the planner stops guessing when they are free.
+    case timeAndDay
     case blocker         // 6 — what's stopped you (single) → step difficulty
     case interstitial    // 7 — one held breath before the mirror (Opal's pacing beat)
     /// 8 — ⭐ SHOW THE MECHANIC BEFORE ASKING FOR THE KEYS (Jack, 2026-08-11,
@@ -54,15 +52,25 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// `screenAccess` — the system picker returns empty without authorization —
     /// and is SKIPPED when access was denied (nothing to pick).
     case pickApps
+    /// v2 — the "Do it now" allow-list and when the standing feed block runs.
+    /// Collected and persisted only; enforcement is a later pass.
+    case reachAndSchedule
     case building        // 9 — loading theater (runs the planner): "Reading your day…"
     case mirror          // 10 — THE MIRROR: loss in gray, then the GAIN in color
     case commit          // 11 — press-and-hold the plate to commit
-    case planReveal      // 12 — the reveal
+    /// ⚠️ NOT ROUTED since onboarding v2 (2026-10-08): the plan is now served
+    /// AFTER the paywall by `menuHero`. The case and view stay so nothing that
+    /// references them breaks; `OnboardingViewModel.isRouted` skips it.
+    case planReveal
     case onboardingPaywall // 13 — ONE-screen Pro paywall (soft close)
     /// 14 — the trial-cancel reminder. SKIPPED (Jack, 2026-07-22) unless the
     /// user actually STARTED A FREE TRIAL at the paywall — promising "before
     /// your free trial ends" to a monthly or free-tier user is a false promise.
     case dinnerBell
+    /// v2 — the hero after the paywall (or its dismissal; nothing is gated):
+    /// the user's words feed the brain while the plan is fetched, then the
+    /// three steps are served out of it.
+    case menuHero
     // ⭐ `firstServing` DELETED 2026-08-13 (Jack: "the plate moment happens
     // twice, remove the second one"). It and `commit` were the same beat with
     // different nouns — identical layout, identical empty plate, identical
@@ -87,8 +95,9 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// those are designed moments, and a back chevron does not belong on them.
     var showsProgress: Bool {
         switch self {
-        case .hijack, .timeLost, .domains, .primaryDomain, .aspiration, .specifics, .blocker,
-             .pause, .screenAccess, .pickApps: return true
+        case .hijack, .timeLost, .domains, .primaryDomain, .goalWords, .baseline,
+             .aspiration, .timeAndDay, .blocker,
+             .pause, .screenAccess, .pickApps, .reachAndSchedule: return true
         default: return false
         }
     }
@@ -110,7 +119,7 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// trial reminder.
     var countsTowardProgress: Bool {
         switch self {
-        case .welcome, .interstitial, .building, .dinnerBell: return false
+        case .welcome, .interstitial, .building, .dinnerBell, .planReveal, .menuHero: return false
         default: return true
         }
     }
@@ -514,6 +523,22 @@ enum ActivityDomain: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// v2 goalWords placeholder — an example of a SPECIFIC goal, never a mood.
+    var goalPlaceholder: String {
+        switch self {
+        case .reading:  return String(localized: "e.g. finish Dune, then 12 books by summer")
+        case .fitness:  return String(localized: "e.g. bench 225 by May, or run a 5k")
+        case .music:    return String(localized: "e.g. play Blackbird all the way through")
+        case .building: return String(localized: "e.g. launch my app and get 100 users")
+        case .writing:  return String(localized: "e.g. finish a short story by December")
+        case .learning: return String(localized: "e.g. hold a conversation in Spanish")
+        case .outdoors: return String(localized: "e.g. hike every trail in the county")
+        case .creating: return String(localized: "e.g. fill a sketchbook this semester")
+        case .social:   return String(localized: "e.g. host one dinner a month")
+        case .mindful:  return String(localized: "e.g. ten quiet minutes every morning")
+        }
+    }
+
     /// The Activity catalog id this domain protects time toward — keeps
     /// ProtectSession + Becoming's per-activity aggregation working.
     var activityID: String {
@@ -665,6 +690,81 @@ enum Blocker: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+// MARK: - v2 · Baseline — where they are with the primary goal today.
+
+enum GoalBaseline: String, CaseIterable, Identifiable, Sendable {
+    case notStarted, stalled, inconsistent, mostDays
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .notStarted:   return String(localized: "Haven't started")
+        case .stalled:      return String(localized: "Started, then stalled")
+        case .inconsistent: return String(localized: "Doing it, not consistently")
+        case .mostDays:     return String(localized: "Doing it most days")
+        }
+    }
+
+    /// One word for the hero chip ("stalled").
+    var shortLabel: String {
+        switch self {
+        case .notStarted:   return String(localized: "not started")
+        case .stalled:      return String(localized: "stalled")
+        case .inconsistent: return String(localized: "on and off")
+        case .mostDays:     return String(localized: "most days")
+        }
+    }
+}
+
+// MARK: - v2 · When the standing feed block runs.
+
+enum FeedSchedule: String, CaseIterable, Identifiable, Sendable {
+    case always, weekdays9to5, nights, custom
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .always:       return String(localized: "Always")
+        case .weekdays9to5: return String(localized: "Weekdays 9–5")
+        case .nights:       return String(localized: "Nights 10pm–8am")
+        case .custom:       return String(localized: "Custom")
+        }
+    }
+}
+
+// MARK: - v2 · Clock helpers. Times are stored as minutes after midnight.
+
+enum DayClock {
+    /// "7:30", "12:30", "9:00".
+    static func label(_ minutes: Int) -> String {
+        let h = ((minutes / 60) % 12 == 0) ? 12 : (minutes / 60) % 12
+        return String(format: "%d:%02d", h, minutes % 60)
+    }
+
+    /// A range without the zero minutes: "9 – 3", "8:30 – 4".
+    static func rangeLabel(_ start: Int, _ end: Int) -> String {
+        func short(_ m: Int) -> String { m % 60 == 0 ? "\(((m / 60) % 12 == 0) ? 12 : (m / 60) % 12)" : label(m) }
+        return "\(short(start)) – \(short(end))"
+    }
+
+    /// "07:30" — the wire format PlanService sends.
+    static func wire(_ minutes: Int) -> String {
+        String(format: "%02d:%02d", (minutes / 60) % 24, minutes % 60)
+    }
+
+    static func date(_ minutes: Int) -> Date {
+        Calendar.current.date(bySettingHour: (minutes / 60) % 24, minute: minutes % 60,
+                              second: 0, of: .now) ?? .now
+    }
+
+    static func minutes(_ date: Date) -> Int {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (c.hour ?? 0) * 60 + (c.minute ?? 0)
+    }
+}
+
 // MARK: - OnboardingAnswers — the judged inputs the planner interprets.
 
 struct OnboardingAnswers: Sendable {
@@ -683,6 +783,20 @@ struct OnboardingAnswers: Sendable {
     /// attached to these instead of to a fixed per-domain guess — see
     /// `DayAnchor` and the note in OnDeviceGoalPlanner's prompt.
     var dailyAnchors: [String] = []
+
+    // MARK: v2 (2026-10-08) — every field defaulted so older call sites compile.
+    /// The goal in their words, per domain (the goalWords step).
+    var goalWords: [ActivityDomain: String] = [:]
+    var baseline: GoalBaseline? = nil
+    /// "What's the next real piece?" — optional.
+    var nextPiece: String = ""
+    /// Honest minutes a day they can give it. Caps every step's length.
+    var minutesPerDay: Int? = nil
+    /// Minutes after midnight.
+    var wakeMinutes: Int? = nil
+    var busyStartMinutes: Int? = nil
+    var busyEndMinutes: Int? = nil
+    var sleepMinutes: Int? = nil
 }
 
 // MARK: - ⭐ DayAnchor — the fixed points a cue can hang on (2026-09-15).
