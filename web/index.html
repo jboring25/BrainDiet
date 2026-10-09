@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BrainDiet · Your brain eats too</title>
+<meta name="description" content="BrainDiet is an iPhone app that blocks the feed and hands you one real step toward the person you want to be.">
+<meta property="og:title" content="BrainDiet · Your brain eats too">
+<meta property="og:description" content="An iPhone app that blocks the feed and hands you one real step toward the person you want to be.">
+<meta property="og:image" content="img/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FDF9F2">
+<link rel="icon" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="preload" href="fonts/YoungSerif-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<style>
+@font-face{font-family:"Young Serif";src:url(fonts/YoungSerif-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:Manrope;src:url(fonts/Manrope-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:Manrope;src:url(fonts/Manrope-SemiBold.ttf) format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:Manrope;src:url(fonts/Manrope-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
+
+:root{
+  --cream:#FDF9F2; --surface:#FFFFFF; --ink:#2A231A; --body:#5A5044; --sub:#8A7E6F;
+  --line:#EFE7DA; --track:#F1EBE1;
+  --leaf:#3E7A4E; --leaf-deep:#2F5E3C; --leaf-tint:#E9F3EB;
+  --salmon:#E8735A; --salmon-tint:#FBEAE5;
+  --berry:#9C4368; --berry-tint:#F6E7EE;
+  --gold:#B98F1F; --gold-text:#8A6A2E;
+  --gray-canvas:#F4F2EF; --gray-ink:#5F5A52; --gray-faint:#A9A29A;
+  --shadow:0 10px 20px rgba(44,37,25,.10);
+  --serif:"Young Serif",Georgia,serif;
+  --sans:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.2,.85,.25,1);
+  --gutter:clamp(16px,5vw,64px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--gutter)}
+.serif{font-family:var(--serif);font-weight:400}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text);margin:0 0 14px}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:20;background:rgba(253,249,242,.86);backdrop-filter:saturate(1.2) blur(12px);-webkit-backdrop-filter:saturate(1.2) blur(12px);
+  border-bottom:1px solid transparent;transition:border-color .3s}
+header.scrolled{border-bottom-color:var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:64px}
+.wordmark{display:block;height:24px;aspect-ratio:4.957;background:var(--leaf-deep);
+  -webkit-mask:url(img/wordmark.png) center/contain no-repeat;mask:url(img/wordmark.png) center/contain no-repeat}
+.wordmark span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.pill{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font:600 15px/1 var(--sans);
+  background:var(--leaf-deep);color:#fff;padding:14px 22px;border-radius:999px;text-decoration:none;
+  box-shadow:0 8px 18px rgba(47,94,60,.22);transition:transform .2s var(--ease),box-shadow .2s}
+.pill:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(47,94,60,.28)}
+.pill:focus-visible,.chip:focus-visible,input:focus-visible{outline:3px solid var(--salmon);outline-offset:3px}
+.pill.small{padding:11px 18px;font-size:14px;box-shadow:none}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(12px,3vw,40px) 0 clamp(56px,8vw,110px)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:clamp(24px,4vw,56px);align-items:center}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.4vw,84px);line-height:1.04;letter-spacing:-.01em;margin:0 0 22px}
+h1 .warm{color:var(--salmon);display:block}
+.hero .lede{font-size:clamp(17px,1.5vw,19px);color:var(--body);max-width:30ch;margin:0 0 32px}
+.hero-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px}
+.soon{font-size:14px;color:var(--sub)}
+.soon b{color:var(--ink);font-weight:600}
+
+.stage{position:relative;display:flex;flex-direction:column;align-items:center}
+.brain{position:relative;width:100%;aspect-ratio:1167/1016;touch-action:none}
+.brain canvas{position:absolute;inset:0;width:100%;height:100%}
+.brain.over::after{content:"";position:absolute;inset:6%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(125,182,139,.18),transparent);pointer-events:none}
+.status{font-family:var(--serif);font-size:clamp(24px,2.4vw,30px);margin:6px 0 4px;text-align:center;min-height:1.3em}
+.status em{font-style:normal;color:var(--salmon);transition:color .6s}
+.status.fed em{color:var(--leaf)}
+.stats{display:flex;gap:0;margin:8px 0 18px}
+.stat{text-align:center;padding:0 22px}
+.stat+.stat{border-left:1px solid var(--line)}
+.stat b{display:block;font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.2;color:var(--leaf)}
+.stat:nth-child(2) b{color:var(--gold)}
+.stat span{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
+.hint{font-size:13.5px;color:var(--sub);margin:0 0 10px;text-align:center}
+.tray{position:relative;width:min(420px,100%);height:76px}
+.chip{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:12px 16px 12px 12px;
+  background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;font:inherit;color:inherit;text-align:left;
+  transition:transform .45s var(--ease),opacity .35s}
+.chip:active{cursor:grabbing}
+.chip.dragging{transition:none;box-shadow:0 18px 34px rgba(44,37,25,.18);z-index:5}
+.chip.gone{opacity:0;transform:scale(.6)}
+.chip.enter{opacity:0;transform:translateY(14px)}
+.chip .ic{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px}
+.chip .t{font-family:var(--serif);font-size:18px;line-height:1.25;display:block}
+.chip .m{font-size:13px;color:var(--sub)}
+.chip .go{margin-left:auto;font-size:13px;font-weight:600;color:var(--leaf-deep);white-space:nowrap}
+.k-learn .ic{background:var(--leaf-tint);color:var(--leaf)}
+.k-focus .ic{background:var(--salmon-tint);color:var(--salmon)}
+.k-create .ic{background:var(--berry-tint);color:var(--berry)}
+
+/* ---------- mirror (the gray world) ---------- */
+.mirror{background:linear-gradient(var(--gray-canvas) 58%,var(--cream));padding:clamp(72px,10vw,140px) 0}
+.mirror .wrap{max-width:980px}
+.mirror .cap{font-size:14px;color:var(--gray-faint);margin:22px 0 0}
+.mirror .eyebrow{color:var(--gray-faint)}
+.big{font-family:var(--serif);color:var(--gray-ink);margin:0;line-height:1}
+.big .n{font-size:clamp(88px,13vw,168px);letter-spacing:-.02em}
+.big .u{font-family:var(--sans);font-size:clamp(20px,2.2vw,28px);font-weight:600;margin-left:.3em}
+.thats{font-weight:600;color:var(--gray-ink);margin:10px 0 6px}
+.mirror p.after{font-size:clamp(18px,1.8vw,22px);color:var(--gray-ink);max-width:28ch;margin:28px 0 0}
+.mirror p.after b{color:var(--ink)}
+.mirror .turn{font-family:var(--serif);font-size:clamp(26px,3vw,38px);line-height:1.2;color:var(--ink);margin:18px 0 0;max-width:20ch}
+.mirror .turn span{color:var(--leaf)}
+
+/* ---------- beats ---------- */
+.beat{padding:clamp(64px,9vw,128px) 0;overflow:clip}
+.beat .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,7vw,110px);align-items:center}
+.beat.flip .copy{order:2}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(34px,4.4vw,56px);line-height:1.08;margin:0 0 20px;letter-spacing:-.005em}
+h2 .warm{color:var(--salmon)} h2 .leaf{color:var(--leaf)}
+.copy p{color:var(--body);max-width:36ch;margin:0}
+.phones{position:relative;display:flex;justify-content:center}
+.phone{width:min(300px,72vw);filter:drop-shadow(0 30px 40px rgba(44,37,25,.16)) drop-shadow(0 6px 10px rgba(44,37,25,.08))}
+.phones.pair{min-height:0}
+.phones.pair .back{position:absolute;width:min(250px,58vw);transform:translate(52%,7%) rotate(5deg);opacity:.98}
+.phones.pair .front{position:relative;transform:translateX(-18%) rotate(-3deg);z-index:1}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+
+
+/* ---------- different + founder ---------- */
+.diff{padding:clamp(64px,9vw,128px) 0;background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.diff .wrap{max-width:900px}
+.diff p{color:var(--body);font-size:clamp(17px,1.5vw,19px);max-width:52ch;margin:0}
+.founder{padding:clamp(64px,9vw,128px) 0}
+.founder .wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:center;max-width:980px}
+.founder img{width:clamp(140px,18vw,200px);height:auto;border-radius:50%}
+.founder p{color:var(--body);max-width:50ch;margin:0}
+.founder .sig{margin-top:16px;font-size:14px;color:var(--sub)}
+@media (max-width:860px){.founder .wrap{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- close ---------- */
+.close{padding:clamp(72px,10vw,140px) 0 clamp(56px,7vw,96px);text-align:center}
+.close h2{font-size:clamp(42px,6vw,80px);margin-bottom:18px}
+.price{font-size:17px;color:var(--body);margin:0 0 34px}
+.price b{color:var(--ink)}
+form{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}
+input[type=email]{flex:1 1 240px;min-width:0;font:400 16px var(--sans);padding:14px 20px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink)}
+input::placeholder{color:var(--sub)}
+.formnote{font-size:13.5px;color:var(--sub);margin:14px 0 0;min-height:1.4em}
+.hp{position:absolute;left:-9999px}
+
+footer{border-top:1px solid var(--line);padding:34px 0 calc(34px + env(safe-area-inset-bottom))}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between;font-size:14px;color:var(--sub)}
+footer nav{display:flex;gap:22px}
+footer a{text-decoration:none;color:var(--body)}
+footer a:hover{color:var(--leaf-deep)}
+
+/* ---------- small screens ---------- */
+@media (max-width:860px){
+  .hero .wrap,.mirror .wrap,.beat .wrap{grid-template-columns:minmax(0,1fr)}
+  .hero .stage{margin-top:8px}
+  .hero{text-align:left}
+  .lede{max-width:none}
+  .beat .copy{order:0}
+  .beat .phones{order:1}
+  .phones{margin-top:8px}
+  .stat{padding:0 14px}
+  .bar .soon{display:none}
+}
+@media (max-width:420px){
+  .chip .go{display:none}
+  .stat b{font-size:24px}
+  .phones.pair .back{transform:translate(40%,7%) rotate(5deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header id="top">
+  <div class="wrap bar">
+    <a href="#top" class="wordmark" aria-label="BrainDiet home"><span>BrainDiet</span></a>
+    <div style="display:flex;align-items:center;gap:18px">
+      <span class="soon">Built at Arizona State</span>
+      <a class="pill small" href="#early">Get early access</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <div class="copy">
+      <h1>You feed your body well. <span class="warm">Your brain eats too.</span></h1>
+      <p class="lede">BrainDiet is an iPhone app that blocks the feed and hands you one real step toward the person you want to be.</p>
+      <div class="hero-cta">
+        <a class="pill" href="#early">Get early access</a>
+        <span class="soon"><b>iPhone · in beta.</b> App Store this fall.</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="brain" id="brain"><canvas id="cv" aria-label="A brain drawn from points that grows as you feed it" role="img"></canvas></div>
+      <p class="status" id="status" aria-live="polite">Your brain is <em>hungry.</em></p>
+      <div class="stats" aria-hidden="true">
+        <div class="stat"><b id="fed">0</b><span>Fed today</span></div>
+        <div class="stat"><b id="prot">0m</b><span>Protected</span></div>
+        <div class="stat"><b id="conn">0</b><span>Connections</span></div>
+      </div>
+      <p class="hint" id="hint">Drag it into your brain, or tap it.</p>
+      <div class="tray" id="tray"></div>
+    </div>
+  </div>
+</section>
+
+<section class="mirror">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">Your mirror</p>
+      <p class="big"><span class="n">3</span><span class="u">hours a day.</span></p>
+      <p class="thats">That's</p>
+      <p class="big"><span class="n">45</span><span class="u">days a year.</span></p>
+      <p class="after">Every decade, <b>over a year of your life</b>, fed to the feed.</p>
+      <p class="turn">You won't have to imagine it back. <span>Become closer, day by day.</span></p>
+      <p class="cap">BrainDiet opens by showing you your own number.</p>
+    </div>
+  </div>
+</section>
+
+<section class="beat">
+  <div class="wrap">
+    <div class="copy reveal">
+      <p class="eyebrow">When the urge hits</p>
+      <h2>Open a blocked app. <span class="warm">Get one real thing to do.</span></h2>
+      <p>You pick your junk apps and Apple's Screen Time holds the block. The shield doesn't scold you. It hands you the step you said you wanted, right where you're standing.</p>
+    </div>
+    <div class="phones pair reveal">
+      <img class="phone back" src="img/block.webp" width="640" height="1310" alt="Picking which apps to block" loading="lazy">
+      <img class="phone front" src="img/shield.webp" width="640" height="1359" alt="The shield: You wanted to be social. Go talk to a stranger." loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="beat flip">
+  <div class="wrap">
+    <div class="phones reveal"><img class="phone" src="img/home.webp" width="640" height="1310" alt="BrainDiet home: a well nourished brain and today's step" loading="lazy"></div>
+    <div class="copy reveal">
+      <p class="eyebrow">Every day</p>
+      <h2>One real step. <span class="leaf">Built from your goals.</span></h2>
+      <p>Tell it who you're becoming and it plans the steps that get you there. Finish three and three more arrive. Every one you do feeds the brain you just played with.</p>
+    </div>
+  </div>
+</section>
+
+<section class="beat">
+  <div class="wrap">
+    <div class="copy reveal">
+      <p class="eyebrow">Over the month</p>
+      <h2>Watch it <span class="leaf">become real.</span></h2>
+      <p>The time you didn't scroll turns into progress you can see. Reading sessions, workouts, the first book finished.</p>
+    </div>
+    <div class="phones reveal"><img class="phone" src="img/becoming.webp" width="640" height="1359" alt="The Becoming screen: first book finished, where the time went" loading="lazy"></div>
+  </div>
+</section>
+
+<section class="diff">
+  <div class="wrap reveal">
+    <p class="eyebrow">Why it's different</p>
+    <h2>Same block as the other apps. <span class="leaf">Everything after it is ours.</span></h2>
+    <p>Blockers stop the scroll and leave the time empty, so people go right back. BrainDiet fills it. It learns the goals you want and the person you want to be, then breaks them into steps small enough to do today. Everything stays on your phone.</p>
+  </div>
+</section>
+
+<section class="founder">
+  <div class="wrap reveal">
+    <img src="img/jack.webp" width="480" height="480" alt="Jack Boring" loading="lazy">
+    <div>
+      <p class="eyebrow">Who's building it</p>
+      <h2>Built by a student who had the problem.</h2>
+      <p>I'm Jack Boring, a student at Arizona State. I'd pick up my phone and lose myself, and watch my days get wasted. Everyone around me was dealing with the same thing, and it was normal. So I researched what actually works, found what works for me, and built BrainDiet so it works for everyone.</p>
+    </div>
+  </div>
+</section>
+
+<section class="close" id="early">
+  <div class="wrap reveal">
+    <h2>Your brain <span class="warm">eats too.</span></h2>
+    <p class="price"><b>3 days free.</b> Then $4.99 a week, or $19.99 once.</p>
+    <form name="early-access" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form">
+      <input type="hidden" name="form-name" value="early-access">
+      <p class="hp"><label>Leave this empty <input name="bot-field"></label></p>
+      <input type="email" name="email" required placeholder="you@email.com" aria-label="Email address" autocomplete="email">
+      <button class="pill" type="submit">Get early access</button>
+    </form>
+    <p class="formnote" id="formnote">One email when it's on the App Store. Nothing else.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Made by Jack Boring, a student at Arizona State University. © 2026</span>
+    <nav><a href="privacy-policy.html">Privacy</a><a href="support.html">Support</a></nav>
+  </div>
+</footer>
+
+<script src="shape.js"></script>
+<script src="gyri.js"></script>
+<script>
+/* The BrainDiet cloud, ported from the app (CultureCloudModel.swift, itself a port
+   of design/culture-cloud/cloud.js). Everything lives in AUTHORED BRAIN UNITS and
+   is transformed at draw time, so resizing never reseeds the sim. */
+(function(){
+const DT=1/60, NODE=5, LINK=64, ZWIN=0.30, WAVE_SPEED=2400, WAVE_BAND=210, WAVE_LIFE=1.6;
+function mb(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// ---- sites: dense rim (identity), folds, sparse interior ----
+const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+svg.style.cssText='position:absolute;width:0;height:0;opacity:0;pointer-events:none';
+document.body.appendChild(svg);
+function samples(d,step){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','path');
+  el.setAttribute('d',d); svg.appendChild(el);
+  const L=el.getTotalLength(), out=[];
+  for(let l=0;l<L;l+=step){const q=el.getPointAtLength(l); out.push({x:q.x,y:q.y});}
+  return out;
+}
+const r0=mb(3), sites=[];
+samples(SMOOTH,12).forEach(p=>sites.push({x:p.x+(r0()*20-10),y:p.y+(r0()*20-10),tier:0}));
+GYRI.forEach(g=>samples(g,20).forEach(p=>sites.push({x:p.x+(r0()*20-10),y:p.y+(r0()*20-10),tier:1})));
+document.body.removeChild(svg);
+const outline=new Path2D(SMOOTH), probe=document.createElement('canvas').getContext('2d');
+let inner=0,tries=0;
+while(inner<260&&tries<6000){tries++;
+  const x=VB.x+r0()*VB.w, y=VB.y+r0()*VB.h;
+  if(probe.isPointInPath(outline,x,y)){sites.push({x,y,tier:2});inner++;}}
+const CX=VB.x+VB.w/2, CY=VB.y+VB.h/2;
+
+// ---- model ----
+let rng=mb(11), t=0, dots=[], used=new Set(), serving=null, burst=null;
+function add(i,bornNow,from){
+  const s=sites[i]; used.add(i);
+  const z=s.tier===0?0.52+rng()*0.48:s.tier===1?0.50+rng()*0.50:rng()*0.55;
+  const gb=s.tier===0?0.72:s.tier===1?0.67:0.45;
+  dots.push({i,tier:s.tier,hx:s.x,hy:s.y,x:from?from.x:s.x,y:from?from.y:s.y,z,
+    grade:gb+Math.pow(rng(),1.7)*(s.tier===0?1.35:1.5),ph:rng()*6.283,
+    amp:(4+rng()*13)*(0.4+z*0.9),drift:(rng()-0.5)*0.5,born:bornNow?t:-99});
+}
+function seed(frac){
+  const r=mb(7);
+  sites.forEach((s,i)=>{if(s.tier===0)add(i,false);});
+  const fill=sites.map((s,i)=>({i,s})).filter(o=>o.s.tier!==0)
+    .map(o=>({i:o.i,k:o.s.tier*1.6+r()})).sort((a,b)=>a.k-b.k);
+  const n=Math.round(fill.length*frac);
+  for(let k=0;k<n;k++)add(fill[k].i,false);
+}
+seed(0.45);
+const fillTotal=sites.filter(s=>s.tier!==0).length;
+const connections=()=>dots.length-sites.filter(s=>s.tier===0).length;
+
+function feedFrom(p){            // flies in from p, absorbs near the centre
+  if(serving)return false;
+  let best=1e18,tg={x:CX,y:CY};
+  dots.forEach(d=>{const dd=(d.x-p.x)**2+(d.y-p.y)**2;if(dd<best){best=dd;tg={x:d.x,y:d.y};}});
+  serving={x:p.x,y:p.y,tx:tg.x,ty:tg.y,r:17,age:0,inside:false,anchored:false,yield:18};return true;
+}
+function feedAt(p){              // dropped: absorbs where it landed
+  if(serving)return false;
+  serving={x:p.x,y:p.y,tx:p.x,ty:p.y,r:17,age:0,inside:true,anchored:true,yield:18};return true;
+}
+let onAbsorb=null;
+function absorb(p,yieldN){
+  const free=sites.map((s,i)=>i).filter(i=>!used.has(i))
+    .sort((a,b)=>Math.hypot(sites[a].x-p.x,sites[a].y-p.y)-Math.hypot(sites[b].x-p.x,sites[b].y-p.y));
+  for(let k=0;k<Math.min(yieldN,free.length);k++)add(free[k],true,p);
+  burst={x:p.x,y:p.y,at:t}; serving=null; onAbsorb&&onAbsorb();
+}
+function step(){
+  t+=DT;
+  const f=serving;
+  if(f){f.age+=DT;
+    if(!f.inside){f.x+=(f.tx-f.x)*0.085;f.y+=(f.ty-f.y)*0.085;
+      if(Math.hypot(f.tx-f.x,f.ty-f.y)<7){f.inside=true;f.age=0;}}
+    else{ if(!f.anchored){f.x+=(CX-f.x)*0.03;f.y+=(CY-f.y)*0.03;}
+      f.r*=0.986; if(f.age>1.0)absorb({x:f.x,y:f.y},f.yield);}
+  }
+  const g=serving;
+  for(const p of dots){
+    const w=t*0.24+p.ph;
+    let tx=p.hx+Math.cos(w)*p.amp, ty=p.hy+Math.sin(w*0.73)*p.amp*0.85+Math.sin(w*0.4)*p.drift*9;
+    if(g&&g.inside){const dx=g.x-p.x,dy=g.y-p.y,d=Math.max(1,Math.hypot(dx,dy));
+      const pull=Math.max(0,1-d/400)*0.34*(0.4+p.z);tx+=dx*pull;ty+=dy*pull;}
+    const e=p.born>-90?0.10:0.05; p.x+=(tx-p.x)*e; p.y+=(ty-p.y)*e;
+  }
+}
+function wave(p){
+  if(!burst)return 0; const age=t-burst.at; if(age<0||age>=WAVE_LIFE)return 0;
+  const b=Math.abs(Math.hypot(p.x-burst.x,p.y-burst.y)-age*WAVE_SPEED);
+  return b<WAVE_BAND?(1-b/WAVE_BAND)*Math.max(0,1-age/1.5):0;
+}
+
+// ---- view ----
+const host=document.getElementById('brain'), cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W=0,H=0,dpr=1,S=1,OX=0,OY=0;
+function resize(){
+  dpr=Math.min(2,window.devicePixelRatio||1);
+  W=Math.round(host.clientWidth*dpr); H=Math.round(host.clientHeight*dpr);
+  cv.width=W; cv.height=H;
+  S=Math.min(W/VB.w,H/VB.h)*0.94; OX=(W-VB.w*S)/2-VB.x*S; OY=(H-VB.h*S)/2-VB.y*S;
+}
+const toPx=(x,y)=>[x*S+OX,y*S+OY];
+const DEEP='36,74,47', MID='62,122,78', HI='125,182,139';
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const P=dots.slice().sort((a,b)=>a.z-b.z);
+  // links only between near neighbours at similar depth (grid-bucketed)
+  const cell=LINK, grid=new Map();
+  P.forEach((p,i)=>{const k=((p.x/cell)|0)+','+((p.y/cell)|0);(grid.get(k)||grid.set(k,[]).get(k)).push(i);});
+  ctx.lineCap='round';
+  for(let i=0;i<P.length;i++){
+    const a=P[i]; let made=0; const gx=(a.x/cell)|0, gy=(a.y/cell)|0;
+    outer: for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
+      const b0=grid.get((gx+ox)+','+(gy+oy)); if(!b0)continue;
+      for(const j of b0){ if(j<=i)continue; const b=P[j];
+        if(Math.abs(a.z-b.z)>ZWIN)continue;
+        const d=Math.hypot(a.x-b.x,a.y-b.y); if(d>LINK)continue;
+        const w=1-d/LINK, z=(a.z+b.z)/2, wv=Math.max(wave(a),wave(b));
+        const [x1,y1]=toPx(a.x,a.y),[x2,y2]=toPx(b.x,b.y);
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+        ctx.lineWidth=(0.25+w*1.1*z+wv*0.95)*dpr*Math.max(.6,S*2.2);
+        ctx.strokeStyle=wv>0.06?`rgba(${HI},${0.16+wv*0.42})`:`rgba(${MID},${(0.04+w*0.30)*(0.3+z*0.7)})`;
+        ctx.stroke(); if(++made>=2)break outer;
+      }
+    }
+  }
+  if(burst&&t-burst.at<1.3){
+    const u=(t-burst.at)/1.3,[bx,by]=toPx(burst.x,burst.y),rr=(30+u*190)*S;
+    const hg=ctx.createRadialGradient(bx,by,0,bx,by,rr);
+    hg.addColorStop(0,`rgba(${HI},${0.30*(1-u)})`);hg.addColorStop(1,`rgba(${HI},0)`);
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(bx,by,rr,0,7);ctx.fill();
+  }
+  for(const p of P){
+    const fresh=Math.max(0,1-(t-p.born)/1.8), grow=Math.min(1,(t-p.born)/0.7), wv=wave(p);
+    const rr=NODE*S*p.grade*(0.35+0.95*p.z)*(p.born>-90?grow:1)*(1+fresh*0.7+wv*0.75);
+    const a=(0.22+p.z*0.66)*(p.born>-90?Math.min(1,grow+0.25):1);
+    const [x,y]=toPx(p.x,p.y);
+    ctx.beginPath();ctx.arc(x,y,Math.max(rr,0.4),0,7);
+    ctx.fillStyle=(fresh>0.05||wv>0.22)?`rgba(${HI},${Math.min(1,a+0.32+wv*0.34)})`:`rgba(${p.z>0.62?DEEP:MID},${a})`;
+    ctx.fill();
+  }
+  const f=serving;
+  if(f){const [x,y]=toPx(f.x,f.y), r=f.r*S;
+    const hg=ctx.createRadialGradient(x,y,0,x,y,r*3.4);
+    hg.addColorStop(0,`rgba(${HI},0.34)`);hg.addColorStop(1,`rgba(${HI},0)`);
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(x,y,r*3.4,0,7);ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=`rgba(${HI},0.95)`;ctx.fill();
+    ctx.lineWidth=1.8*dpr;ctx.strokeStyle=`rgba(${MID},0.65)`;ctx.stroke();}
+}
+
+// fixed timestep with accumulator; pauses offscreen; static under reduced motion
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let visible=true,last=0,acc=0,raf=0;
+function frame(now){
+  raf=0; if(!visible)return;
+  const dt=last?Math.min(0.1,(now-last)/1000):DT; last=now; acc+=dt;
+  if(still){ if(serving){while(serving)step();} }
+  else while(acc>=DT){step();acc-=DT;}
+  if(still)acc=0;
+  draw(); if(!still||serving)raf=requestAnimationFrame(frame);
+}
+function kick(){ if(!raf){last=0;raf=requestAnimationFrame(frame);} }
+new IntersectionObserver(es=>{visible=es[0].isIntersecting; if(visible)kick();}).observe(host);
+new ResizeObserver(()=>{resize();draw();kick();}).observe(host);
+resize(); for(let k=0;k<90;k++)step(); draw(); kick();
+
+// ---- the steps you feed it ----
+const STEPS=[
+  {k:'learn', icon:'ph-book-open', t:'Read 10 pages of Dune', m:'after you brush your teeth', mins:35},
+  {k:'focus', icon:'ph-timer', t:'Deep work for 25 minutes', m:'phone in the other room', mins:25},
+  {k:'create', icon:'ph-paint-brush', t:'Sketch for 15 minutes', m:'before you open anything', mins:15},
+  {k:'focus', icon:'ph-barbell', t:'Train a full session', m:"once you've done your stretches", mins:45},
+];
+const tray=document.getElementById('tray'), statusEl=document.getElementById('status');
+const fedEl=document.getElementById('fed'), protEl=document.getElementById('prot'), connEl=document.getElementById('conn');
+let idx=0, fed=0, mins=0, chip=null, busy=false;
+const fmt=m=>m<60?m+'m':Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'');
+function counters(){fedEl.textContent=fed; protEl.textContent=fmt(mins); connEl.textContent=connections();}
+counters();
+onAbsorb=()=>{
+  busy=false; counters();
+  if(fed>=3){statusEl.classList.add('fed');statusEl.innerHTML='Well <em>nourished.</em>';}
+  else if(fed>=1){statusEl.innerHTML='Still a little <em>hungry.</em>';}
+  if(dots.length>=sites.length-20){ // full: start over quietly so it stays playable
+    setTimeout(()=>{dots=[];used=new Set();rng=mb(11);seed(0.45);fed=0;mins=0;counters();
+      statusEl.classList.remove('fed');statusEl.innerHTML='Your brain is <em>hungry.</em>';},2200);
+  }
+  makeChip();
+};
+function makeChip(){
+  const s=STEPS[idx%STEPS.length]; idx++;
+  const b=document.createElement('button'); b.type='button';
+  b.className='chip enter k-'+s.k;
+  b.setAttribute('aria-label','Feed your brain: '+s.t);
+  b.innerHTML=`<span class="ic"><i class="ph-duotone ${s.icon}"></i></span><span><span class="t">${s.t}</span><span class="m">${s.m}</span></span><span class="go">${s.mins}m</span>`;
+  tray.appendChild(b); chip=b; b._s=s;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>b.classList.remove('enter')));
+  bindDrag(b);
+}
+function toBrain(cx,cy){
+  const r=cv.getBoundingClientRect();
+  return {x:((cx-r.left)*dpr-OX)/S, y:((cy-r.top)*dpr-OY)/S};
+}
+function consume(b,how,pt){
+  if(busy)return; busy=true;
+  const s=b._s; fed++; mins+=s.mins;
+  const r=b.getBoundingClientRect();
+  const ok=how==='drop'?feedAt(pt):feedFrom(toBrain(r.left+r.width/2,r.top+r.height/2));
+  if(!ok){busy=false;fed--;mins-=s.mins;return;}
+  b.classList.remove('dragging'); b.classList.add('gone'); b.disabled=true;
+  setTimeout(()=>b.remove(),400); kick();
+}
+function bindDrag(b){
+  let sx=0,sy=0,moved=false,id=null;
+  b.addEventListener('pointerdown',e=>{
+    if(busy)return; id=e.pointerId; sx=e.clientX; sy=e.clientY; moved=false;
+    b.setPointerCapture(id);
+  });
+  b.addEventListener('pointermove',e=>{
+    if(e.pointerId!==id)return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!moved&&Math.hypot(dx,dy)>6){moved=true;b.classList.add('dragging');}
+    if(moved){b.style.transform=`translate(${dx}px,${dy}px) scale(.92) rotate(${Math.max(-6,Math.min(6,dx/30))}deg)`;
+      const p=toBrain(e.clientX,e.clientY);
+      host.classList.toggle('over',probe.isPointInPath(outline,p.x,p.y));}
+  });
+  const end=e=>{
+    if(e.pointerId!==id)return; id=null; host.classList.remove('over');
+    if(!moved){consume(b,'tap');return;}
+    const p=toBrain(e.clientX,e.clientY);
+    if(probe.isPointInPath(outline,p.x,p.y)){b.style.transform='';consume(b,'drop',p);}
+    else{b.classList.remove('dragging');b.style.transform='';}
+  };
+  b.addEventListener('pointerup',end); b.addEventListener('pointercancel',end);
+  b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();consume(b,'tap');}});
+  b.addEventListener('click',e=>{ if(e.detail===0)consume(b,'tap'); }); // keyboard-synthesized click
+}
+makeChip();
+})();
+
+// header hairline, reveal on scroll
+(function(){
+  const h=document.querySelector('header');
+  const on=()=>h.classList.toggle('scrolled',scrollY>8); on(); addEventListener('scroll',on,{passive:true});
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.15});
+  const all=/[?&]all\b/.test(location.search);
+  if(all)document.querySelectorAll('img[loading=lazy]').forEach(i=>i.loading='eager');
+  document.querySelectorAll('.reveal').forEach(el=>all?el.classList.add('in'):io.observe(el));
+})();
+
+// early access: Netlify Forms when hosted there, email fallback anywhere else
+(function(){
+  const f=document.getElementById('form'), note=document.getElementById('formnote');
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const data=new URLSearchParams(new FormData(f)).toString();
+    try{
+      const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:data});
+      if(!r.ok)throw 0;
+      f.reset(); note.textContent="You're on the list. One email when it's live.";
+    }catch(_){
+      const em=f.email.value;
+      location.href='mailto:jackisboring25@gmail.com?subject='+encodeURIComponent('BrainDiet early access')+'&body='+encodeURIComponent('Add me: '+em);
+    }
+  });
+})();
+</script>
+</body>
+</html>

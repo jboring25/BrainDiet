@@ -5,6 +5,15 @@
 > (`design/_current/`, captured with ios-sim-review), never re-drawn from
 > scratch. Paint out only what changes; reuse the real elements.
 >
+> **Onboarding v2 (approved 2026-10-08, built a51c7a5):** welcome → hijack → timeLost →
+> domains → primaryDomain → goalWords (required, top 3 goals) → baseline → aspiration →
+> timeAndDay → blocker → interstitial → pause → screenAccess → pickApps →
+> reachAndSchedule → building → mirror → commit → onboardingPaywall → dinnerBell →
+> menuHero. `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
+> paywall. AI plan = PlanService → braindietapp.com/.netlify/functions/plan (Claude Haiku
+> 4.5, tool-forced JSON, no chat); any failure falls back to the heuristic planner.
+> OPEN: schedule enforcement + the "Do it now" lock (answers collected, not enforced).
+>
 > ## ⭐ STATE OF THE APP — 2026-08-29
 >
 > **Read this block. Everything below it is history, and much of it is stale.**
