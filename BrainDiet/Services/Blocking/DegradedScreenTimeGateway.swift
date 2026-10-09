@@ -43,4 +43,13 @@ final class DegradedScreenTimeGateway: ScreenTimeGateway {
     func disarmDailyCap() {
         Log.app.info("Blocking: disarmDailyCap no-op (degraded)")
     }
+    func armFeedSchedule(_ window: FeedWindow, selection: BlockingSelection) {
+        Log.app.info("Blocking: armFeedSchedule no-op (degraded)")
+    }
+    func startDoItNow(allow: BlockingSelection, endsAt: Date) {
+        Log.app.info("Blocking: startDoItNow no-op (degraded)")
+    }
+    func endDoItNow() {
+        Log.app.info("Blocking: endDoItNow no-op (degraded)")
+    }
 }

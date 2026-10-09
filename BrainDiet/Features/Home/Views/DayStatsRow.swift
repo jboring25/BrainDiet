@@ -128,7 +128,8 @@ struct TodaysFocusCard: View {
     let symbol: String
     let tint: Color
     let onSelfReport: () -> Void
-    let onTimer: () -> Void
+    /// The round button: lock the phone for this step (Do it now, 2026-10-08).
+    let onDoItNow: () -> Void
     /// ⭐ DRAG, DON'T TAP (Jack, 2026-10-07): "I did this" is now a handle you
     /// drag into your brain. It turns into the serving ball and lands where you
     /// let go. The tap-only path survives as an accessibility action.
@@ -154,7 +155,7 @@ struct TodaysFocusCard: View {
     //     teach the swipe up to the camera. It stops for good once learned.
     //
     // Compact on purpose: one icon, the step, one meta line, and the timer as a
-    // round button. The specific action is the biggest type on the card.
+    // round button (Do it now). The specific action is the biggest type on the card.
 
     @State private var pressing = false
     @State private var nudge: CGFloat = 0
@@ -192,7 +193,7 @@ struct TodaysFocusCard: View {
                 }
                 Spacer(minLength: 4)
 
-                Button(action: onTimer) {
+                Button(action: onDoItNow) {
                     Image(systemName: "timer")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(Color.bdLeafDeep)
@@ -200,7 +201,8 @@ struct TodaysFocusCard: View {
                         .background(Circle().strokeBorder(Color.bdLeafDeep.opacity(0.3), lineWidth: 1.2))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Time it")
+                .accessibilityLabel("Do it now")
+                .accessibilityHint("Locks every app except your chosen ones for \(minutes) minutes.")
             }
             .padding(.horizontal, 14)
             .padding(.bottom, 14)

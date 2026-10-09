@@ -66,6 +66,17 @@ private enum ShieldKeys {
     static let symbol    = "shield.symbol"
     static let variants  = "shield.variants"
     static let cursor    = "shield.cursor"
+    // Do it now (mirrors BlockingConfig, 2026-10-08).
+    static let doItNowEndsAt = "doItNow.endsAt"
+    static let doItNowTitle  = "doItNow.title"
+
+    /// The running Do it now step's title, or nil when no lock is live.
+    static func doItNowStep(_ d: UserDefaults?) -> String? {
+        guard let d, d.double(forKey: doItNowEndsAt) > Date().timeIntervalSince1970,
+              let title = d.string(forKey: doItNowTitle), !title.isEmpty
+        else { return nil }
+        return title
+    }
 }
 
 // Design-system colors, duplicated as UIColors for the extension (no SwiftUI here).
@@ -76,6 +87,10 @@ private enum ShieldPalette {
     // Appetite palette (2026-07-18): leaf replaces the superseded sage family.
     static let sage        = UIColor(red: 0x3E/255, green: 0x7A/255, blue: 0x4E/255, alpha: 1)    // leaf #3E7A4E
     static let onSage      = UIColor.white                                                        // white on leaf (CTA law)
+    // Do it now lock (mirrors Color.bdLockGround / bdLockInk / bdMint in the app).
+    static let lock        = UIColor(red: 0x13/255, green: 0x2A/255, blue: 0x1C/255, alpha: 1)
+    static let lockInk     = UIColor(red: 0xF6/255, green: 0xF1/255, blue: 0xE7/255, alpha: 1)
+    static let mint        = UIColor(red: 0xA8/255, green: 0xD5/255, blue: 0xB2/255, alpha: 1)
 }
 
 final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
@@ -100,6 +115,21 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
 
     private func bridge() -> ShieldConfiguration {
         let d = UserDefaults(suiteName: ShieldKeys.suite)
+
+        // ⭐ DO IT NOW (2026-10-08). While a lock runs, every blocked app says
+        // the one thing to do, nothing else. No pass button: a pass lifts the
+        // junk store only, so it could not open anything here, and a shield
+        // button that cannot do what it says is never drawn.
+        if let step = ShieldKeys.doItNowStep(d) {
+            return ShieldConfiguration(
+                backgroundBlurStyle: .systemUltraThinMaterialDark,
+                backgroundColor: ShieldPalette.lock.withAlphaComponent(0.96),
+                icon: UIImage(named: "PlateInviteCard"),
+                title: .init(text: "Do it now.", color: ShieldPalette.lockInk),
+                subtitle: .init(text: step, color: ShieldPalette.mint),
+                primaryButtonLabel: .init(text: "Back to it", color: ShieldPalette.lock),
+                primaryButtonBackgroundColor: ShieldPalette.mint)
+        }
 
         var headline  = d?.string(forKey: ShieldKeys.headline)  ?? "You wanted your time back."
         var body      = d?.string(forKey: ShieldKeys.body)      ?? "There's still time today. Here's 20 minutes, protected. Go spend it on you."

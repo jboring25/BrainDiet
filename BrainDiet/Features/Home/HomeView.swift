@@ -161,7 +161,7 @@ struct HomeView: View {
                                 symbol: focus.domain.symbol,
                                 tint: focus.domain.tint,
                                 onSelfReport: { reportFocus(focus) },
-                                onTimer: { startFocus(focus) },
+                                onDoItNow: { doItNow(focus) },
                                 onDragChanged: { value in
                                     if !drop.isDragging {
                                         drop.begin(focusDraggable(focus), rowID: focus.step.id, origin: focusCardCentre == .zero ? value.startLocation : focusCardCentre)
@@ -389,6 +389,15 @@ struct HomeView: View {
                 consumePendingReport()
             }
         }
+        // Do it now's "I did it" hands over while Home may already be the tab,
+        // so the tab change above never fires. Same beat, same delay.
+        .onChange(of: router.pendingReport) { _, item in
+            guard item != nil, router.selectedTab == .home else { return }
+            Task {
+                try? await Task.sleep(for: .milliseconds(420))
+                consumePendingReport()
+            }
+        }
     }
 
     // MARK: Engine sync — views @Query → engine (event-driven, never in body).
@@ -532,9 +541,13 @@ struct HomeView: View {
                               icon: .leaf, tint: f.domain.tint, ink: .bdTextPrimary))
     }
 
-    private func startFocus(_ f: TodaysFocus) {
-        guard let serving = PlateEngine.serving(for: f.step, in: f.goal) else { return }
-        start(serving)
+    /// ⭐ DO IT NOW (Jack, 2026-10-08): the round button locks the phone for
+    /// the step's expected time. MainView owns the lock screen.
+    private func doItNow(_ f: TodaysFocus) {
+        blocking.startDoItNow(DoItNowSession(title: f.step.title,
+                                             domainRaw: f.domain.rawValue,
+                                             goalID: f.goal.id, stepID: f.step.id,
+                                             minutes: f.step.suggestedMinutes))
     }
 
     private func report(_ item: PlateDraggable) {

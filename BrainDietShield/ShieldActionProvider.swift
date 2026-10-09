@@ -29,6 +29,7 @@ private enum ShieldActionKeys {
     static let lastProtectAt = "shield.lastProtectAt"
     static let junkStore     = "BrainDietJunk"
     static let cursor        = "shield.cursor"
+    static let doItNowEndsAt = "doItNow.endsAt"
 }
 
 // Mirrors InterceptPass in the app (separate target → duplicated on purpose,
@@ -102,8 +103,13 @@ final class ShieldActionProvider: ShieldActionDelegate {
     private func response(for action: ShieldAction) -> ShieldActionResponse {
         switch action {
         case .primaryButtonPressed:
-            // Chose real life: stamp the intent, then leave the feed.
             let d = UserDefaults(suiteName: ShieldActionKeys.suite)
+            // Do it now's "Back to it": just close. The rotation and the
+            // protect stamp belong to the junk intercept, not to the lock.
+            if (d?.double(forKey: ShieldActionKeys.doItNowEndsAt) ?? 0) > Date().timeIntervalSince1970 {
+                return .close
+            }
+            // Chose real life: stamp the intent, then leave the feed.
             d?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
             // Next interrupt speaks to the next goal. Re-assigning the same
             // shield set asks iOS to redraw it rather than reuse the last one.

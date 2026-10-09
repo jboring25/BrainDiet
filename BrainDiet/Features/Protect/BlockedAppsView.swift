@@ -82,6 +82,8 @@ struct BlockedAppsView: View {
     /// with no call site is not a feature**, and nothing in the build catches it
     /// because unreferenced SwiftUI views compile perfectly.
     @State private var tweaking: StepRow?
+    /// The "Block my feeds" editor.
+    @State private var editingSchedule = false
 
     private var profile: UserProfile? { profiles.first }
     private var tiles: [Tile] { Tile.current(blocking: blocking, profile: profile) }
@@ -113,6 +115,18 @@ struct BlockedAppsView: View {
             if ProcessInfo.processInfo.environment["BD_SHOW_MAKE_MINE"] == "1" {
                 tweaking = stepRows.first
             }
+        }
+        #endif
+        .sheet(isPresented: $editingSchedule) {
+            if let profile {
+                FeedScheduleSheet(profile: profile)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
+        }
+        #if DEBUG
+        .onAppear {
+            if ProcessInfo.processInfo.environment["BD_SHOW_SCHEDULE"] == "1" { editingSchedule = true }
         }
         #endif
         .sheet(item: $tweaking) { row in
@@ -200,6 +214,13 @@ struct BlockedAppsView: View {
                     .padding(.bottom, 2)
                 }
                 .padding(.horizontal, -Theme.Space.screenX)
+
+                // ⭐ WHEN they rest (2026-10-08): Opal's Rules card as one row.
+                if let profile {
+                    FeedScheduleCard(window: profile.feedWindow) { editingSchedule = true }
+                        .padding(.top, 10)
+                        .padding(.bottom, 4)
+                }
             }
 
             // Setup state, not the point of the screen — a quiet row, never a
@@ -288,10 +309,11 @@ struct BlockedAppsView: View {
         .accessibilityHint(Text("Connects Screen Time if needed, then opens the app picker."))
     }
 
-    /// States the truth and nothing more — there is no schedule engine yet, so
-    /// this never invents an end time (honesty law).
+    /// States the truth and nothing more (honesty law). Outside the feed
+    /// window nothing is resting, so it says when the rest starts again.
     private var headline: String {
         if tiles.isEmpty { return String(localized: "Nothing is resting yet.") }
+        if !blocking.isFeedWindowOpen, let line = blocking.feedWindow.openUntilLine() { return line }
         if restingCount == 0 { return String(localized: "Everything is out right now.") }
         if released.isEmpty {
             return restingCount == 1

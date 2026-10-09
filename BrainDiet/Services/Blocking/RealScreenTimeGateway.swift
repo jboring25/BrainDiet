@@ -261,5 +261,81 @@ final class RealScreenTimeGateway: ScreenTimeGateway {
         activityCenter.stopMonitoring([.init(BlockingConfig.dailyCapActivity)])
         Log.app.info("Blocking: daily cap disarmed")
     }
+
+    // MARK: Feed schedule (2026-10-08) — the junk shield only inside the window.
+
+    /// ⭐ The monitor, not the app, is what flips the shield at 9am and 5pm: the
+    /// app is usually not running then. It reads the selection and the window
+    /// from the App Group, so both are written here before anything is armed.
+    func armFeedSchedule(_ window: FeedWindow, selection: BlockingSelection) {
+        if let defaults = UserDefaults(suiteName: BlockingConfig.appGroup) {
+            defaults.set(selection.encoded, forKey: BlockingConfig.kSelectionData)
+            defaults.set(try? JSONEncoder().encode(window), forKey: BlockingConfig.kFeedWindow)
+        }
+        // Only ever our own feed activities: the daily cap and a running Do it
+        // now live under different names and must survive a schedule change.
+        let previous = activityCenter.activities
+            .filter { $0.rawValue.hasPrefix(BlockingConfig.feedActivityPrefix) }
+        if !previous.isEmpty { activityCenter.stopMonitoring(previous) }
+        guard !window.isAlways else {
+            Log.app.info("Blocking: feed schedule = Always (no window activities)")
+            return
+        }
+        var armed = 0
+        for segment in window.segments {
+            do {
+                try activityCenter.startMonitoring(
+                    .init(segment.name),
+                    during: DeviceActivitySchedule(intervalStart: segment.start,
+                                                   intervalEnd: segment.end,
+                                                   repeats: true))
+                armed += 1
+            } catch {
+                Log.app.error("Blocking: feed segment \(segment.name, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+        Log.app.info("Blocking: feed schedule armed (\(armed, privacy: .public) intervals, \(window.summary, privacy: .public))")
+    }
+
+    // MARK: Do it now (2026-10-08) — everything locked but the allow-list.
+
+    private let doItNowStore = ManagedSettingsStore(named: .init(BlockingConfig.doItNowStoreName))
+
+    func startDoItNow(allow: BlockingSelection, endsAt: Date) {
+        let allowed = Self.decode(allow).applicationTokens
+        if let defaults = UserDefaults(suiteName: BlockingConfig.appGroup) {
+            defaults.set(allow.encoded, forKey: BlockingConfig.kAllowSelectionData)
+        }
+        doItNowStore.shield.applicationCategories = .all(except: allowed)
+        doItNowStore.shield.webDomainCategories = .all()
+
+        // The release has to happen even if the app is killed, so it belongs to
+        // the monitor. Apple rejects intervals under 15 minutes; a shorter step
+        // starts its interval in the past so the END still lands on time.
+        let activity = DeviceActivityName(BlockingConfig.doItNowActivity)
+        activityCenter.stopMonitoring([activity])
+        let cal = Calendar.current
+        let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let start = min(Date(), endsAt.addingTimeInterval(-TimeInterval(FeedWindow.minimumMinutes * 60 + 30)))
+        do {
+            try activityCenter.startMonitoring(
+                activity,
+                during: DeviceActivitySchedule(intervalStart: cal.dateComponents(parts, from: start),
+                                               intervalEnd: cal.dateComponents(parts, from: endsAt),
+                                               repeats: false))
+            Log.app.info("Blocking: Do it now armed until \(endsAt, privacy: .public) (\(allowed.count, privacy: .public) apps allowed)")
+        } catch {
+            // The in-app lock still ends it on the next launch; only the
+            // killed-app release is lost.
+            Log.app.error("Blocking: Do it now interval failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    func endDoItNow() {
+        doItNowStore.shield.applicationCategories = nil
+        doItNowStore.shield.webDomainCategories = nil
+        activityCenter.stopMonitoring([.init(BlockingConfig.doItNowActivity)])
+        Log.app.info("Blocking: Do it now released")
+    }
 }
 #endif

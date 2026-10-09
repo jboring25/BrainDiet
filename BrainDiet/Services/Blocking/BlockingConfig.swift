@@ -24,6 +24,30 @@ enum BlockingConfig {
 
     /// DeviceActivity activity name for the daily junk-cap monitor.
     static let dailyCapActivity = "BrainDietDailyCap"
+
+    // MARK: - Feed schedule + Do it now (2026-10-08). Mirrored in the monitor
+    // and shield extensions; keep the strings identical.
+
+    /// Prefix for the repeating feed-window activities ("BrainDietFeed.0" …).
+    /// Distinct from `dailyCapActivity` so re-arming one never stops the other.
+    static let feedActivityPrefix = "BrainDietFeed."
+    /// The one-off activity whose end releases a Do it now lock even if the app
+    /// has been killed.
+    static let doItNowActivity = "BrainDietDoItNow"
+    /// Do it now gets its OWN store: ending it must never touch the junk shield.
+    static let doItNowStoreName = "BrainDietDoItNow"
+
+    /// JSON-encoded `FeedWindow`, read by the monitor at each window edge.
+    static let kFeedWindow = "blocking.feedWindow"
+    /// Encoded FamilyActivitySelection of the apps Do it now leaves open.
+    static let kAllowSelectionData = "blocking.allowSelectionData"
+    /// Epoch seconds the running Do it now lock ends. Absent/0 = no lock. The
+    /// shield extension reads this to swap its copy to the step.
+    static let kDoItNowEndsAt = "doItNow.endsAt"
+    /// The step's title, shown as the shield's body while the lock runs.
+    static let kDoItNowTitle = "doItNow.title"
+    /// The whole session (app-only), so the lock survives a relaunch.
+    static let kDoItNowSession = "doItNow.session"
     /// DeviceActivityEvent name for "junk cap reached".
     static let junkCapEvent = "junkCapReached"
     /// DeviceActivityEvent name prefix for the automatic USAGE meters — a series

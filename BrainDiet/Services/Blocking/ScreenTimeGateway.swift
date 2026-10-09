@@ -73,4 +73,15 @@ protocol ScreenTimeGateway: AnyObject {
     func armDailyCap(minutes: Int, selection: BlockingSelection)
     /// Disarm the daily cap schedule.
     func disarmDailyCap()
+
+    /// Replace the repeating feed-window activities with `window`'s segments
+    /// (none for Always) and hand the monitor the selection + window.
+    func armFeedSchedule(_ window: FeedWindow, selection: BlockingSelection)
+
+    /// Shield every app and website except `allow`'s apps until `endsAt`, with
+    /// a one-off DeviceActivity interval so the monitor releases it if the app
+    /// is gone by then.
+    func startDoItNow(allow: BlockingSelection, endsAt: Date)
+    /// Lift the Do it now shield and stop its activity.
+    func endDoItNow()
 }

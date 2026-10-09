@@ -105,6 +105,10 @@ enum DemoSeed {
                 : .now
         )
         context.insert(profile)
+        // Screenshot jump for the Menu's "Block my feeds" card.
+        if let raw = ProcessInfo.processInfo.environment["BD_FEED_SCHEDULE"] {
+            profile.feedScheduleRaw = raw
+        }
         for (domain, object) in objects { profile.rememberStepObject(object, for: domain) }
 
         let goals = plan.persist(into: context)

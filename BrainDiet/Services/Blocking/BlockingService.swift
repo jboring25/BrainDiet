@@ -31,6 +31,23 @@ final class BlockingService {
         self.mode = self.gateway.mode
         // The system's real status lands after launch; route it into the mirror.
         self.gateway.onModeChange = { [weak self] in self?.refreshMode() }
+        self.feedWindow = Self.storedFeedWindow()
+        self.doItNow = DoItNowSession.load()
+        #if DEBUG
+        // ios-sim-review jump: BD_DOITNOW=1 opens the lock on a fake 20-minute
+        // step; BD_DOITNOW=timesup opens it on the time's-up question. Never
+        // persisted, never touches the system shield.
+        if let raw = ProcessInfo.processInfo.environment["BD_DOITNOW"] {
+            let over = raw == "timesup"
+            doItNow = DoItNowSession(title: String(localized: "Read 10 pages of Atomic Habits"),
+                                     domainRaw: ActivityDomain.reading.rawValue,
+                                     goalID: nil, stepID: nil, minutes: 20,
+                                     startedAt: over ? Date().addingTimeInterval(-20 * 60) : Date(),
+                                     shielded: true)
+            isDebugDoItNow = true
+        }
+        #endif
+        expireDoItNowIfNeeded()
     }
 
     // MARK: Surface for the UI
@@ -145,6 +162,8 @@ final class BlockingService {
     /// the shield and the Menu can never disagree about which apps are out.
     func applyStandingShield(excluding releasedIDs: Set<String>) {
         guard hasSelection else { clearStandingShield(); return }
+        // Outside the feed window the junk shield is down by design.
+        guard isFeedWindowOpen else { clearStandingShield(); return }
         guard !releasedIDs.isEmpty else { applyStandingShield(); return }
         var reduced = BlockingSelection(
             encoded: selection.encoded,
@@ -159,6 +178,11 @@ final class BlockingService {
 
     func applyStandingShield() {
         guard isAuthorized, hasSelection else { return }
+        // ⭐ THE SCHEDULE WINS (2026-10-08). Every caller in the app that
+        // re-applies the shield (launch, picker, copy re-sync) goes through
+        // here, so this one check is what stops the app from re-blocking at
+        // 7pm a feed the monitor correctly released at 5pm.
+        guard isFeedWindowOpen else { gateway.clearPersistentShield(); return }
         gateway.applyPersistentShield(selection)
     }
 
@@ -176,5 +200,90 @@ final class BlockingService {
     func disarmDailyCap() {
         guard isAuthorized else { return }
         gateway.disarmDailyCap()
+    }
+
+    // MARK: - Feed schedule (Jack, 2026-10-08: "so they are not indefinite")
+
+    /// When the standing junk shield runs. Always until the user picks a window.
+    private(set) var feedWindow: FeedWindow = .always
+
+    /// True when the junk shield should be up right now.
+    var isFeedWindowOpen: Bool { feedWindow.contains(.now) }
+
+    /// Adopt a (possibly unchanged) window: persist it for the monitor, re-arm
+    /// the window activities, and put the shield in the state the window says.
+    /// Call after `loadSelection`, since the monitor needs the selection too.
+    func setFeedWindow(_ window: FeedWindow) {
+        feedWindow = window
+        if let d = UserDefaults(suiteName: BlockingConfig.appGroup) {
+            d.set(try? JSONEncoder().encode(window), forKey: BlockingConfig.kFeedWindow)
+        }
+        guard isAuthorized else { return }
+        gateway.armFeedSchedule(window, selection: selection)
+        applyStandingShield()
+    }
+
+    private static func storedFeedWindow() -> FeedWindow {
+        guard let data = UserDefaults(suiteName: BlockingConfig.appGroup)?
+                .data(forKey: BlockingConfig.kFeedWindow),
+              let window = try? JSONDecoder().decode(FeedWindow.self, from: data)
+        else { return .always }
+        return window
+    }
+
+    // MARK: - Do it now (Jack, 2026-10-08)
+
+    /// The running (or expired, unanswered) lock. Non-nil = the lock screen is up.
+    private(set) var doItNow: DoItNowSession?
+    /// DEBUG jump session: shown, never persisted, never shielded for real.
+    private var isDebugDoItNow = false
+
+    /// The apps Do it now leaves open (encoded FamilyActivitySelection).
+    private var allowSelection: BlockingSelection = .empty
+
+    func loadAllowList(encoded: Data?) {
+        allowSelection = BlockingSelection(encoded: encoded, mockAppIDs: [])
+        UserDefaults(suiteName: BlockingConfig.appGroup)?
+            .set(encoded, forKey: BlockingConfig.kAllowSelectionData)
+    }
+
+    /// Lock the phone for this step. In the Simulator, or without Screen Time
+    /// access, the lock screen still runs; only the system shield is skipped,
+    /// and `shielded` stays false so the copy says so.
+    func startDoItNow(_ session: DoItNowSession) {
+        var s = session
+        s.shielded = isAuthorized
+        s.save()                         // shield copy first, so it draws the step
+        doItNow = s
+        isDebugDoItNow = false
+        guard isAuthorized else { return }
+        gateway.startDoItNow(allow: allowSelection, endsAt: s.endsAt)
+        redrawStandingShield()
+    }
+
+    /// Time ran out: release the phone but keep the session for the question.
+    func expireDoItNowIfNeeded(_ now: Date = .now) {
+        guard let s = doItNow, s.isOver(now), !isDebugDoItNow else { return }
+        DoItNowSession.clearShieldCopy()
+        if s.shielded { gateway.endDoItNow(); redrawStandingShield() }
+    }
+
+    /// The question is answered (either way) or the lock ended early.
+    func endDoItNow() {
+        let wasShielded = doItNow?.shielded ?? false
+        doItNow = nil
+        guard !isDebugDoItNow else { isDebugDoItNow = false; return }
+        DoItNowSession.remove()
+        if wasShielded { gateway.endDoItNow(); redrawStandingShield() }
+    }
+
+    /// iOS keeps drawing a shield's last configuration until the store is
+    /// re-assigned, so the junk apps would keep saying "Do it now." after the
+    /// lock (or miss it during). Clearing first makes it a real change.
+    private func redrawStandingShield() {
+        guard isAuthorized, hasSelection else { return }
+        gateway.clearPersistentShield()
+        // Honour apps taken back on a pass from the Menu.
+        applyStandingShield(excluding: Set(AppRest.released().keys))
     }
 }

@@ -8,11 +8,10 @@ import SwiftUI
 //      default.
 //   2. When the standing feed block runs.
 //
-// TODO(onboarding-v2): ENFORCEMENT. Neither answer changes behaviour yet. The
-// "Do it now" lock (shield everything except the allow-list for the step's
-// minutes) and a non-Always feed schedule both need DeviceActivity schedules
-// in BrainDietMonitor that apply/clear the shield at interval boundaries.
-// Today the standing shield is always on, whatever is chosen here.
+// ENFORCED (2026-10-08). The schedule becomes a `FeedWindow` (MainView syncs it
+// into BlockingService; BrainDietMonitor flips the junk shield at its edges).
+// The allow-list is what Do it now leaves open (`BlockingService.startDoItNow`).
+// Both are editable later: the schedule on the Menu's "Block my feeds" card.
 
 struct ReachAndScheduleStepView: View {
     @Bindable var vm: OnboardingViewModel

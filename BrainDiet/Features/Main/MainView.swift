@@ -19,6 +19,11 @@ struct MainView: View {
     @Query private var sessions: [ProtectSession]
     @Query(sort: \Goal.sortIndex) private var goals: [Goal]
 
+    @Environment(\.scenePhase) private var scenePhase
+    /// "I did it" on the lock: fed into Home once the cover is gone, so the
+    /// user lands on the brain and watches it eat (the drag's own path).
+    @State private var lockFeed: PlateDraggable?
+
     /// DEBUG: auto-present the intercept preview at launch for clean screenshots.
     @State private var showIntercept = false
     private var forceIntercept: Bool {
@@ -107,10 +112,21 @@ struct MainView: View {
         // the user edits their apps) would then write an empty set and silently
         // unblock everything. Loading from the profile first is what keeps the
         // in-memory selection and the OS in agreement.
-        .task(id: profiles.first?.familySelectionData) {
-            guard let profile = profiles.first, profile.familySelectionData != nil else { return }
+        // Keyed on the schedule and the allow-list too (2026-10-08): changing
+        // either on the Menu re-arms the window activities and hands the
+        // monitor the new answer, the same way a new app selection does.
+        .task(id: blockingKey) {
+            guard let profile = profiles.first else { return }
+            blocking.loadAllowList(encoded: profile.allowSelectionData)
+            guard profile.familySelectionData != nil else {
+                blocking.setFeedWindow(profile.feedWindow)
+                return
+            }
             blocking.loadSelection(encoded: profile.familySelectionData,
                                    mockIDs: profile.junkAppIDs)
+            // Selection first: the monitor needs both, and this also puts the
+            // shield in the state the window says (down outside it).
+            blocking.setFeedWindow(profile.feedWindow)
             blocking.applyStandingShield()
             // ⭐ ARM THE USAGE METERS HERE TOO (2026-08-13). `armDailyCap` was
             // called from exactly ONE place — starting a protect session — so a
@@ -123,6 +139,25 @@ struct MainView: View {
             blocking.armDailyCap(minutes: ctx.plan.junkCapMinutes)
         }
         .sheet(isPresented: $showPaywall) { PaywallView() }
+        // ⭐ DO IT NOW (2026-10-08). Hosted here, not on Home, so a lock that
+        // is still running (or ran out unanswered) reopens on any launch.
+        .fullScreenCover(isPresented: Binding(get: { blocking.doItNow != nil },
+                                              set: { _ in }),
+                         onDismiss: feedAfterLock) {
+            if let session = blocking.doItNow {
+                DoItNowLockView(
+                    session: session,
+                    onDidIt: {
+                        lockFeed = draggable(for: session)
+                        blocking.endDoItNow()
+                    },
+                    onNotYet: { blocking.endDoItNow() },
+                    onExpire: { blocking.expireDoItNowIfNeeded() })
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { blocking.expireDoItNowIfNeeded() }
+        }
         // The route-by-why triage flow (2026-07-23) — entitlement-free, opened
         // from Home's "Reaching for a scroll?" card (and, in DEBUG, the
         // intercept). Every branch either starts the SAME live session or lets
@@ -181,6 +216,35 @@ struct MainView: View {
             )
         }
         #endif
+    }
+
+    // MARK: Blocking sync (feed schedule + Do it now allow-list)
+
+    /// Everything the standing shield, the window activities and the lock read
+    /// from the profile. Any change re-runs the sync task.
+    private var blockingKey: String {
+        guard let p = profiles.first else { return "" }
+        return [String(p.familySelectionData?.hashValue ?? 0), p.feedScheduleRaw,
+                String(p.feedCustomStart), String(p.feedCustomEnd), p.feedCustomWeekdaysRaw,
+                String(p.allowSelectionData?.hashValue ?? 0)].joined(separator: "|")
+    }
+
+    /// The serving "I did it" reports: the same shape the focus card's drag
+    /// builds, so the brain, the toast and the session are identical.
+    private func draggable(for s: DoItNowSession) -> PlateDraggable {
+        let domain = ActivityDomain(rawValue: s.domainRaw)
+        return PlateDraggable(title: s.title, subtitle: "",
+                              activityID: domain?.activityID ?? s.domainRaw,
+                              goalID: s.goalID, stepID: s.stepID,
+                              minutes: s.minutes, icon: .leaf,
+                              tint: domain?.tint ?? .bdLeaf, ink: .bdTextPrimary)
+    }
+
+    private func feedAfterLock() {
+        guard let item = lockFeed else { return }
+        lockFeed = nil
+        router.selectedTab = .home
+        router.pendingReport = item
     }
 
     /// DEBUG: which screen-2 branch to open the triage flow on (screenshots).

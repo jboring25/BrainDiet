@@ -214,6 +214,12 @@ extension Color {
     static let bdTextPrimary   = Color(hex: "#2A231A")  // ink
     static let bdTextSecondary = Color(hex: "#8A7E6F")  // sub — mockup value
     static let bdTextOnAccent  = Color(hex: "#FFFFFF")  // white on the leaf-deep pill
+
+    // The Do it now lock (design/rewiring/feed-prototype.html `.lock`): the
+    // leaf-deep family taken to night. Mirrored as UIColors in the shield.
+    static let bdLockGround    = Color(hex: "#132A1C")  // lock background
+    static let bdLockInk       = Color(hex: "#F6F1E7")  // headline + countdown
+    static let bdMint          = Color(hex: "#A8D5B2")  // eyebrow, ring, button fill
 }
 
 // MARK: - Theme namespace (material, spacing, shape, motion)
