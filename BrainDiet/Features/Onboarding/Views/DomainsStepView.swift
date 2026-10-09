@@ -16,7 +16,7 @@ struct DomainsStepView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     StepHeader(
-                        title: "Now, what should your brain eat instead?",
+                        title: "What would you rather be doing?",
                         subtitle: "Pick 1–3. Every hour we reclaim goes right here."
                     )
 

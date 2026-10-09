@@ -69,6 +69,23 @@ final class OnboardingViewModel {
     /// Anchors that exist in their day — what cues get attached to.
     var dayAnchors: Set<DayAnchor> = []
 
+    // MARK: ⭐ v3 pain sweep (Jack approved 2026-10-09). None pre-selected: these
+    // are admissions, and an answer handed to you is not one you made (same
+    // reasoning as `blocker`).
+
+    /// When it gets them. Multi, ≥ 1.
+    var whenItGets: Set<PullMoment> = []
+    /// How they feel after. Single.
+    var feelAfter: AfterFeeling? = nil
+    /// What they already tried. Multi, ≥ 1; "Nothing yet" is exclusive.
+    var triedBefore: Set<TriedFix> = []
+
+    var orderedWhenItGets: [PullMoment] { PullMoment.allCases.filter(whenItGets.contains) }
+    var orderedTriedBefore: [TriedFix] { TriedFix.allCases.filter(triedBefore.contains) }
+
+    /// True when they named a real fix that failed (anything but "Nothing yet").
+    var triedSomething: Bool { triedBefore.contains { $0 != .nothing } }
+
     // MARK: ⭐ Onboarding v2 answers (Jack approved 2026-10-08).
     //
     // The retired `specifics` step asked for a NOUN per goal ("Dune"); v2 asks
@@ -149,6 +166,9 @@ final class OnboardingViewModel {
         primaryDomain = .reading
         aspiration = "Reading every night."
         blocker = .distracted
+        whenItGets = [.sitDownToWork, .waiting, .bedtime]
+        feelAfter = .behind
+        triedBefore = [.screenTimeLimits, .willpower]
         // The mockup's own answers (design/onboarding-v2/screens.html), so the
         // hero and every v2 screen reviews real words, not placeholders.
         selectedDomains = [.reading, .building, .fitness]
@@ -206,6 +226,13 @@ final class OnboardingViewModel {
         case "timeAndDay":
             sleepMinutes = 30           // 12:30, the mockup
         case "blocker":       blocker = nil
+        case "whenItGets" where !filled:  whenItGets = []
+        case "feelAfter" where !filled:   feelAfter = nil
+        case "triedBefore" where !filled: triedBefore = []
+        // BD_TRIED=nothing previews the other headline.
+        case "emptyTimeInsight"
+            where ProcessInfo.processInfo.environment["BD_TRIED"] == "nothing":
+            triedBefore = [.nothing]
         default:              break
         }
 
@@ -222,7 +249,11 @@ final class OnboardingViewModel {
         case "reachAndSchedule": step = .reachAndSchedule
         case "menuHero":      step = .menuHero
         case "blocker":       step = .blocker
-        case "interstitial":  step = .interstitial
+        case "whenItGets":    step = .whenItGets
+        case "feelAfter":     step = .feelAfter
+        case "triedBefore":   step = .triedBefore
+        case "emptyTimeInsight", "interstitial": step = .emptyTimeInsight
+        case "cueInsight":    step = .cueInsight
         case "pause":         step = .pause
         case "screenAccess":  step = .screenAccess
         case "pickApps":      step = .pickApps
@@ -305,7 +336,10 @@ final class OnboardingViewModel {
             wakeMinutes: wakeMinutes,
             busyStartMinutes: busyStartMinutes,
             busyEndMinutes: busyEndMinutes,
-            sleepMinutes: sleepMinutes
+            sleepMinutes: sleepMinutes,
+            whenItGets: orderedWhenItGets,
+            feelAfter: feelAfter,
+            triedBefore: orderedTriedBefore
         )
     }
 
@@ -369,6 +403,10 @@ final class OnboardingViewModel {
         profile.feedCustomEnd = feedCustomEnd
         profile.feedCustomWeekdaysRaw = feedCustomWeekdays.sorted().map(String.init).joined(separator: ",")
         profile.shieldLines = shieldLines
+        // v3 pain sweep.
+        profile.whenItGetsRaw = orderedWhenItGets.map(\.rawValue).joined(separator: ",")
+        profile.feelAfterRaw = feelAfter?.rawValue ?? ""
+        profile.triedBeforeRaw = orderedTriedBefore.map(\.rawValue).joined(separator: ",")
 
         // Materialise the plan (fall back to the deterministic floor if generation
         // never ran — e.g. jumped state).
@@ -384,6 +422,9 @@ final class OnboardingViewModel {
     var canAdvance: Bool {
         switch step {
         case .hijack:        return !selectedHijackers.isEmpty
+        case .whenItGets:    return !whenItGets.isEmpty
+        case .feelAfter:     return feelAfter != nil
+        case .triedBefore:   return !triedBefore.isEmpty
         case .domains:       return !selectedDomains.isEmpty
         case .primaryDomain: return primaryDomain != nil
         case .aspiration:    return !aspiration.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -488,6 +529,18 @@ final class OnboardingViewModel {
     func toggleHijacker(_ h: AttentionHijacker) {
         if selectedHijackers.contains(h) { selectedHijackers.remove(h) }
         else { selectedHijackers.insert(h) }
+    }
+
+    func togglePullMoment(_ m: PullMoment) {
+        if whenItGets.contains(m) { whenItGets.remove(m) } else { whenItGets.insert(m) }
+    }
+
+    /// "Nothing yet" can't sit beside a fix they tried: picking it clears the
+    /// rest, and picking a fix clears it.
+    func toggleTriedFix(_ f: TriedFix) {
+        if triedBefore.contains(f) { triedBefore.remove(f); return }
+        if f == .nothing { triedBefore = [.nothing] }
+        else { triedBefore.remove(.nothing); triedBefore.insert(f) }
     }
 
     func toggleDomain(_ d: ActivityDomain) {

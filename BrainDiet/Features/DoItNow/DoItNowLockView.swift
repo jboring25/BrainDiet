@@ -17,6 +17,10 @@ struct DoItNowLockView: View {
     let onNotYet: () -> Void
     /// Fires once when the countdown crosses zero (releases the system shield).
     var onExpire: () -> Void = {}
+    /// The honest exit (Jack, 2026-10-09): releases the lock, feeds nothing.
+    var onEndEarly: () -> Void = {}
+
+    @State private var confirmingEnd = false
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -87,11 +91,30 @@ struct DoItNowLockView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 4)
+            } else {
+                // ⭐ THE HONEST EXIT (2026-10-09). A lock with no way out gets
+                // the app deleted, and a fake "I did it" poisons the record.
+                // Ending early costs exactly one thing: this step does not count.
+                Button { confirmingEnd = true } label: {
+                    Text("End early")
+                        .font(BDFont.body(.semiBold, size: 13, relativeTo: .footnote))
+                        .foregroundStyle(Color.bdMint.opacity(0.75))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: Theme.Size.minTouch)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
             }
         }
         .padding(.horizontal, 30)
         .padding(.bottom, 24)
         .animation(Theme.Motion.smooth, value: over)
+        .confirmationDialog("End early?", isPresented: $confirmingEnd, titleVisibility: .visible) {
+            Button("End early", role: .destructive, action: onEndEarly)
+            Button("Keep going", role: .cancel) {}
+        } message: {
+            Text("This one won't count.")
+        }
     }
 
     private func ring(now: Date) -> some View {

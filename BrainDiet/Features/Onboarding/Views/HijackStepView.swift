@@ -18,13 +18,13 @@ struct HijackStepView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     StepHeader(
-                        title: "What's been eating your time?",
+                        title: "What do you reach for without thinking?",
                         // ⭐ 2026-07-22 UX audit: reviewers read the mixed list
                         // ("Oversleeping" next to "Socials") as an unrelated
                         // grab-bag — "is this a sleep tracker or a blocker?".
                         // Naming the ORGANIZING IDEA makes all six cohere as
                         // avoidance behaviors. The labels are unchanged.
-                        subtitle: "Pick what you reach for when you're avoiding something."
+                        subtitle: "Pick everything that pulls you in."
                     )
 
                     LazyVGrid(columns: OBGrid.columns, spacing: 12) {

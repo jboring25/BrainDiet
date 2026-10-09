@@ -98,6 +98,12 @@ final class UserProfile {
     /// domain has a line here the shield speaks it instead of the stock copy.
     var shieldLinesRaw: String = ""
 
+    // MARK: ⭐ Onboarding v3 pain sweep (Jack approved 2026-10-09). Defaulted:
+    // lightweight migration. Comma-joined raw values.
+    var whenItGetsRaw: String = ""
+    var feelAfterRaw: String = ""
+    var triedBeforeRaw: String = ""
+
     init(
         goalIDs: [String],
         why: String,
@@ -160,6 +166,14 @@ final class UserProfile {
     var feedSchedule: FeedSchedule { FeedSchedule(rawValue: feedScheduleRaw) ?? .always }
     var feedCustomWeekdays: [Int] {
         feedCustomWeekdaysRaw.split(separator: ",").compactMap { Int($0) }
+    }
+
+    var whenItGets: [PullMoment] {
+        whenItGetsRaw.split(separator: ",").compactMap { PullMoment(rawValue: String($0)) }
+    }
+    var feelAfter: AfterFeeling? { AfterFeeling(rawValue: feelAfterRaw) }
+    var triedBefore: [TriedFix] {
+        triedBeforeRaw.split(separator: ",").compactMap { TriedFix(rawValue: String($0)) }
     }
 
     /// The planner's shield lines, per domain. Empty until PlanService answers.
@@ -334,7 +348,10 @@ final class UserProfile {
             wakeMinutes: wakeMinutes >= 0 ? wakeMinutes : nil,
             busyStartMinutes: busyStartMinutes >= 0 ? busyStartMinutes : nil,
             busyEndMinutes: busyEndMinutes >= 0 ? busyEndMinutes : nil,
-            sleepMinutes: sleepMinutes >= 0 ? sleepMinutes : nil
+            sleepMinutes: sleepMinutes >= 0 ? sleepMinutes : nil,
+            whenItGets: whenItGets,
+            feelAfter: feelAfter,
+            triedBefore: triedBefore
         )
     }
 

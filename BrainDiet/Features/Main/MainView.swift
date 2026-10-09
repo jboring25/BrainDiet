@@ -152,7 +152,9 @@ struct MainView: View {
                         blocking.endDoItNow()
                     },
                     onNotYet: { blocking.endDoItNow() },
-                    onExpire: { blocking.expireDoItNowIfNeeded() })
+                    onExpire: { blocking.expireDoItNowIfNeeded() },
+                    // Releases the lock + the one-off DeviceActivity; feeds nothing.
+                    onEndEarly: { blocking.endDoItNow() })
             }
         }
         .onChange(of: scenePhase) { _, phase in

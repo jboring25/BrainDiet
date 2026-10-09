@@ -76,6 +76,13 @@ struct OnboardingPaywallStepView: View {
     @State private var skipSheetSeen = Self.forceSkipSheet
     @State private var returnToPaywall = false
 
+    /// ⭐ SOFT PAYWALL (Jack approved 2026-10-09): the close X and "Not now"
+    /// fade in after 4 seconds, so the offer is read once before the exit is
+    /// the loudest thing on screen. Restore never hides. Starts true for the
+    /// DEBUG skip-sheet seam so that capture is unchanged.
+    @State private var exitsVisible = Self.forceSkipSheet
+    static let exitDelay: Duration = .seconds(4)
+
     /// DEBUG screenshot seam: BD_PAYWALL_SKIP_SHEET=1 lands on the skip sheet.
     private static var forceSkipSheet: Bool {
         #if DEBUG
@@ -94,7 +101,39 @@ struct OnboardingPaywallStepView: View {
         ((vm.primaryDomain ?? vm.selectedDomains.first)?.label ?? "what matters").lowercased()
     }
 
-    /// "Keep your 2 hours a day pointed at reading." — their own reclaim → goal.
+    /// ⭐ V3 (Jack approved 2026-10-09): the headline is THEIR goal, in their
+    /// words. "Launch BrainDiet on the App Store and get 100 users" →
+    /// "Launch BrainDiet on the App Store.\nKeep the time it needs."
+    private var headline: String {
+        let domain = vm.primaryDomain ?? vm.selectedDomains.first
+        guard let domain, let clause = Self.firstClause(vm.goalWords[domain] ?? "") else {
+            return personalizedHeadline
+        }
+        return clause + "\n" + String(localized: "Keep the time it needs.")
+    }
+
+    /// The first clause of their goal: split on " and ", ",", " then ", capped
+    /// near 40 characters at a word boundary, capitalised, one period.
+    static func firstClause(_ words: String) -> String? {
+        var t = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        for sep in [",", " and ", " then ", ";", " & "] {
+            if let r = t.range(of: sep, options: .caseInsensitive) { t = String(t[..<r.lowerBound]) }
+        }
+        t = t.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        if t.count > 40 {
+            var out = ""
+            for w in t.split(separator: " ") {
+                let next = out.isEmpty ? String(w) : out + " " + w
+                if next.count > 40 { break }
+                out = next
+            }
+            t = out.isEmpty ? String(t.prefix(40)) : out
+        }
+        guard t.count >= 3 else { return nil }
+        return t.prefix(1).uppercased() + t.dropFirst() + "."
+    }
+
+    /// The pre-v3 headline: the fallback when there are no goal words.
     private var personalizedHeadline: String {
         guard reclaimedHours > 0 else {
             return String(localized: "Keep your reclaimed time pointed at \(primaryWord).")
@@ -133,6 +172,8 @@ struct OnboardingPaywallStepView: View {
                 .padding(.top, Theme.Space.sm)
             transparentBilling
                 .padding(.top, Theme.Space.sm)
+            proofRow
+                .padding(.top, Theme.Space.sm)
             ctaBlock
                 .padding(.top, Theme.Space.sm)
         }
@@ -142,6 +183,10 @@ struct OnboardingPaywallStepView: View {
         .blur(radius: showSkipSheet ? 10 : 0)
         .animation(Theme.Motion.smooth, value: showSkipSheet)
         // Products + REAL intro-offer eligibility before any trial word renders.
+        .task {
+            try? await Task.sleep(for: Self.exitDelay)
+            withAnimation(.easeOut(duration: 0.5)) { exitsVisible = true }
+        }
         .task {
             await pvm.syncOffer(using: store)
             #if DEBUG
@@ -207,6 +252,9 @@ struct OnboardingPaywallStepView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close")
+            .opacity(exitsVisible ? 1 : 0)
+            .allowsHitTesting(exitsVisible)
+            .accessibilityHidden(!exitsVisible)
         }
         .padding(.top, Theme.Space.md)
     }
@@ -219,9 +267,8 @@ struct OnboardingPaywallStepView: View {
                 // Page 1 leads with the user's OWN headline + their own curve —
                 // the personalised line is the proven converter and it stays the
                 // first thing read.
-                PaywallProjectionPage(title: personalizedHeadline,
-                                      baselineMinutes: baselineMinutes,
-                                      reclaimedHours: reclaimedHours)
+                PaywallProjectionPage(title: headline,
+                                      baselineMinutes: baselineMinutes)
                     .tag(0)
                 PaywallPlanPage(domains: orderedDomains).tag(1)
                 PaywallProtectPage().tag(2)
@@ -277,6 +324,32 @@ struct OnboardingPaywallStepView: View {
         .accessibilityElement(children: .combine)
     }
 
+    // MARK: Honest proof (2026-10-09) — three checkable lines, nothing invented.
+
+    private var proofRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            proofLine(String(localized: "Built on habit research (Lally 2010, Gollwitzer 2006)"))
+            proofLine(String(localized: "Made by an ASU student who had the problem"))
+            proofLine(String(localized: "No account. No ads."))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func proofLine(_ text: String) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.bdLeaf.opacity(0.7))
+                .accessibilityHidden(true)
+            Text(text)
+                .font(BDFont.body(.medium, size: 12, relativeTo: .caption))
+                .foregroundStyle(Color.bdTextSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+    }
+
     // MARK: CTA + the quiet free path.
 
     private var ctaBlock: some View {
@@ -295,17 +368,22 @@ struct OnboardingPaywallStepView: View {
 
             // The quiet free path + Restore, one calm row under the CTA.
             HStack(spacing: Theme.Space.lg) {
-                Button(action: skip) {
-                    Text("Not now")
-                        .font(.bdCaption)
-                        .foregroundStyle(Color.bdTextSecondary)
-                        .frame(minHeight: Theme.Size.minTouch)
-                }
-                .buttonStyle(.plain)
+                Group {
+                    Button(action: skip) {
+                        Text("Not now")
+                            .font(.bdCaption)
+                            .foregroundStyle(Color.bdTextSecondary)
+                            .frame(minHeight: Theme.Size.minTouch)
+                    }
+                    .buttonStyle(.plain)
 
-                Text("·")
-                    .font(.bdCaption)
-                    .foregroundStyle(Color.bdTextSecondary.opacity(0.5))
+                    Text("·")
+                        .font(.bdCaption)
+                        .foregroundStyle(Color.bdTextSecondary.opacity(0.5))
+                }
+                .opacity(exitsVisible ? 1 : 0)
+                .allowsHitTesting(exitsVisible)
+                .accessibilityHidden(!exitsVisible)
 
                 Button {
                     // A restore is never a NEW trial — no cancel-reminder step.

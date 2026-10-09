@@ -32,9 +32,6 @@ struct MirrorStepView: View {
     /// Built straight from the scrubbed hours (honest — no band rounding).
     private var mirror: MirrorNumbers { MirrorNumbers(minutesPerDay: vm.baselineJunkMinutes) }
 
-    /// The deterministic plan — its reclaimed-hours figure feeds the gain rows.
-    private var plan: BrainPlan { vm.makePlan() }
-
     var body: some View {
         // TOP-ANCHORED (fix-v2): eyebrow pinned at a single top inset (~14% of
         // height), the three staged beats flow DOWN from it, the pivot + CTA
@@ -63,8 +60,8 @@ struct MirrorStepView: View {
                 Text("That's")
                     .font(BDFont.body(.bold, size: 15, relativeTo: .subheadline))
                     .foregroundStyle(Color.bdSlopGrayText)
-                    .padding(.top, 22)
-                    .padding(.bottom, 4)
+                    .padding(.top, 12)
+                    .padding(.bottom, 2)
                     .opacity(stage >= 2 ? 1 : 0)
 
                 // 2 — a year.
@@ -76,20 +73,15 @@ struct MirrorStepView: View {
 
                 // 3 — a decade. Prose; the loss phrase carries the slop gray.
                 decadeLine
-                    .padding(.top, 26)
+                    .padding(.top, 16)
                     .opacity(stage >= 3 ? 1 : 0)
                     .offset(y: stage >= 3 || reduceMotion ? 0 : 10)
 
-                // The closing beat of the loss — a forward hook, still on the
-                // gray, still part of stage 3. It recedes with the numbers when
-                // the pivot arrives.
-                Text("Imagine how much closer your dreams would be.")
-                    .font(BDFont.serif(size: 20, relativeTo: .title3))
-                    .foregroundStyle(Color.bdGrayInk)
-                    .lineSpacing(4)
-                    .frame(maxWidth: 320, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 22)
+                // ⭐ V3 (Jack approved 2026-10-09): the cost lands against THEIR
+                // goals, in their own words, not a generic "imagine your
+                // dreams". Still stage 3, still on the gray.
+                spentOnBlock
+                    .padding(.top, 16)
                     .opacity(stage >= 3 ? 1 : 0)
                     .offset(y: stage >= 3 || reduceMotion ? 0 : 10)
             }
@@ -105,12 +97,10 @@ struct MirrorStepView: View {
                 pivotLine
                     .fixedSize(horizontal: false, vertical: true)
 
-                // THE GAIN (Opal mapping row 8): after the pivot, what the plan
-                // gives BACK — in the category colors, on the returned cream.
-                // Numbers derive from their own answer (baseline − cap); the
-                // domain line comes from their chosen primary. Loss then gain,
-                // gray then color.
-                gainBlock
+                // (The per-domain projection rows — "2 more books a month" —
+                // were cut 2026-10-09: the goal lines above already say what
+                // the time is for, in the user's words, and a stock projection
+                // under them repeated it less honestly.)
 
                 BDPrimaryButton(title: "Show me the way back") {
                     vm.advance()
@@ -124,104 +114,40 @@ struct MirrorStepView: View {
         .task { await orchestrate() }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
-            "\(mirror.dayValue) \(mirror.dayUnit) a day. That's \(mirror.daysPerYear) days a year. Every decade, \(mirror.decadePhrase), fed to the feed. Imagine how much closer your dreams would be. You won't have to imagine that. Become closer, day by day. \(outcomeDomains.map { outcomePhrase(for: $0) }.joined(separator: ". "))."
+            "\(mirror.dayValue) \(mirror.dayUnit) a day. That's \(mirror.daysPerYear) days a year. Every decade, \(mirror.decadePhrase), fed to the feed. That's time you could have spent on: \(spentOnLines.joined(separator: ". ")). You won't have to imagine that. Become closer, day by day."
         )
     }
 
-    // MARK: The gain block — one future-self outcome per chosen domain, each in
-    // its own category color (the color returns, domain by domain).
+    // MARK: What the time was for — their own goal words (v3, 2026-10-09).
 
-    /// The domains the gain rows render — the user's selection (cap 4), or the
-    /// primary alone if somehow empty.
-    private var outcomeDomains: [ActivityDomain] {
-        vm.selectedDomains.isEmpty
-            ? [vm.primaryDomain ?? .reading]
-            : Array(vm.selectedDomains.prefix(4))
+    /// The user's words for their top goals (primary first), falling back to
+    /// the goal title for any goal with no words (jumped/edge states only:
+    /// the goalWords step requires them).
+    private var spentOnLines: [String] {
+        let domains = vm.goalWordDomains.isEmpty
+            ? [vm.primaryDomain ?? .reading] : vm.goalWordDomains
+        return domains.map { d in
+            let w = (vm.goalWords[d] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return w.isEmpty ? d.goalTitle : w
+        }
     }
 
-    private var gainBlock: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.sm + 2) {
-            ForEach(outcomeDomains, id: \.self) { domain in
-                gainRow(text: outcomePhrase(for: domain), color: domain.categoryTextInk)
+    private var spentOnBlock: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("That's time you could have spent on:")
+                .font(BDFont.body(.semiBold, size: 17, relativeTo: .body))
+                .foregroundStyle(Color.bdGrayInk)
+            ForEach(spentOnLines, id: \.self) { line in
+                Text(line)
+                    .font(BDFont.serif(size: 17.5, relativeTo: .title3))
+                    .foregroundStyle(Color.bdLeaf)
+                    .lineSpacing(0)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .frame(maxWidth: 330, alignment: .leading)
         .accessibilityHidden(true)   // carried by the container's label
-    }
-
-    private func gainRow(text: String, color: Color) -> some View {
-        HStack(spacing: Theme.Space.sm + 2) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(text)
-                .font(BDFont.body(.bold, size: 16, relativeTo: .body))
-                .foregroundStyle(color)
-        }
-    }
-
-    // MARK: Derived gain numbers (2026-07-22) — the outcome per domain now comes
-    // from the user's OWN reclaimed time, not fixed copy. Their daily reclaimed
-    // hours × 30 = monthly reclaimed hours, split evenly across the chosen
-    // outcome domains; each domain converts its share into an honest count via a
-    // per-unit hours constant. Floored at 1 so nothing ever reads "0".
-
-    /// Reclaimed hours/day the plan returns × 30 (a month's worth of returned time).
-    private var monthlyReclaimedHours: Double { Double(plan.reclaimedHours) * 30 }
-
-    /// Each domain's even share of the monthly reclaimed hours.
-    private var perDomainMonthlyHours: Double {
-        monthlyReclaimedHours / Double(max(1, outcomeDomains.count))
-    }
-
-    /// The future-self outcome for a domain — concrete, achievable, and DERIVED
-    /// from their reclaimed time (honest projection). Pointed at who they're
-    /// becoming, never what they're avoiding.
-    private func outcomePhrase(for domain: ActivityDomain) -> String {
-        let hours = perDomainMonthlyHours
-        func count(per unit: Double) -> Int { max(1, Int((hours / unit).rounded())) }
-
-        switch domain {
-        case .reading:
-            let n = count(per: 5)
-            return n == 1 ? String(localized: "1 more book a month")
-                          : String(localized: "\(n) more books a month")
-        case .fitness:
-            let n = count(per: 1)
-            return n == 1 ? String(localized: "1 workout a month")
-                          : String(localized: "\(n) workouts a month")
-        case .outdoors:
-            let n = count(per: 1.5)
-            return n == 1 ? String(localized: "1 bike ride a month")
-                          : String(localized: "\(n) bike rides a month")
-        case .music:
-            let n = count(per: 8)
-            return n == 1 ? String(localized: "1 new song learned")
-                          : String(localized: "\(n) new songs learned")
-        case .writing:
-            let n = count(per: 6)
-            return n == 1 ? String(localized: "1 more chapter a month")
-                          : String(localized: "\(n) more chapters a month")
-        case .learning:
-            let n = count(per: 12)
-            return n == 1 ? String(localized: "1 new skill a month")
-                          : String(localized: "\(n) new skills a month")
-        case .creating:
-            let n = count(per: 3)
-            return n == 1 ? String(localized: "1 thing you actually made, a month")
-                          : String(localized: "\(n) things you actually made, a month")
-        case .social:
-            let n = count(per: 0.75)
-            return n == 1 ? String(localized: "1 more real conversation a month")
-                          : String(localized: "\(n) more real conversations a month")
-        case .mindful:
-            let n = count(per: 1)
-            return n == 1 ? String(localized: "1 hour fully present, a month")
-                          : String(localized: "\(n) hours fully present, a month")
-        case .building:
-            // Weekly cadence: this domain's monthly share → weekly hours ÷ ~2.
-            let weekly = hours / 4.345
-            let n = max(1, Int((weekly / 2).rounded(.down)))
-            return n == 1 ? String(localized: "1 big step toward your business, a week")
-                          : String(localized: "\(n) big steps toward your business, a week")
-        }
     }
 
     // MARK: Stanzas — slop-gray Young Serif numerals (mockup `.m-num`).
@@ -268,7 +194,7 @@ struct MirrorStepView: View {
             .foregroundColor(Color.bdTextPrimary)
          + Text("Become closer, day by day.")
             .foregroundColor(Color.bdLeaf))
-            .font(BDFont.serif(size: 27, relativeTo: .title2))
+            .font(BDFont.serif(size: 25, relativeTo: .title2))
             .lineSpacing(4)
     }
 

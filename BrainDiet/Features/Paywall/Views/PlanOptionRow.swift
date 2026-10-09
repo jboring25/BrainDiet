@@ -33,12 +33,9 @@ struct PlanOptionRow: View {
                             .font(.bdCaption)
                             .foregroundStyle(Color.bdTextSecondary)
                     } else {
-                        // The honest frame for a one-time price: what it is worth
-                        // in the currency of the other plan, not a "save 90%".
-                        Text("Pays for itself in \(PaywallPricing.lifetimeBreakEvenWeeks) weeks")
-                            .font(.bdCaption)
-                            .foregroundStyle(Color.bdTextSecondary)
-                        Text("Nothing renews.")
+                        // 2026-10-09: "Pays for itself in 4 weeks" cut. One
+                        // plain sentence about what it is.
+                        Text("One payment. Nothing renews.")
                             .font(.bdCaption)
                             .foregroundStyle(Color.bdTextSecondary)
                     }

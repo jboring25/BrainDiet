@@ -5,11 +5,15 @@
 > (`design/_current/`, captured with ios-sim-review), never re-drawn from
 > scratch. Paint out only what changes; reuse the real elements.
 >
-> **Onboarding v2 (approved 2026-10-08, built a51c7a5):** welcome → hijack → timeLost →
-> domains → primaryDomain → goalWords (required, top 3 goals) → baseline → aspiration →
-> timeAndDay → blocker → interstitial → pause → screenAccess → pickApps →
-> reachAndSchedule → building → mirror → commit → onboardingPaywall → dinnerBell →
-> menuHero. `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
+> **Onboarding v3 (approved 2026-10-09, problem-first):** welcome → hijack → whenItGets →
+> timeLost → feelAfter → triedBefore → emptyTimeInsight → domains → primaryDomain →
+> goalWords (required, top 3 goals) → baseline → aspiration → timeAndDay → cueInsight →
+> blocker → pause → screenAccess → pickApps → reachAndSchedule → building → mirror
+> (cost shown against their goalWords) → commit → onboardingPaywall (headline = first
+> clause of primary goalWords; X + "Not now" fade in at 4s; proof row; no break-even
+> copy) → dinnerBell → menuHero. `interstitial` is gone (InsightStepView). whenItGets /
+> feelAfter / triedBefore persist on UserProfile and ride PlanService's JSON. Do it now
+> lock has "End early" (releases, feeds nothing). `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
 > paywall. AI plan = PlanService → braindietapp.com/.netlify/functions/plan (Claude Haiku
 > 4.5, tool-forced JSON, no chat); any failure falls back to the heuristic planner.
 > Schedules + Do it now lock built 3897091 (FeedWindow → BrainDietMonitor; BrainDietDoItNow store). iOS can only exempt picked APPS (not Messages by default, not categories).

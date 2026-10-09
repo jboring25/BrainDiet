@@ -44,6 +44,11 @@ struct PlanRequest: Encodable, Sendable {
     let anchors: [String]
     let blocker: String
     let localHour: Int
+    // v3 pain sweep (2026-10-09): the labels the user tapped, so the model
+    // reads the same words they did.
+    let whenItGets: [String]
+    let feelAfter: String
+    let triedBefore: [String]
 }
 
 private struct PlanResponse: Decodable {
@@ -94,7 +99,10 @@ enum PlanService {
             sleep: DayClock.wire(profile.sleepMinutes >= 0 ? profile.sleepMinutes : 1410),
             anchors: profile.dayAnchors.map(\.label),
             blocker: profile.blockerRaw,
-            localHour: Calendar.current.component(.hour, from: .now)
+            localHour: Calendar.current.component(.hour, from: .now),
+            whenItGets: profile.whenItGets.map(\.label),
+            feelAfter: profile.feelAfter?.label ?? "",
+            triedBefore: profile.triedBefore.map(\.label)
         )
     }
 

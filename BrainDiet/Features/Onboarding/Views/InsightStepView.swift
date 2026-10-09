@@ -33,37 +33,65 @@ import SwiftUI
 // showing the fix is the definition of telling when you could show. Two short
 // lines survive; the picture carries the rest.
 
-struct InterstitialStepView: View {
+// ⭐ V3 (Jack approved 2026-10-09): the layout is now a reusable insight
+// beat, `InsightStepView`, carrying two screens of the pain sweep:
+//   • emptyTimeInsight — on gray, with the bottomless feed under it: why the
+//     fixes they just named never stuck.
+//   • cueInsight — on cream, after they describe their day: the
+//     implementation-intention finding, with its citation.
+// The old "never about willpower / built to be bottomless" copy is retired.
+
+struct InsightStepView: View {
+    /// The small lead-in line.
+    let lead: String
+    /// The serif payoff.
+    let headline: String
+    let message: String
+    var footnote: String? = nil
+    /// The dead, bottomless feed under the text (gray world only).
+    var showsFeed: Bool = false
+    var grayWorld: Bool = false
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // The lead-in: small, quiet, gray. It sets up the payoff.
-            Text("This was never about willpower.")
+            // The lead-in: small, quiet. It sets up the payoff.
+            Text(lead)
                 .font(BDFont.body(.semiBold, size: 17.5, relativeTo: .body))
-                .foregroundStyle(Color.bdGrayInk)
+                .foregroundStyle(grayWorld ? Color.bdGrayInk : Color.bdTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // The payoff. "Bottomless" is doing the work of a paragraph: it's
-            // the app's own word for the feed (the hijack step's captions call
-            // it the bottomless bowl), it names the design rather than blaming
-            // the user, and it's the caption for the picture below it.
-            Text("It was built to be bottomless.")
+            Text(headline)
                 .font(BDFont.serif(size: 31, relativeTo: .largeTitle))
                 .foregroundStyle(Color.bdTextPrimary)
                 .lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // 0.74, not 0.62: at the shorter reveal only one and a half cards
-            // survived the fade, and one card is a screenshot — REPETITION is
-            // what reads as endless. Two and a half identical cards running off
-            // the bottom is the whole argument.
-            BDDeviceFrame(width: 190, visibleFraction: 0.74) { DeadFeedPoster() }
-                .frame(maxWidth: .infinity)
-                .padding(.top, Theme.Space.lg)
-                .opacity(shown ? 1 : 0)
-                .offset(y: shown || reduceMotion ? 0 : 18)
+            Text(message)
+                .font(BDFont.body(.medium, size: 16, relativeTo: .body))
+                .foregroundStyle(grayWorld ? Color.bdGrayInk : Color.bdTextSecondary)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+
+            if let footnote {
+                Text(footnote)
+                    .font(BDFont.body(.medium, size: 12, relativeTo: .caption))
+                    .foregroundStyle(Color.bdTextSecondary.opacity(0.8))
+                    .padding(.top, 2)
+            }
+
+            if showsFeed {
+                // Two and a half identical cards running off the bottom: the
+                // place you go back to when the freed time sits empty.
+                BDDeviceFrame(width: 190, visibleFraction: 0.74) { DeadFeedPoster() }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, Theme.Space.lg)
+                    .opacity(shown ? 1 : 0)
+                    .offset(y: shown || reduceMotion ? 0 : 18)
+            }
 
             Spacer(minLength: 0)
         }
@@ -76,7 +104,34 @@ struct InterstitialStepView: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("This was never about willpower. It was built to be bottomless.")
+        .accessibilityLabel([lead, headline, message, footnote ?? ""].joined(separator: " "))
+    }
+}
+
+/// v3 · Why it never stuck. The headline answers their own triedBefore.
+struct EmptyTimeInsightStepView: View {
+    let vm: OnboardingViewModel
+
+    var body: some View {
+        InsightStepView(
+            lead: String(localized: "Why it never stuck"),
+            headline: vm.triedSomething
+                ? String(localized: "Blocking frees the time. Nothing fills it. So you go back.")
+                : String(localized: "Most people block the apps. Then the time sits empty, and they go back."),
+            message: String(localized: "BrainDiet fills it with what the person you want to be would do."),
+            showsFeed: true,
+            grayWorld: true)
+    }
+}
+
+/// v3 · One thing that works (Gollwitzer & Sheeran 2006).
+struct CueInsightStepView: View {
+    var body: some View {
+        InsightStepView(
+            lead: String(localized: "One thing that works"),
+            headline: String(localized: "Steps tied to something you already do get done about twice as often."),
+            message: String(localized: "So every step you get hangs on a moment that already happens in your day."),
+            footnote: String(localized: "Gollwitzer and Sheeran, 2006"))
     }
 }
 
@@ -130,9 +185,16 @@ private struct DeadFeedPoster: View {
     }
 }
 
-#Preview {
+#Preview("Empty time") {
     ZStack {
         Color.bdGrayCanvas.ignoresSafeArea()
-        InterstitialStepView().padding(Theme.Space.screenX)
+        EmptyTimeInsightStepView(vm: OnboardingViewModel()).padding(Theme.Space.screenX)
+    }
+}
+
+#Preview("Cue") {
+    ZStack {
+        BDBackground()
+        CueInsightStepView().padding(Theme.Space.screenX)
     }
 }

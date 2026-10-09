@@ -33,7 +33,10 @@ struct OnboardingView: View {
 
     private var stepCanvas: StepCanvas {
         switch vm.step {
-        case .hijack, .timeLost, .interstitial, .screenAccess: return .gray
+        // v3: the whole pain sweep stays gray until the domains step brings
+        // the color back.
+        case .hijack, .whenItGets, .timeLost, .feelAfter, .triedBefore,
+             .emptyTimeInsight, .screenAccess: return .gray
         case .mirror:            return .mirror
         default:                 return .cream
         }
@@ -129,8 +132,16 @@ struct OnboardingView: View {
             WelcomeStepView()
         case .hijack:
             HijackStepView(vm: vm)
+        case .whenItGets:
+            WhenItGetsStepView(vm: vm)
         case .timeLost:
             TimeLostStepView(vm: vm)
+        case .feelAfter:
+            FeelAfterStepView(vm: vm)
+        case .triedBefore:
+            TriedBeforeStepView(vm: vm)
+        case .emptyTimeInsight:
+            EmptyTimeInsightStepView(vm: vm)
         case .domains:
             DomainsStepView(vm: vm)
         case .primaryDomain:
@@ -145,8 +156,8 @@ struct OnboardingView: View {
             TimeAndDayStepView(vm: vm)
         case .blocker:
             BlockerStepView(vm: vm)
-        case .interstitial:
-            InterstitialStepView()
+        case .cueInsight:
+            CueInsightStepView()
         case .pause:
             PauseStepView()
         case .screenAccess:

@@ -58,11 +58,18 @@ private struct StoryPage<Visual: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // ⭐ THE HEADLINE NEVER CLIPS (2026-10-09). The proof row under
+            // the offer took ~60pt from the carousel and pages 2-4 lost their
+            // first headline line, because an over-tall VStack in a fixed page
+            // clips at BOTH ends. Now the header takes its full size first and
+            // the visual gets what is left, top-aligned and clipped at its
+            // bottom edge (the device frames already fade out there).
             StoryHeader(title: title, subtitle: subtitle)
                 .padding(.bottom, 14)
+                .layoutPriority(1)
             visual
-                .frame(maxWidth: .infinity)
-            Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
+                .clipped()
         }
         // ⛔️ NO `maxHeight: .infinity` ON THE VISUAL. It had one, and combined
         // with the Spacer the stack over-expanded inside the TabView's fixed
@@ -79,19 +86,19 @@ struct PaywallProjectionPage: View {
     /// The personalised line ("Keep your 2 hours a day pointed at reading.") —
     /// the proven converter, so it stays the first thing read on page one.
     let title: String
-    /// The user's stated baseline in minutes/day.
+    /// The user's stated baseline in minutes/day (the timeLost answer).
     let baselineMinutes: Int
-    /// Hours a day the deterministic plan says they get back.
-    let reclaimedHours: Int
-
-    private var targetMinutes: Int { max(0, baselineMinutes - reclaimedHours * 60) }
 
     var body: some View {
         StoryPage(title: title,
                   subtitle: String(localized: "Here's where this goes.")) {
             ReclaimCurve(
+                // ⭐ ONE NUMBER (2026-10-09). "Today" is their own timeLost
+                // answer, the same figure the mirror counted. The end point
+                // carries no target: the old "Your target 1h" came from the
+                // heuristic reclaim and disagreed with everything around it.
                 fromLabel: String(localized: "Today \(BDMealTray.display(baselineMinutes))"),
-                toLabel: String(localized: "Your target \(BDMealTray.display(targetMinutes))")
+                toLabel: String(localized: "With BrainDiet")
             )
             .padding(.horizontal, 2)
         }
@@ -141,7 +148,10 @@ private struct ReclaimCurve: View {
                     .position(x: max(w * 0.62, 60), y: h * 0.74 - 34)
             }
         }
-        .frame(height: 214)
+        // 214 → 160 (2026-10-09): the headline is now two lines (their goal +
+        // "Keep the time it needs.") and the proof row sits under the offer;
+        // at 214 the page clipped the first headline line away.
+        .frame(height: 160)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(fromLabel). \(toLabel).")
     }

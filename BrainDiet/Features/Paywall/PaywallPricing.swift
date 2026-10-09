@@ -71,18 +71,6 @@ enum PaywallPricing {
     @MainActor static var lifetimeDisplay: String {
         live[.lifetime]?.display ?? usd(lifetimePrice)
     }
-
-    /// How many weeks of the subscription the one-time price is worth. The
-    /// honest frame for lifetime: not "save 90%", but "this is four weeks".
-    /// Computed from the live pair so a price change can never leave a stale
-    /// number on screen.
-    @MainActor static var lifetimeBreakEvenWeeks: Int {
-        let weekly = amount(.weekly)
-        guard weekly > 0 else { return 0 }
-        let weeks = (amount(.lifetime) as NSDecimalNumber).doubleValue
-                  / (weekly as NSDecimalNumber).doubleValue
-        return max(1, Int(weeks.rounded()))
-    }
 }
 
 // MARK: - Selectable plan

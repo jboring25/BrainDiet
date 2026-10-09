@@ -33,7 +33,7 @@ final class PaywallViewModel {
     var transparentBillingLine: String {
         guard selectedPlan.isRecurring else {
             return String(
-                format: String(localized: "%1$@ once. Not a subscription — nothing renews, nothing to cancel."),
+                format: String(localized: "%1$@ once. Not a subscription. Nothing renews, nothing to cancel."),
                 PaywallPricing.lifetimeDisplay
             )
         }

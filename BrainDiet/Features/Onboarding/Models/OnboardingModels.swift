@@ -20,7 +20,17 @@ import SwiftUI
 enum OnboardingStep: Int, CaseIterable, Comparable {
     case welcome         // 0 — hook
     case hijack          // 1 — what hijacks your attention (multi) → junk to cut
+    /// ⭐ ONBOARDING V3 PAIN SWEEP (Jack approved 2026-10-09: "the pain points
+    /// are still not being driven like they were in the video"). Problem first:
+    /// the moment it gets you, how much, how it feels after, what already
+    /// failed, and why it failed, all BEFORE any goal or solution is named.
+    case whenItGets      // v3 — the moments (multi): wake, between classes, at the desk…
     case timeLost        // 2 — hours-a-day scrubber (Opal's self-quantification ask)
+    case feelAfter       // v3 — how it feels after (single)
+    case triedBefore     // v3 — failed fixes (multi)
+    /// v3 — replaces the old `interstitial` beat (same layout): why the fixes
+    /// they just named never stuck. Blocking frees the time; nothing fills it.
+    case emptyTimeInsight
     case domains         // 3 — what to pour time into (multi) → goal seeds
     case primaryDomain   // 4 — which matters most (single) → primary anchor
     /// ⭐ ONBOARDING V2 (Jack approved 2026-10-08). The goal in the user's own
@@ -35,8 +45,10 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// work, sleep) + the existing DayAnchor chips. Replaces the anchors half of
     /// the retired `specifics` step; the planner stops guessing when they are free.
     case timeAndDay
+    /// v3 — the implementation-intention beat (Gollwitzer & Sheeran 2006), right
+    /// after they describe their day: why every step hangs on a moment in it.
+    case cueInsight
     case blocker         // 6 — what's stopped you (single) → step difficulty
-    case interstitial    // 7 — one held breath before the mirror (Opal's pacing beat)
     /// 8 — ⭐ SHOW THE MECHANIC BEFORE ASKING FOR THE KEYS (Jack, 2026-08-11,
     /// from his Opal teardown). Opal spends a whole screen on "Unblock apps when
     /// you need to · A short pause helps keep it intentional" — a headline, one
@@ -95,7 +107,8 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// those are designed moments, and a back chevron does not belong on them.
     var showsProgress: Bool {
         switch self {
-        case .hijack, .timeLost, .domains, .primaryDomain, .goalWords, .baseline,
+        case .hijack, .whenItGets, .timeLost, .feelAfter, .triedBefore,
+             .domains, .primaryDomain, .goalWords, .baseline,
              .aspiration, .timeAndDay, .blocker,
              .pause, .screenAccess, .pickApps, .reachAndSchedule: return true
         default: return false
@@ -119,7 +132,8 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// trial reminder.
     var countsTowardProgress: Bool {
         switch self {
-        case .welcome, .interstitial, .building, .dinnerBell, .planReveal, .menuHero: return false
+        case .welcome, .emptyTimeInsight, .cueInsight, .building, .dinnerBell,
+             .planReveal, .menuHero: return false
         default: return true
         }
     }
@@ -198,6 +212,61 @@ enum AttentionHijacker: String, CaseIterable, Identifiable, Sendable {
         case .youtube:    return ["youtube"]
         case .games:      return []
         case .messaging:  return ["snapchat"]
+        }
+    }
+}
+
+// MARK: - v3 pain sweep (Jack approved 2026-10-09). Copy is exact; the raw
+// values are the wire + storage format, never shown.
+
+/// When does it get you? (multi, ≥ 1)
+enum PullMoment: String, CaseIterable, Identifiable, Sendable {
+    case wake, betweenClasses, sitDownToWork, waiting, withPeople, bedtime
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .wake:           return String(localized: "Right when I wake up")
+        case .betweenClasses: return String(localized: "Between classes or meetings")
+        case .sitDownToWork:  return String(localized: "When I sit down to work")
+        case .waiting:        return String(localized: "When I'm waiting somewhere")
+        case .withPeople:     return String(localized: "When I'm with people")
+        case .bedtime:        return String(localized: "In bed at night")
+        }
+    }
+}
+
+/// How do you feel after? (single)
+enum AfterFeeling: String, CaseIterable, Identifiable, Sendable {
+    case wasted, behind, drained, numb, fine
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .wasted:  return String(localized: "Like I wasted the time")
+        case .behind:  return String(localized: "Behind on what I wanted to do")
+        case .drained: return String(localized: "Anxious or drained")
+        case .numb:    return String(localized: "Numb")
+        case .fine:    return String(localized: "Honestly, fine")
+        }
+    }
+}
+
+/// What have you tried to stop it? (multi, ≥ 1). `nothing` is exclusive.
+enum TriedFix: String, CaseIterable, Identifiable, Sendable {
+    case screenTimeLimits, blockerApp, deletedApps, willpower, nothing
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .screenTimeLimits: return String(localized: "Screen Time limits")
+        case .blockerApp:       return String(localized: "A blocker app")
+        case .deletedApps:      return String(localized: "Deleting the apps")
+        case .willpower:        return String(localized: "Just willpower")
+        case .nothing:          return String(localized: "Nothing yet")
         }
     }
 }
@@ -797,6 +866,11 @@ struct OnboardingAnswers: Sendable {
     var busyStartMinutes: Int? = nil
     var busyEndMinutes: Int? = nil
     var sleepMinutes: Int? = nil
+
+    // MARK: v3 pain sweep (2026-10-09).
+    var whenItGets: [PullMoment] = []
+    var feelAfter: AfterFeeling? = nil
+    var triedBefore: [TriedFix] = []
 }
 
 // MARK: - ⭐ DayAnchor — the fixed points a cue can hang on (2026-09-15).
