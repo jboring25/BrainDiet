@@ -10,7 +10,7 @@ import SwiftUI
 // bug") even though it was already filtered to their picks. The narrowing is
 // now VISUAL as well as logical: the chosen domains render as a single-column
 // list of LARGE cards — icon chip on the left, a bigger domain name, the
-// food-word subtitle in the category color, and the leaf check on the right.
+// and the leaf check on the right (no subtitle, 2026-10-09).
 // Fewer, bigger, one per row = "pick one of these," not "pick again."
 
 struct PrimaryDomainStepView: View {
@@ -49,7 +49,7 @@ struct PrimaryDomainStepView: View {
 
 // MARK: - The narrowing card — one chosen domain per row, at scale.
 //
-// Same color law as `DomainTile` (category-tint chip, category-ink food word),
+// Same color law as `DomainTile` (category-tint chip),
 // but laid out wide: a 54pt tint chip, the label at 20pt display, and the
 // established leaf check on selection.
 
@@ -68,15 +68,10 @@ struct PrimaryDomainCard: View {
                     .frame(width: 54, height: 54)
                     .overlay(BDPhIcon(icon: domain.phIcon, size: 27, color: domain.categoryColor))
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(domain.label)
-                        .font(BDFont.display(.extraBold, size: 20, relativeTo: .title3))
-                        .foregroundStyle(Color.bdTextPrimary)
-                    Text(domain.foodSubtitle)
-                        .font(BDFont.body(.bold, size: 13, relativeTo: .subheadline))
-                        .foregroundStyle(domain.categoryTextInk)
-                }
-                .multilineTextAlignment(.leading)
+                Text(domain.label)
+                    .font(BDFont.display(.extraBold, size: 20, relativeTo: .title3))
+                    .foregroundStyle(Color.bdTextPrimary)
+                    .multilineTextAlignment(.leading)
 
                 Spacer(minLength: Theme.Space.sm)
 
@@ -110,7 +105,7 @@ struct PrimaryDomainCard: View {
         .buttonStyle(.plain)
         .animation(Theme.Motion.snappy, value: isSelected)
         .sensoryFeedback(.selection, trigger: isSelected)
-        .accessibilityLabel("\(domain.label), \(domain.foodSubtitle)")
+        .accessibilityLabel(domain.label)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

@@ -194,59 +194,33 @@ private struct ReclaimCurve: View {
     }
 }
 
-// MARK: - Page 2 · their own plan, plated
+// MARK: - Page 2 · their own plan
 
 struct PaywallPlanPage: View {
     /// The domains the user actually chose, primary first.
     let domains: [ActivityDomain]
 
     var body: some View {
-        StoryPage(title: String(localized: "A serving for every part of your day."),
+        StoryPage(title: String(localized: "A step for every part of your day."),
                   subtitle: String(localized: "Built from what you just told us.")) {
             VStack(spacing: 9) {
-                ForEach(plated, id: \.0) { pair in
-                    planRow(pair.1, dish: pair.2)
+                ForEach(Array(domains.prefix(3)), id: \.self) { domain in
+                    planRow(domain)
                 }
             }
             .padding(.top, 6)
         }
     }
 
-    /// ⭐ EACH ROW GETS A DIFFERENT DISH. `thumbnail(for:)` keys off the plate
-    /// CATEGORY, and fitness and building are both protein — so the first build
-    /// plated identical sushi next to "You're becoming an athlete" and "You're
-    /// becoming a builder". `thumbnail(for:excluding:)` exists precisely for
-    /// this and jumps to the far end of the roster on a collision; it just has
-    /// to be threaded through the loop, which a plain ForEach can't do.
-    private var plated: [(Int, ActivityDomain, String?)] {
-        var used: String?
-        return domains.prefix(3).enumerated().map { i, domain in
-            let dish = MealLibrary.thumbnail(
-                for: PlateEngine.category(forDomain: domain), excluding: used)
-            used = dish
-            return (i, domain, dish)
-        }
-    }
-
-    private func planRow(_ domain: ActivityDomain, dish: String?) -> some View {
+    /// Each row leads with the domain's icon tile — the same rounded tint tile
+    /// + glyph Home uses (no food photography, 2026-10-09).
+    private func planRow(_ domain: ActivityDomain) -> some View {
         HStack(spacing: 13) {
-            ZStack {
-                Circle().fill(Color.bdSurface)
-                Circle().strokeBorder(Color.bdCardBorder, lineWidth: 1)
-                if let dish {
-                    // Scaled + cropped so the FOOD reads at this size, the same
-                    // treatment the plan card uses for its 44pt dishes.
-                    Image(dish)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 46, height: 46)
-                        .scaleEffect(1.85)
-                        .clipShape(Circle())
-                } else {
-                    BDPhIcon(icon: domain.phIcon, size: 20, color: domain.categoryColor)
-                }
-            }
-            .frame(width: 46, height: 46)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(domain.categoryTint)
+                .frame(width: 46, height: 46)
+                .overlay(BDPhIcon(icon: domain.phIcon, size: 21, color: domain.categoryColor))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(domain.identityLine)
@@ -277,7 +251,7 @@ struct PaywallPlanPage: View {
 
 struct PaywallProtectPage: View {
     var body: some View {
-        StoryPage(title: String(localized: "Apps rest while you eat."),
+        StoryPage(title: String(localized: "Apps wait their turn."),
                   subtitle: String(localized: "A pause, then the thing you actually wanted.")) {
             // ⭐ SIZED TO THE PAGE BOX, not to taste. At width 196 the framed
             // pages stood ~430pt tall in a ~336pt page, and a TabView page
@@ -440,15 +414,15 @@ struct PaywallTimelinePage: View {
         ) {
             VStack(alignment: .leading, spacing: 0) {
                 if trialSelected {
-                    row(.forkKnife, .bdLeaf, .bdLeafTint, String(localized: "Today"),
+                    row(.leaf, .bdLeaf, .bdLeafTint, String(localized: "Today"),
                         String(localized: "Full access, free for \(PaywallPricing.trialDays) days."), true)
                     row(.bell, .bdLeaf, .bdLeafTint, String(localized: "Day \(PaywallPricing.trialDays - 1)"),
                         String(localized: "We remind you before you're charged."), true)
                     row(.sparkle, .bdHoneyText, .bdHoneyTint, String(localized: "Day \(PaywallPricing.trialDays)"),
                         String(localized: "Your plan begins, \(PaywallPricing.weeklyDisplay)/week."), false)
                 } else {
-                    row(.forkKnife, .bdLeaf, .bdLeafTint,
-                        String(localized: "Every serving on your plan"),
+                    row(.leaf, .bdLeaf, .bdLeafTint,
+                        String(localized: "Every step on your plan"),
                         String(localized: "Not just the first step of each goal."), true)
                     row(.moon, .bdLeaf, .bdLeafTint,
                         String(localized: "Apps rest while you focus"),

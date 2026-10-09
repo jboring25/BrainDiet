@@ -1,6 +1,9 @@
 import SwiftUI
 
-// MARK: - Step 11 — THE COMMITMENT BEAT, as a plating moment.
+// MARK: - Step 11 — THE COMMITMENT BEAT: drag who you're becoming into your brain.
+//
+// 2026-10-09: all plate/meal imagery + copy removed (Jack). The target is the
+// particle brain; no MealLibrary dish is chosen any more.
 //
 // ⭐ REBUILT 2026-08-06 (Jack: "change the hold to a plating moment").
 //
@@ -51,7 +54,6 @@ struct CommitStepView: View {
     @State private var dragging = false
     @State private var overPlate = false
     @State private var committed = false
-    @State private var dishAmount: Double = 0
     @State private var cardDissolved = false
     @State private var goldPulse = false
     @State private var plateRect: CGRect = .zero
@@ -78,18 +80,6 @@ struct CommitStepView: View {
     private var identityLine: String {
         let picked = vm.aspiration.trimmingCharacters(in: .whitespacesAndNewlines)
         return picked.isEmpty ? domain.identityLine : picked
-    }
-
-    /// The dish this commitment becomes — MealLibrary's deterministic HERO pick
-    /// (same white speckled vessel as PlateEmpty, so the ceramic never jumps).
-    private var dishName: String? {
-        MealLibrary.heroMeal(for: PlateEngine.category(forDomain: domain),
-                             seed: Self.seed(from: identityLine))
-    }
-
-    /// Process-stable seed (String.hashValue is randomised per launch).
-    private static func seed(from text: String) -> Int {
-        text.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) % 100_003 }
     }
 
     // MARK: Body
@@ -166,8 +156,8 @@ struct CommitStepView: View {
                 .scaleEffect(goldPulse ? 1.45 : 0.85)
                 .opacity(committed ? 1 : 0)
 
-            BDPlateMark(nourishment: 0, steaming: committed,
-                        dish: dishName, dishAmount: dishAmount)
+            // The particle brain (BDPlateMark renders CULTURE since 2026-09-03).
+            BDPlateMark(nourishment: 0, steaming: committed)
                 .frame(width: 300)
                 .scaleEffect(overPlate && !committed ? 1.04 : 1.0)
                 .animation(.easeOut(duration: 0.25), value: overPlate)
@@ -175,7 +165,7 @@ struct CommitStepView: View {
         .frame(width: 300, height: 200)
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { plateRect = $0 }
         .accessibilityElement()
-        .accessibilityLabel("Your plate")
+        .accessibilityLabel("Your brain")
         .accessibilityHint("Drag who you're becoming here, or use the button below")
         .accessibilityAction { commit() }
     }
@@ -189,7 +179,7 @@ struct CommitStepView: View {
                 Text("Committed.")
                     .font(BDFont.serif(size: 24, relativeTo: .title2))
                     .foregroundStyle(Color.bdLeafDeep)
-                Text("That's the person. Now we feed them.")
+                Text("That's the person. Now we get you there.")
                     .font(BDFont.body(.medium, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Color.bdTextSecondary)
                     .multilineTextAlignment(.center)
@@ -270,7 +260,7 @@ struct CommitStepView: View {
         .gesture(dragGesture)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(identityLine)
-        .accessibilityHint("Drag onto your plate to commit")
+        .accessibilityHint("Drag into your brain to commit")
         .accessibilityAction { commit() }
     }
 
@@ -350,10 +340,8 @@ struct CommitStepView: View {
 
         if reduceMotion {
             cardDissolved = true
-            dishAmount = 1
         } else {
             withAnimation(.easeOut(duration: 0.28)) { cardDissolved = true }
-            withAnimation(.easeInOut(duration: 0.75).delay(0.10)) { dishAmount = 1 }
             withAnimation(.easeOut(duration: 0.9).delay(0.20)) { goldPulse = true }
         }
 

@@ -9,8 +9,9 @@ import SwiftUI
 // canvas, the PLATE assembles through its real aligned states — the
 // PlateEmpty → PlateMorning → PlateMidday → PlateNourished crossfade (the same
 // full-color ramp as Home; never a filter) — while the copy reads the user's
-// own answers back: "Reading your day… Plating your servings…". Reduce Motion:
-// the plate rests at a settled state, lines still cycle.
+// own answers back: "Reading your day… Building your plan…". Reduce Motion:
+// the brain rests at a settled state, lines still cycle. (BDPlateMark renders
+// the particle brain since 2026-09-03; no plate imagery.)
 
 struct BuildingStepView: View {
     @Bindable var vm: OnboardingViewModel
@@ -33,7 +34,7 @@ struct BuildingStepView: View {
     private var lines: [String] {
         var out = [
             String(localized: "Reading your day…"),
-            String(localized: "Plating your servings…")
+            String(localized: "Building your plan…")
         ]
         if reclaimHours > 0 {
             out.append(String(localized: "Setting \(reclaimHours)h a day back for \(primaryWord)…"))
@@ -63,7 +64,7 @@ struct BuildingStepView: View {
                 .frame(width: 300)
                 .padding(.vertical, Theme.Space.xl)
                 .accessibilityElement()
-                .accessibilityLabel("Plating your plan")
+                .accessibilityLabel("Building your plan")
 
             // Single line at a time — the string is swapped only while fully faded
             // out, so two lines can NEVER overlap (no garbled "ghost" line).

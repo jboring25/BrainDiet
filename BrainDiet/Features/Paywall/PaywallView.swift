@@ -181,15 +181,15 @@ struct PaywallView: View {
         return max(500, screen - 210)
     }
 
-    /// "Your 2 hours a day, fully fed." — their reclaim, their goal. Falls back
+    /// "Your 2 hours a day, back." — their reclaim, their goal. Falls back
     /// cleanly when the plan has no reclaim figure yet (day zero / no data).
     private var personalHeadline: String {
         let hours = plan.reclaimedHours
         guard hours > 0 else {
-            return String(localized: "Your day, fully fed.")
+            return String(localized: "Your day, back.")
         }
         let unit = hours == 1 ? String(localized: "hour") : String(localized: "hours")
-        return String(localized: "Your \(hours) \(unit) a day, fully fed.")
+        return String(localized: "Your \(hours) \(unit) a day, back.")
     }
 
     // MARK: The trial timeline — the Opal progression pattern, our voice
@@ -215,7 +215,7 @@ struct PaywallView: View {
                 timelineRow(
                     marker: "leaf.fill",
                     title: "Today",
-                    line: "Your whole plate unlocks.",
+                    line: "Everything unlocks.",
                     filled: true, isLast: false
                 )
                 timelineRow(
@@ -234,7 +234,7 @@ struct PaywallView: View {
                 timelineRow(
                     marker: "leaf.fill",
                     title: "Today",
-                    line: "Your whole plate unlocks.",
+                    line: "Everything unlocks.",
                     filled: true, isLast: false
                 )
                 timelineRow(

@@ -40,7 +40,7 @@ struct AspirationStepView: View {
         VStack(alignment: .leading, spacing: Theme.Space.xl) {
             StepHeader(
                 title: "Who do you want to become?",
-                subtitle: "Pick the one that sounds most like you on your best day. Every serving we hand you builds that person."
+                subtitle: "Pick the one that sounds most like you on your best day. Every step we hand you builds that person."
             )
 
             VStack(spacing: Theme.Space.sm) {

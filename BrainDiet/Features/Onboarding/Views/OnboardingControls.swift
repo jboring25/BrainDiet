@@ -152,7 +152,7 @@ struct HijackTile: View {
                 Text(hijacker.label)
                     .font(BDFont.body(.bold, size: 14.5, relativeTo: .subheadline))
                     .foregroundStyle(isSelected ? Color.bdTextPrimary : Color.bdGrayInk)
-                Text(hijacker.foodCaption)
+                Text(hijacker.caption)
                     .font(BDFont.body(.semiBold, size: 11.5, relativeTo: .caption))
                     .foregroundStyle(Color.bdGrayFaint)
             }
@@ -187,7 +187,7 @@ struct HijackTile: View {
         .buttonStyle(.plain)
         .animation(Theme.Motion.snappy, value: isSelected)
         .sensoryFeedback(.selection, trigger: isSelected)
-        .accessibilityLabel("\(hijacker.label), \(hijacker.foodCaption)")
+        .accessibilityLabel("\(hijacker.label), \(hijacker.caption)")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }
@@ -195,8 +195,7 @@ struct HijackTile: View {
 // MARK: - Color-return domain tile (appetite mockup, screen 3).
 //
 // Where the color comes back: white tile, the domain's Phosphor icon in its
-// CATEGORY color (the LAW: leaf / salmon / berry / honey), the label, and the
-// food-language subtitle. Selected = the category's tint wash + colored border.
+// CATEGORY color, and the label. No subtitle (2026-10-09). Selected = the category's tint wash + colored border.
 
 struct DomainTile: View {
     let domain: ActivityDomain
@@ -211,10 +210,7 @@ struct DomainTile: View {
                     .padding(.bottom, 6)
                 Text(domain.label)
                     .font(BDFont.display(.extraBold, size: 14.5, relativeTo: .subheadline))
-                    .foregroundStyle(Color.bdTextPrimary)
-                Text(domain.foodSubtitle)
-                    .font(BDFont.body(.bold, size: 11.5, relativeTo: .caption))
-                    .foregroundStyle(isSelected ? domain.categoryTextInk : Color.bdTextSecondary)
+                    .foregroundStyle(isSelected ? domain.categoryTextInk : Color.bdTextPrimary)
             }
             .multilineTextAlignment(.center)
             .lineLimit(1)
@@ -222,7 +218,7 @@ struct DomainTile: View {
             .frame(maxWidth: .infinity)
             // Tighter than the hijack tiles: 8 domains must fit 4 rows + the
             // "color comes back" footer above the fold.
-            .padding(.vertical, 13)
+            .padding(.vertical, 14)
             .padding(.horizontal, 10)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -237,7 +233,7 @@ struct DomainTile: View {
         .buttonStyle(.plain)
         .animation(Theme.Motion.snappy, value: isSelected)
         .sensoryFeedback(.selection, trigger: isSelected)
-        .accessibilityLabel("\(domain.label), \(domain.foodSubtitle)")
+        .accessibilityLabel(domain.label)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

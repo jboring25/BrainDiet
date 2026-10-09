@@ -114,7 +114,7 @@ struct MirrorStepView: View {
         .task { await orchestrate() }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
-            "\(mirror.dayValue) \(mirror.dayUnit) a day. That's \(mirror.daysPerYear) days a year. Every decade, \(mirror.decadePhrase), fed to the feed. That's time you could have spent on: \(spentOnLines.joined(separator: ". ")). You won't have to imagine that. Become closer, day by day."
+            "\(mirror.dayValue) \(mirror.dayUnit) a day. That's \(mirror.daysPerYear) days a year. Every decade, \(mirror.decadePhrase), lost to the feed. That's time you could have spent on: \(spentOnLines.joined(separator: ". ")). You won't have to imagine that. Become closer, day by day."
         )
     }
 
@@ -180,7 +180,7 @@ struct MirrorStepView: View {
             .fontWeight(.heavy)
             // Body-size emphasis → 4.5:1. Was bdSlopGray (2.69:1).
             .foregroundStyle(Color.bdSlopGrayText)
-         + Text(", fed to the feed.")
+         + Text(", lost to the feed.")
             .foregroundStyle(Color.bdGrayInk))
             .font(BDFont.body(.semiBold, size: 19, relativeTo: .title3))
             .lineSpacing(6)

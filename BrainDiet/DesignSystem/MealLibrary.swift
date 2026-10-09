@@ -24,42 +24,8 @@ enum MealLibrary {
         .entertainment: ["MealChocBerries"]
     ]
 
-    // MARK: - ⭐ HERO ROSTER (2026-08-05) — SAME-VESSEL, for the plating moment.
-    //
-    // THE BUG THIS FIXES: the first-serving hero crossfades PlateEmpty → a dish.
-    // PlateEmpty is a WHITE SPECKLED CERAMIC BOWL. When we regenerated the meal
-    // art with cuisine-specific vessels (sushi on slate, ramen in a noodle bowl,
-    // med-grain in TERRACOTTA), the hero moment started swapping the bowl mid-
-    // animation: you drag a serving onto a white bowl and a clay bowl appears
-    // holding the food. The whole choreography — halo, crossfade, steam, flare —
-    // rests on "THIS bowl received YOUR serving", so the vessel swap collapsed
-    // the illusion and read as one stock photo replacing another.
-    //
-    // The cuisine-vessel rule was right for the 44pt plan-card thumbnails, where
-    // each row must look distinct. It was wrong for the hero, where CONTINUITY is
-    // the point. So: two rosters chosen by context. These `MealHero*` assets are
-    // the pre-vessel renders (restored from design/meal-art-backup-20260727),
-    // every one plated in the SAME white speckled bowl as PlateEmpty and
-    // geometry-locked to it (1024×559, aligned to PlateNourished).
-    //
-    // RULE: anything crossfading from PlateEmpty/PlateNourished uses `heroMeal`.
-    // Anything rendering a standalone small dish uses `thumbnail`. Never mix.
-    static let heroMeals: [PlateCategory: [String]] = [
-        .learning:      ["MealHeroMedGrain", "MealHeroGreenSalad"],
-        .focus:         ["MealHeroSushi", "MealHeroMisoRamen"],
-        .creativity:    ["MealHeroAcai", "MealHeroBlueberryYogurt"],
-        .entertainment: ["MealHeroChocBerries"]
-    ]
-
-    /// The same-vessel dish for a plate crossfade. Falls back to the standard
-    /// roster only if a category has no hero render, so a missing asset degrades
-    /// to "wrong vessel" rather than "no dish at all".
-    static func heroMeal(for category: PlateCategory, seed: Int = 0) -> String? {
-        if let options = heroMeals[category], !options.isEmpty {
-            return options[abs(seed) % options.count]
-        }
-        return meal(for: category, seed: seed)
-    }
+    // HERO ROSTER removed 2026-10-09: its only caller (onboarding commit) now
+    // drags into the particle brain, and the MealHero* assets were deleted.
 
     /// A deterministic dish for a category. `seed` (e.g. a stable hash of a
     /// step id, or the day ordinal) rotates variety without randomness.

@@ -167,15 +167,15 @@ enum AttentionHijacker: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// The food-language caption (appetite mockup) — what this snack really is.
-    var foodCaption: String {
+    /// The one-line caption under the tile — the pull, in plain words.
+    var caption: String {
         switch self {
-        case .social:     return String(localized: "the bottomless bowl")
-        case .shortVideo: return String(localized: "sugar, no meal")
+        case .social:     return String(localized: "one more swipe")
+        case .shortVideo: return String(localized: "no bottom to it")
         case .youtube:    return String(localized: "one more episode")
-        case .games:      return String(localized: "empty calories")
-        case .news:       return String(localized: "doom snacks")
-        case .messaging:  return String(localized: "picking at the phone")
+        case .games:      return String(localized: "just one more round")
+        case .news:       return String(localized: "doom scrolling")
+        case .messaging:  return String(localized: "picking up the phone")
         }
     }
 

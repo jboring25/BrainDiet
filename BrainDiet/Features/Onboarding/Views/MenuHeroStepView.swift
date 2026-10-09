@@ -30,7 +30,7 @@ struct MenuHeroStepView: View {
                 .frame(height: served ? 300 : 470)
                 .padding(.top, served ? 24 : 36)
 
-            Text(served ? "Your menu is ready." : "Feeding your brain\nwhat you told it.")
+            Text(served ? "Your plan is ready." : "Turning your words\ninto steps.")
                 .font(BDFont.serif(size: 26, relativeTo: .title2))
                 .foregroundStyle(Color.bdTextPrimary)
                 .multilineTextAlignment(.center)
