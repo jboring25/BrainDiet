@@ -308,6 +308,7 @@ final class RealScreenTimeGateway: ScreenTimeGateway {
         }
         doItNowStore.shield.applicationCategories = .all(except: allowed)
         doItNowStore.shield.webDomainCategories = .all()
+        Log.app.info("Blocking: Do it now shield set (\(allowed.count, privacy: .public) allowed)")
 
         // The release has to happen even if the app is killed, so it belongs to
         // the monitor. Apple rejects intervals under 15 minutes; a shorter step

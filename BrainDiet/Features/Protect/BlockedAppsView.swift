@@ -535,10 +535,14 @@ struct BlockedAppsView: View {
         withAnimation(Theme.Motion.smooth) { router.selectedTab = .home }
     }
 
+    /// ⭐ ONE TIMER, ONE MEANING (Jack, 2026-10-09: "when the timer is hit, it
+    /// does not block any apps"). The Menu's timer used to start the old
+    /// in-app session, which blocks nothing. Every timer button is Do it now.
     private func startTimer(_ row: StepRow) {
-        guard let serving = PlateEngine.serving(for: row.step, in: row.goal) else { return }
-        router.pendingServing = serving
-        withAnimation(Theme.Motion.smooth) { router.selectedTab = .protect }
+        blocking.startDoItNow(DoItNowSession(title: row.step.title,
+                                             domainRaw: row.domain.rawValue,
+                                             goalID: row.goal.id, stepID: row.step.id,
+                                             minutes: row.step.suggestedMinutes))
     }
 
     private func rest(_ id: String) {
