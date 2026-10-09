@@ -20,7 +20,7 @@ struct GoalScenesStepView: View {
                     BuilderEchoChip(text: echo).padding(.bottom, 10)
                 }
                 StepHeader(title: "Picture the person you want to be, a year from now.",
-                           subtitle: "Pick up to 3.")
+                           subtitle: "Pick up to 3.", compact: true)
 
                 ForEach(SceneGroup.allCases) { group in
                     BuilderLabel(text: group.label)
