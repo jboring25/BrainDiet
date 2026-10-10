@@ -70,7 +70,9 @@ final class PlateDropController {
     /// Card centre in Home space, mid-drag.
     private var cardCentre: CGSize { translation }
 
-    func begin(_ item: PlateDraggable, rowID: UUID?, origin: CGPoint) {
+    /// `haptic: false` when the caller already fired the lift tick on touch-down
+    /// (the onboarding commit card), so pickup never double-taps.
+    func begin(_ item: PlateDraggable, rowID: UUID?, origin: CGPoint, haptic: Bool = true) {
         payload = item
         liftedRowID = rowID
         cardOrigin = origin
@@ -79,6 +81,7 @@ final class PlateDropController {
         point = origin
         morph = 0
         startDistance = max(80, hypot(origin.x - cultureRect.midX, origin.y - cultureRect.midY))
+        guard haptic else { return }
         let lift = UIImpactFeedbackGenerator(style: .light)
         lift.prepare(); lift.impactOccurred(intensity: 0.55)
     }
@@ -88,9 +91,14 @@ final class PlateDropController {
     /// on exit — leaving is not an event).
     @discardableResult
     func update(_ value: DragGesture.Value) -> Bool {
-        translation = value.translation
-        let centre = CGPoint(x: cardOrigin.x + value.translation.width,
-                             y: cardOrigin.y + value.translation.height)
+        update(translation: value.translation)
+    }
+
+    /// Same as `update(_:)` from a raw translation (DEBUG autoplay drives this).
+    @discardableResult
+    func update(translation t: CGSize) -> Bool {
+        translation = t
+        let centre = CGPoint(x: cardOrigin.x + t.width, y: cardOrigin.y + t.height)
         point = centre
         if !cultureRect.isEmpty {
             let d = hypot(centre.x - cultureRect.midX, centre.y - cultureRect.midY)
