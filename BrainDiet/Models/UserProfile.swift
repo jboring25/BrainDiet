@@ -110,9 +110,17 @@ final class UserProfile {
     var goalScenesRaw: String = ""
     /// JSON map ActivityDomain.rawValue → GoalReason.rawValue.
     var goalReasonsRaw: String = ""
-    /// JSON map ActivityDomain.rawValue → "BrainDiet" / "your app" (the
-    /// shield's "Go get back to ___.").
+    /// JSON map ActivityDomain.rawValue → "BrainDiet launched" (the shield's
+    /// "Go get ___."; legacy profiles: "Go get back to ___.").
     var goalShortsRaw: String = ""
+
+    // MARK: ⭐ One moonshot (Jack approved 2026-10-10). Defaulted: lightweight
+    // migration. A profile from the multi-goal builder has these empty and
+    // reads its PRIMARY goal's words as the moonshot (`moonshotText`).
+    /// The moonshot in their words.
+    var moonshot: String = ""
+    /// JSON array of `Milestone`, in order. The steps aim at the first not done.
+    var milestonesRaw: String = ""
 
     init(
         goalIDs: [String],
@@ -186,8 +194,21 @@ final class UserProfile {
         triedBeforeRaw.split(separator: ",").compactMap { TriedFix(rawValue: String($0)) }
     }
 
-    var goalScenes: [GoalScene] {
-        goalScenesRaw.split(separator: ",").compactMap { GoalScene(rawValue: String($0)) }
+    var milestones: [Milestone] {
+        get { Milestone.decode(milestonesRaw) }
+        set { milestonesRaw = Milestone.encode(newValue) }
+    }
+
+    /// True for a profile written by the moonshot onboarding.
+    var hasMoonshot: Bool { !moonshot.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    /// The moonshot, or for a multi-goal profile its primary goal's words
+    /// (migration: their primary IS the moonshot). Empty when neither exists.
+    var moonshotText: String {
+        let m = moonshot.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !m.isEmpty { return m }
+        guard let p = primaryDomain ?? domains.first else { return "" }
+        return (goalWords[p] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     var goalReasons: [ActivityDomain: GoalReason] {
         get { Self.decodeDomainMap(goalReasonsRaw, as: String.self).compactMapValues(GoalReason.init(rawValue:)) }
@@ -205,8 +226,12 @@ final class UserProfile {
         let shorts = goalShorts
         var out: [ActivityDomain: ShieldLine] = [:]
         for (d, r) in goalReasons {
-            let short = shorts[d] ?? d.sentenceTemplate().fallbackShort
-            out[d] = ShieldLine(wish: r.shieldWish, go: String(localized: "Go get back to \(short)."))
+            if hasMoonshot {
+                out[d] = ShieldLine(wish: r.shieldWish, go: MoonshotShield.goLine(short: shorts[d] ?? ""))
+            } else {
+                let short = shorts[d] ?? d.shieldFallbackShort
+                out[d] = ShieldLine(wish: r.shieldWish, go: String(localized: "Go get back to \(short)."))
+            }
         }
         return out
     }
@@ -387,8 +412,9 @@ final class UserProfile {
             whenItGets: whenItGets,
             feelAfter: feelAfter,
             triedBefore: triedBefore,
-            goalScenes: goalScenes,
-            goalReasons: goalReasons
+            goalReasons: goalReasons,
+            moonshot: moonshotText,
+            milestones: milestones
         )
     }
 

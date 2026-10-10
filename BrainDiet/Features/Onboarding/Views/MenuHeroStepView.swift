@@ -106,6 +106,14 @@ struct MenuHeroStepView: View {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.74)) { cardsShown = i + 1 }
             try? await Task.sleep(for: .milliseconds(180))
         }
+        #if DEBUG
+        // BD_HERO_FINISH=1: walk straight into Home, so a capture can check what
+        // onboarding actually persisted (the one-goal Home after the moonshot).
+        if ProcessInfo.processInfo.environment["BD_HERO_FINISH"] == "1" {
+            try? await Task.sleep(for: .milliseconds(800))
+            vm.finishOnboarding()
+        }
+        #endif
     }
 }
 

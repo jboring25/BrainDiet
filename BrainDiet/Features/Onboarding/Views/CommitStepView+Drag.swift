@@ -81,8 +81,9 @@ extension CommitStepView {
 
         if let point {
             culture.feed(at: point)
-            // By the outline the card is already ~fully the ball; this only
-            // hands the ball to the brain's own serving at the same spot.
+            // By the outline the card is already ~fully the ball; the landed
+            // ball finishes shrinking to the brain's serving at the same spot.
+            drop.landing = .init(point: drop.point, handoff: drop.ballHandoff)
             withAnimation(.easeOut(duration: 0.12)) { cardGone = true }
         } else {
             culture.feed()

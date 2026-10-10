@@ -127,14 +127,26 @@ struct CommitStepView: View {
 
     /// The green serving ball the card turns into. Always mounted; opacity is
     /// driven by morph so a spring-back fades it out instead of popping it.
+    /// ⭐ Finger-sized in the hand (Jack, 2026-10-10: "way too small"), shrinking
+    /// to the brain's own serving over the last stretch (`DragBallSize`); a drop
+    /// before that finishes hands off through `LandedServingBall`.
     @ViewBuilder
     private var ball: some View {
         let m = CommitMorph.eased(drop.morph)
-        let s = drop.cultureRect.isEmpty ? 0.2 : CultureCloudGeometry.transform(in: drop.cultureRect.size).a
-        ServingBall(radius: max(4, 17 * s))
-            .scaleEffect(0.5 + 0.5 * m)
-            .opacity(cardGone ? 0 : Double(max(0, min(1, (m - 0.3) / 0.45))))
-            .position(drop.point)
+        ZStack(alignment: .topLeading) {
+            DraggedServingBall(handoff: drop.ballHandoff, cultureRect: drop.cultureRect)
+                .scaleEffect(0.5 + 0.5 * m)
+                .opacity(cardGone ? 0 : Double(max(0, min(1, (m - 0.3) / 0.45))))
+                // The landed ball takes over in the same frame; no crossfade.
+                .animation(nil, value: cardGone)
+                .position(drop.point)
+            if let landing = drop.landing {
+                LandedServingBall(landing: landing, cultureRect: drop.cultureRect) {
+                    if drop.landing == landing { drop.landing = nil }
+                }
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder

@@ -54,12 +54,12 @@ struct MainView: View {
         )
     }
 
-    /// The user's goals in the order the shield rotates them: primary first.
+    /// ⭐ ONE GOAL (the moonshot, 2026-10-10): the shield speaks only it. A
+    /// legacy multi-goal profile rotates nothing either: its primary is the moonshot.
     private var shieldDomains: [ActivityDomain] {
         guard let profile = profiles.first else { return [] }
-        let all = profile.domains
-        guard let primary = profile.primaryDomain, all.contains(primary) else { return all }
-        return [primary] + all.filter { $0 != primary }
+        guard let primary = profile.primaryDomain ?? profile.domains.first else { return [] }
+        return [primary]
     }
 
     var body: some View {

@@ -160,7 +160,19 @@ final class PlateEngine {
     /// The soft inferred plan — 3 servings/day, one per recommended category.
     /// Order matters: it is the deficit priority (reference reducer's key order).
     static let planOrder: [PlateCategory] = [.learning, .focus, .creativity]
-    let plan: [PlateCategory: Int] = [.learning: 1, .focus: 1, .creativity: 1]
+    static let defaultPlan: [PlateCategory: Int] = [.learning: 1, .focus: 1, .creativity: 1]
+    /// ⭐ ONE MOONSHOT (2026-10-10): the day's three servings are spread over
+    /// the categories the user's goals actually cover, so a one-goal plan is
+    /// three of ITS steps, not one step plus "Read a few pages" filler for
+    /// categories nobody chose. No goals = the default one-per-category plan.
+    private(set) var plan: [PlateCategory: Int] = PlateEngine.defaultPlan
+
+    static func plan(covering cats: [PlateCategory]) -> [PlateCategory: Int] {
+        guard !cats.isEmpty else { return defaultPlan }
+        var out: [PlateCategory: Int] = [:]
+        for i in 0..<planOrder.count { out[cats[i % cats.count], default: 0] += 1 }
+        return out
+    }
 
     // Derived per-sync from persisted truth (sessions map in via activity ids).
     private(set) var done: [PlateCategory: Int] = [:]
@@ -188,8 +200,11 @@ final class PlateEngine {
 
     /// Recompute today's plate from persisted truth. Idempotent + event-driven
     /// (never called from a view body). The suggestion stays STICKY across syncs.
-    func sync(goals: [Goal], sessions: [ProtectSession], junkMinutes: Int,
+    func sync(goals allGoals: [Goal], sessions: [ProtectSession], junkMinutes: Int,
               junkAppCount: Int, now: Date = .now) {
+        // ⭐ ONE GOAL (moonshot, 2026-10-10): only the primary feeds the plate.
+        // A legacy multi-goal plan keeps its other goals on disk, unserved.
+        let goals = allGoals.theOneGoal
         #if DEBUG
         // Screenshot determinism: a seeded run starts from a clean day state
         // (the seeds regenerate every launch; yesterday's sticky ids are stale).
@@ -203,6 +218,10 @@ final class PlateEngine {
         if key != dayKey { loadDayState(for: key, now: now) }
 
         catalog = Self.buildCatalog(goals: goals, everDone: Set(sessions.compactMap(\.stepID)))
+        let covered = Self.planOrder.filter { cat in
+            goals.contains { ActivityDomain(rawValue: $0.domain).map(Self.category(forDomain:)) == cat }
+        }
+        plan = Self.plan(covering: covered)
 
         // Fold today's sessions into per-category servings + minutes. A session
         // is the user speaking an ACTIVITY; the map below is our translation.
@@ -481,8 +500,10 @@ final class PlateEngine {
                     goalID: goal.id, stepID: step.id, activityID: domain.activityID))
             }
         }
-        // Sensible defaults for any plan category the goals didn't cover.
-        for cat in planOrder where !out.contains(where: { $0.category == cat }) {
+        // Sensible defaults only when there is no real plan at all: a category
+        // the goals don't cover is no longer on the day's plan (see `plan`).
+        let noPlan = out.isEmpty
+        for cat in planOrder where noPlan {
             out.append(contentsOf: defaults(for: cat))
         }
         // ⛔️ Dessert defaults are NOT appended (2026-09-14). The category still

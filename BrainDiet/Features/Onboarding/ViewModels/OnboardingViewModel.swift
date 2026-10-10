@@ -47,30 +47,33 @@ final class OnboardingViewModel {
     var timeLostBand: ShortFormBand? {
         timeLostHours.map(ShortFormBand.nearest(toHours:))
     }
-    /// The goals' domains in pick order. DERIVED from `pickedScenes` by the
-    /// goal builder (2026-10-09); kept as storage because the planner, the
-    /// mirror, the paywall and the persist path all read it.
+    /// The goal's domain: exactly ONE since the moonshot (2026-10-10), set by
+    /// `syncMoonshotGoal`. Kept as storage because the planner, the mirror,
+    /// the paywall and the persist path all read it.
     var selectedDomains: [ActivityDomain] = []
-    /// Pick #1's domain.
+    /// The moonshot's domain.
     var primaryDomain: ActivityDomain? = nil
     /// The identity line anything that still reads `aspiration` gets: the
-    /// primary goal's `GoalReason.aspiration` since the goal builder.
+    /// moonshot reason's `GoalReason.aspiration`.
     var aspiration: String = ""
 
-    // MARK: ⭐ Goal builder (Jack approved 2026-10-09, design/goal-builder/mock4).
+    // MARK: ⭐ One moonshot (Jack approved 2026-10-10, design/goal-builder/moon.png).
 
-    /// The scenes they picked, in pick order (≤ `maxScenes`). Pick #1 = primary.
-    var pickedScenes: [GoalScene] = []
-    static let maxScenes = 3
-    /// Which pick the per-goal steps (sentence → sharpen → why) are on.
-    var builderIndex: Int = 0
-    /// Each goal's sentence in progress.
-    var drafts: [GoalScene: GoalDraft] = [:]
-    /// The sharpen call per goal, keyed to the sentence it was asked about.
-    var sharpen: [GoalScene: SharpenState] = [:]
-    /// Which sharper version they took. Absent = "Keep mine".
-    var sharpenPick: [GoalScene: Int] = [:]
-    /// Why each goal matters.
+    /// What they typed on moonshotWrite.
+    var moonshot: String = ""
+    /// The road: three milestones from the AI (editable), in order.
+    var milestones: [Milestone] = []
+    /// The road call, keyed to the moonshot it was asked about.
+    var road: RoadState = .idle
+    /// The AI's read of the moonshot's domain. Nil = not answered (→ Building).
+    var roadDomain: ActivityDomain? = nil
+    /// "BrainDiet launched": the shield's "Go get ___." phrase.
+    var moonshotShort: String = ""
+    /// The timeline's last row ("1 million people"), when the server sent one.
+    var roadFinish: String = ""
+    /// Why it matters.
+    var moonshotReason: GoalReason? = nil
+    /// The reason keyed by the goal's domain (what the profile + planner read).
     var goalReasons: [ActivityDomain: GoalReason] = [:]
     /// Q6 (slide 7) — the obstacle question ("What's stopped you before?").
     /// Reverted 2026-07-21 to a plain nil default; the question sets it before
@@ -181,19 +184,11 @@ final class OnboardingViewModel {
         whenItGets = [.sitDownToWork, .waiting, .bedtime]
         feelAfter = .behind
         triedBefore = [.screenTimeLimits, .willpower]
-        // The mockup's own answers (design/onboarding-v2/screens.html), so the
-        // hero and every v2 screen reviews real words, not placeholders.
-        // Jack's mock4 picks: launched (1), a book a month (2), strongest (3).
-        pickedScenes = [.launched, .readMonth, .strongest]
-        syncDomainsFromScenes()
-        drafts = [.launched: Self.mockDraft(.launched),
-                  .readMonth: Self.mockDraft(.readMonth),
-                  .strongest: Self.mockDraft(.strongest)]
-        goalReasons = [.building: .prove, .reading: .years, .fitness: .tired]
-        aspiration = GoalReason.prove.aspiration
-        goalWords = [.reading: "Finish Dune, then read 12 books by next summer",
-                     .building: "Launch BrainDiet on the App Store and get 100 users at ASU",
-                     .fitness: "Upper body twice a week, bench 225 by May"]
+        // Jack's moonshot mock answers (design/goal-builder/moon.png).
+        moonshot = Self.mockMoonshot
+        applyRoad(RoadService.stub, for: Self.mockMoonshot)
+        moonshotReason = .prove
+        syncMoonshotGoal()
         baseline = .inconsistent
         nextPiece = "Finish the App Store listing"
         busyEndMinutes = 15 * 60
@@ -226,30 +221,16 @@ final class OnboardingViewModel {
         let filled = ProcessInfo.processInfo.environment["BD_OB_FILLED"] == "1"
         switch raw {
         case "hijack":        selectedHijackers = Self.defaultHijackers
-        // Goal builder: real defaults unless BD_OB_FILLED=1 (mock4's answers).
-        case "goalScenes" where !filled:
-            pickedScenes = []; syncDomainsFromScenes()
-        case "goalSentence":
-            builderIndex = 0
-            drafts[.launched] = filled
-                ? GoalDraft(choices: [.option(0), .option(1), nil], active: 1)
-                : GoalDraft(blankCount: 3)
-        case "goalSharpen":
-            builderIndex = 0
-            let mine = builtSentence(for: .launched) ?? ""
-            if filled {
-                let opts = SharpenService.stub(for: sharpenRequest(scene: .launched, sentence: mine))
-                sharpen[.launched] = .ready(mine, opts)
-                pickSharpen(0)
-            } else {
-                sharpen[.launched] = .loading(mine)
-            }
-        case "goalWhy":
-            builderIndex = 0
-            let mine = builtSentence(for: .launched) ?? ""
-            sharpen[.launched] = .ready(mine, SharpenService.stub(for: sharpenRequest(scene: .launched, sentence: mine)))
-            pickSharpen(0)
-            if !filled { goalReasons[.building] = nil }
+        // Moonshot: real defaults unless BD_OB_FILLED=1 (Jack's mock answers).
+        case "moonshotWrite" where !filled:
+            moonshot = ""; road = .idle; milestones = []
+        case "moonshotRoad" where !filled:
+            // Empty = the skeleton the user sees while the road call runs
+            // (BD_PLAN_STUB=1 lets it answer; otherwise the real server).
+            road = .idle
+            startRoad()
+        case "moonshotWhy" where !filled:
+            moonshotReason = nil; aspiration = ""
         case "baseline" where !filled:
             baseline = nil; nextPiece = ""
         case "baseline":
@@ -274,10 +255,9 @@ final class OnboardingViewModel {
         case "welcome":       step = .welcome
         case "hijack":        step = .hijack
         case "timeLost":      timeLostHours = nil; step = .timeLost
-        case "goalScenes":    step = .goalScenes
-        case "goalSentence":  step = .goalSentence
-        case "goalSharpen":   step = .goalSharpen
-        case "goalWhy":       step = .goalWhy
+        case "moonshotWrite": step = .moonshotWrite
+        case "moonshotRoad":  step = .moonshotRoad
+        case "moonshotWhy":   step = .moonshotWhy
         case "baseline":      step = .baseline
         case "timeAndDay":    step = .timeAndDay
         case "reachAndSchedule": step = .reachAndSchedule
@@ -360,8 +340,11 @@ final class OnboardingViewModel {
             // The named things go to the on-device model as its "in their own
             // words" block, so where the model runs its wording already names them.
             // The goal words ARE the "in their own words" block now.
+            // The moonshot + the milestone the steps aim at seed the heuristic
+            // and on-device planners.
             dreamDetails: DreamDetails.normalise(
-                goalWordDomains.compactMap { goalWords[$0] } + [nextPiece]),
+                goalWordDomains.compactMap { goalWords[$0] }
+                    + [milestones.current?.title ?? "", nextPiece]),
             dailyAnchors: DayAnchor.allCases.filter(dayAnchors.contains).map(\.rawValue),
             goalWords: goalWords,
             baseline: baseline,
@@ -374,8 +357,9 @@ final class OnboardingViewModel {
             whenItGets: orderedWhenItGets,
             feelAfter: feelAfter,
             triedBefore: orderedTriedBefore,
-            goalScenes: pickedScenes,
-            goalReasons: goalReasons.filter { goalWordDomains.contains($0.key) }
+            goalReasons: goalReasons.filter { goalWordDomains.contains($0.key) },
+            moonshot: trimmedMoonshot,
+            milestones: milestones.filled
         )
     }
 
@@ -410,7 +394,7 @@ final class OnboardingViewModel {
 
         let profile = UserProfile(
             goalIDs: derivedGoalIDs,
-            why: primaryAspiration,
+            why: aspiration,
             baselineJunkMinutes: baselineJunkMinutes,
             junkAppIDs: derivedJunkAppIDs,
             familySelectionData: familySelectionData,
@@ -424,7 +408,9 @@ final class OnboardingViewModel {
         context.insert(profile)
         // v2 answers.
         profile.goalWords = goalWords.filter { goalWordDomains.contains($0.key) }
-        profile.dreamDetails = answers?.dreamDetails ?? []
+        // The moonshot + milestones have their own fields (and their own
+        // editor in Adjust plan); only the next piece is a free "own words" entry.
+        profile.dreamDetails = DreamDetails.normalise([nextPiece])
         profile.baselineRaw = baseline?.rawValue ?? ""
         profile.nextPiece = nextPiece.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.minutesPerDay = minutesPerDay
@@ -443,16 +429,17 @@ final class OnboardingViewModel {
         profile.whenItGetsRaw = orderedWhenItGets.map(\.rawValue).joined(separator: ",")
         profile.feelAfterRaw = feelAfter?.rawValue ?? ""
         profile.triedBeforeRaw = orderedTriedBefore.map(\.rawValue).joined(separator: ",")
-        // Goal builder.
-        profile.goalScenesRaw = pickedScenes.map(\.rawValue).joined(separator: ",")
+        // The moonshot (one goal).
         profile.goalReasons = goalReasons.filter { goalWordDomains.contains($0.key) }
-        var shorts: [ActivityDomain: String] = [:]
-        for scene in pickedScenes { shorts[scene.domain] = shortGoal(for: scene) }
-        profile.goalShorts = shorts
+        profile.moonshot = trimmedMoonshot
+        profile.milestones = milestones.filled
+        let short = moonshotShort.trimmingCharacters(in: .whitespacesAndNewlines)
+        profile.goalShorts = short.isEmpty || primaryDomain == nil ? [:] : [primaryDomain!: short]
 
         // Materialise the plan (fall back to the deterministic floor if generation
         // never ran — e.g. jumped state).
-        let plan = generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) }
+        let plan = (generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) })
+            .map { MoonshotPlan.focus($0, moonshot: trimmedMoonshot, short: moonshotShort) }
         plan?.persist(into: context)
 
         try? context.save()
@@ -467,10 +454,11 @@ final class OnboardingViewModel {
         case .whenItGets:    return !whenItGets.isEmpty
         case .feelAfter:     return feelAfter != nil
         case .triedBefore:   return !triedBefore.isEmpty
-        case .goalScenes:    return !pickedScenes.isEmpty
-        // Every blank filled: the plan is only as specific as this sentence.
-        case .goalSentence:  return currentScene.map { draft(for: $0).isComplete } ?? false
-        case .goalWhy:       return currentScene.map { goalReasons[$0.domain] != nil } ?? false
+        // A moonshot, not a word.
+        case .moonshotWrite: return trimmedMoonshot.count >= MoonshotExamples.minLength
+        // The road is always skippable: a failed call leaves one empty row.
+        case .moonshotRoad:  return true
+        case .moonshotWhy:   return moonshotReason != nil
         case .baseline:      return baseline != nil
         case .blocker:       return blocker != nil   // slide 7 = the obstacle question
         // timeLost always advances: an untouched scrubber commits the honest
@@ -501,8 +489,8 @@ final class OnboardingViewModel {
         // for a life they never chose — and personalization is the entire
         // product, so buying conversion with it is buying it with the thing
         // being sold.
-        if step == .goalScenes || step.isPerGoal {
-            advanceGoalBuilder()
+        if step == .moonshotWrite || step == .moonshotRoad || step == .moonshotWhy {
+            advanceMoonshot()
             return
         }
         guard let next = nextRoutedStep(after: step) else {
@@ -514,9 +502,7 @@ final class OnboardingViewModel {
     }
 
     func back() {
-        if step == .goalScenes || step.isPerGoal || step == .baseline {
-            if backGoalBuilder() { return }
-        }
+        if step == .moonshotWhy { backFromMoonshotWhy() }
         var prev = OnboardingStep(rawValue: step.rawValue - 1)
         while let p = prev, !isRouted(p) { prev = OnboardingStep(rawValue: p.rawValue - 1) }
         guard let prev else { return }
@@ -551,11 +537,14 @@ final class OnboardingViewModel {
     /// Fold the server's plan into the plan the app already has and remember
     /// its shield lines. Nil = server failed: the heuristic plan stands.
     func applyServed(_ served: ServedPlan?) {
-        let base = generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) }
+        let base = (generatedPlan ?? answers.map { HeuristicGoalPlanner.plan(from: $0) })
+            .map { MoonshotPlan.focus($0, moonshot: trimmedMoonshot, short: moonshotShort) }
         if let served {
             generatedPlan = base?.merging(served)
             shieldLines = served.shield
-            servedSteps = served.steps
+            // One goal: only its steps are served.
+            let d = primaryDomain
+            servedSteps = served.steps.filter { d == nil || $0.domain == d }
         } else {
             generatedPlan = base
             // Fallback menu: each goal's first step, primary first.

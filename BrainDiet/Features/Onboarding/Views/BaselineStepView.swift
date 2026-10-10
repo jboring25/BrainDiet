@@ -13,10 +13,13 @@ struct BaselineStepView: View {
 
     private var domain: ActivityDomain? { vm.primaryDomain ?? vm.selectedDomains.first }
 
+    /// Asked about the moonshot: its own words under the question.
     private var subtitle: LocalizedStringResource? {
-        guard let domain else { return nil }
-        let words = (vm.goalWords[domain] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return words.isEmpty ? "\(domain.label)" : "\(domain.label) · \(GoalSentenceText.display(words))"
+        let words = vm.trimmedMoonshot.isEmpty
+            ? (domain.flatMap { vm.goalWords[$0] } ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            : vm.trimmedMoonshot
+        if !words.isEmpty { return "\(GoalSentenceText.display(words))" }
+        return domain.map { "\($0.label)" }
     }
 
     var body: some View {

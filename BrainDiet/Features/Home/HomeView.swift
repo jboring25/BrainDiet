@@ -308,14 +308,14 @@ struct HomeView: View {
             .overlay(alignment: .topLeading) {
                 if let item = drop.payload {
                     let m = drop.morph
-                    let s = CultureCloudGeometry.transform(in: drop.cultureRect.size).a
                     ZStack {
                         PlateDragCard(item: item, near: drop.isOverPlate)
                             .frame(width: 292)
                             .scaleEffect(1 - 0.9 * m)
                             .opacity(Double(max(0, 1 - m * 1.5)))
                             .blur(radius: m * 5)
-                        ServingBall(radius: max(4, 17 * s))
+                        // Finger-sized in the hand, brain-sized at the drop (`DragBallSize`).
+                        DraggedServingBall(handoff: drop.ballHandoff, cultureRect: drop.cultureRect)
                             .opacity(Double(max(0, min(1, (m - 0.3) / 0.45))))
                             .scaleEffect(0.5 + 0.5 * m)
                     }
@@ -329,6 +329,12 @@ struct HomeView: View {
                         .transition(.identity)
                         .allowsHitTesting(false)
                         .zIndex(50)
+                }
+                if let landing = drop.landing {
+                    LandedServingBall(landing: landing, cultureRect: drop.cultureRect) {
+                        if drop.landing == landing { drop.landing = nil }
+                    }
+                    .zIndex(49)
                 }
             }
             .coordinateSpace(name: Self.space)
@@ -595,6 +601,8 @@ struct HomeView: View {
     /// goal's identity line, then to any goal's — never to invented copy, and
     /// the card is hidden entirely when there are no goals to speak for.
     private var dreamLine: String {
+        // ⭐ One moonshot (2026-10-10): "WHAT YOU'RE BUILDING" is the moonshot.
+        if let p = profiles.first, p.hasMoonshot { return GoalSentenceText.display(p.moonshot) }
         let stated = (profiles.first?.planIdentityLine ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if !stated.isEmpty { return stated }
@@ -621,11 +629,14 @@ struct HomeView: View {
         return goalRows.contains { $0.step?.id == stepID } ? stepID : nil
     }
 
-    /// One row per goal, carrying its next unserved step (nil = done today).
+    /// The goal's row, carrying its next unserved step (nil = done today).
+    /// ⭐ ONE GOAL since the moonshot (2026-10-10): a legacy multi-goal plan
+    /// keeps its rows on disk, but only the primary (their moonshot) shows.
     private var goalRows: [YourGoalsCard.Row] {
         let done = completedStepIDsToday
         return goals
             .sorted { ($0.isPrimary ? 0 : 1, $0.sortIndex) < ($1.isPrimary ? 0 : 1, $1.sortIndex) }
+            .prefix(1)
             .compactMap { goal in
                 guard let domain = ActivityDomain(rawValue: goal.domain) else { return nil }
                 return YourGoalsCard.Row(

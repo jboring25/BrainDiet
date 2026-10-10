@@ -31,16 +31,13 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     /// v3 — replaces the old `interstitial` beat (same layout): why the fixes
     /// they just named never stuck. Blocking frees the time; nothing fills it.
     case emptyTimeInsight
-    /// ⭐ THE GUIDED GOAL BUILDER (Jack approved 2026-10-09, design/goal-builder/mock4).
-    /// Replaces domains → primaryDomain → goalWords → aspiration. Pick up to
-    /// three scenes of the person a year from now; then, for EACH pick in
-    /// order: build the sentence → (sharper AI versions, only if the call
-    /// succeeded) → why it matters. The three per-goal steps repeat; the VM's
-    /// `builderIndex` says which goal is on screen.
-    case goalScenes
-    case goalSentence
-    case goalSharpen
-    case goalWhy
+    /// ⭐ ONE MOONSHOT (Jack approved 2026-10-10, design/goal-builder/moon.png).
+    /// Replaces the multi-goal builder (goalScenes → goalSentence → goalSharpen
+    /// → goalWhy, per goal). Type the moonshot → the AI's road of three
+    /// milestones (editable) → why it matters, with a live shield preview.
+    case moonshotWrite
+    case moonshotRoad
+    case moonshotWhy
     /// v2 — where they are with the primary goal today. Sizes the first step.
     case baseline
     /// v2 — real minutes per day + the real shape of the day (wake, class or
@@ -110,7 +107,7 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
     var showsProgress: Bool {
         switch self {
         case .hijack, .whenItGets, .timeLost, .feelAfter, .triedBefore,
-             .goalScenes, .goalSentence, .goalSharpen, .goalWhy, .baseline,
+             .moonshotWrite, .moonshotRoad, .moonshotWhy, .baseline,
              .timeAndDay, .blocker,
              .pause, .screenAccess, .pickApps, .reachAndSchedule: return true
         default: return false
@@ -138,12 +135,6 @@ enum OnboardingStep: Int, CaseIterable, Comparable {
              .planReveal, .menuHero: return false
         default: return true
         }
-    }
-
-    /// The goal builder's per-goal steps: they repeat once per picked scene,
-    /// so the progress bar counts them per goal (`OnboardingViewModel.progress`).
-    var isPerGoal: Bool {
-        self == .goalSentence || self == .goalSharpen || self == .goalWhy
     }
 }
 
@@ -858,9 +849,10 @@ struct OnboardingAnswers: Sendable {
     var feelAfter: AfterFeeling? = nil
     var triedBefore: [TriedFix] = []
 
-    // MARK: Goal builder (2026-10-09). `goalWords` carries each built sentence.
-    var goalScenes: [GoalScene] = []
+    // MARK: Moonshot (2026-10-10). `goalWords` carries the moonshot for its domain.
     var goalReasons: [ActivityDomain: GoalReason] = [:]
+    var moonshot: String = ""
+    var milestones: [Milestone] = []
 }
 
 // MARK: - ⭐ DayAnchor — the fixed points a cue can hang on (2026-09-15).

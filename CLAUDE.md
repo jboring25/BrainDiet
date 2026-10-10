@@ -5,18 +5,22 @@
 > (`design/_current/`, captured with ios-sim-review), never re-drawn from
 > scratch. Paint out only what changes; reuse the real elements.
 >
-> **Onboarding v3 (approved 2026-10-09, problem-first):** welcome → hijack → whenItGets →
-> timeLost → feelAfter → triedBefore → emptyTimeInsight → goalScenes (pick ≤3; #1 = primary)
-> → per pick: goalSentence → goalSharpen (only if the AI "sharpen" call answered) → goalWhy
-> → baseline → timeAndDay → cueInsight →
+> **⭐ ONE MOONSHOT (approved 2026-10-10, design/goal-builder/moon.png; MoonshotModels + OnboardingViewModel+Moonshot + RoadService):**
+> exactly ONE goal. The multi-goal builder (goalScenes/goalSentence/goalSharpen/goalWhy, SharpenService) is DELETED.
+> moonshotWrite (typed, ≥12 chars) → moonshotRoad (POST {"mode":"road"} to braindietapp.com plan fn, 8s → domain/short/finish?/3 milestones,
+> editable inline; failure = one empty row) → moonshotWhy (GoalReason; shield preview "Go get <short>."). The one goal's domain keys
+> goalWords (= moonshot) / goalReasons / goalShorts; UserProfile.moonshot + milestonesRaw. Steps aim at `milestones.current`
+> (first not done); PlanService sends moonshot/milestones/currentMilestone/reason. `[Goal].theOneGoal` gates every serving surface
+> (PlateEngine, TodaysFocus, Home goals card, shield = primary only); the plate's 3 daily servings spread over the goal's category.
+> Legacy multi-goal profiles: primary = moonshot (`moonshotText`), other goals stay on disk unserved; Adjust plan converts them.
+> **Onboarding order:** welcome → hijack → whenItGets → timeLost → feelAfter → triedBefore → emptyTimeInsight → moonshotWrite
+> → moonshotRoad → moonshotWhy → baseline (asked about the moonshot) → timeAndDay → cueInsight →
 > blocker → pause → screenAccess → pickApps → reachAndSchedule → building → mirror
-> (cost shown against their goalWords) → commit → onboardingPaywall (headline = first
-> clause of primary goalWords; X + "Not now" fade in at 4s; proof row; no break-even
-> copy) → dinnerBell → menuHero. **Goal builder (approved 2026-10-09, design/goal-builder/mock4,
-> built in GoalBuilderModels + OnboardingViewModel+GoalBuilder):** domains/primaryDomain/goalWords/aspiration
-> screens are DELETED. The built sentence IS goalWords; the reason (GoalReason) is persisted per goal and
-> its line wins the shield headline (reason > server wish > stock); `aspiration`/`why` = primary reason's
-> gerund. Sharpen = POST {"mode":"sharpen"} to braindietapp.com plan fn, 6s, fails silent. `interstitial` is gone (InsightStepView). whenItGets /
+> → commit (dragged ball is finger-sized, shrinks to the brain's serving on the last stretch: `DragBallSize`, Home too) → onboardingPaywall (headline = first
+> clause of the moonshot; X + "Not now" fade in at 4s; proof row; no break-even
+> copy) → dinnerBell → menuHero. DEBUG: BD_ONBOARDING_STEP=moonshotWrite|moonshotRoad|moonshotWhy (+BD_OB_FILLED=1, BD_PLAN_STUB=1,
+> BD_ROAD_FAIL=1, BD_ROAD_HOLD=1 skeleton), BD_HERO_FINISH=1 walks menuHero into Home.
+> `interstitial` is gone (InsightStepView). whenItGets /
 > feelAfter / triedBefore persist on UserProfile and ride PlanService's JSON. Do it now
 > lock has "End early" (releases, feeds nothing). `specifics` deleted; `planReveal` unrouted. The menu is first seen AFTER the
 > paywall. AI plan = PlanService → braindietapp.com/.netlify/functions/plan (Claude Haiku

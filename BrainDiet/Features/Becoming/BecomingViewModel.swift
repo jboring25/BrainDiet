@@ -350,6 +350,9 @@ struct BecomingViewModel {
     /// (2026-08-18) — the noun a user was given at the paywall is the noun they
     /// see here, so the projection they were promised is the one being re-dated.
     var milestoneTitle: String {
+        // ⭐ One moonshot (2026-10-10): the user's own current milestone, the
+        // one the steps aim at, wins over the domain's stock milestone.
+        if let m = ctx.profile?.milestones.current { return m.title }
         guard let domain = primaryGoal.flatMap({ ActivityDomain(rawValue: $0.domain) })
         else { return String(localized: "First milestone") }
         return domain.milestone.title

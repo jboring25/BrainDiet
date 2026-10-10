@@ -54,6 +54,17 @@ struct PlanRequest: Encodable, Sendable {
     let whenItGets: [String]
     let feelAfter: String
     let triedBefore: [String]
+    // ⭐ One moonshot (2026-10-10): the steps aim at `currentMilestone`, the
+    // first milestone not done. `reason` = why it matters ("Prove it to myself").
+    struct WireMilestone: Encodable, Sendable {
+        let title: String
+        let by: String
+        let done: Bool
+    }
+    var moonshot: String = ""
+    var milestones: [WireMilestone] = []
+    var currentMilestone: WireMilestone? = nil
+    var reason: String = ""
 }
 
 private struct PlanResponse: Decodable {
@@ -85,21 +96,18 @@ enum PlanService {
     /// UserProfile is a SwiftData model; the network leg is not.
     @MainActor
     static func request(for profile: UserProfile) -> PlanRequest {
-        let words = profile.goalWords
         let reasons = profile.goalReasons
-        let scenes = profile.goalScenes
-        let ranked: [ActivityDomain] = {
-            guard let p = profile.primaryDomain else { return profile.domains }
-            return [p] + profile.domains.filter { $0 != p }
-        }()
+        let moonshot = profile.moonshotText
+        let milestones = profile.milestones.filled
+        let wire = { (m: Milestone) in PlanRequest.WireMilestone(title: m.title, by: m.by, done: m.done) }
+        // ONE goal: the primary (a legacy multi-goal profile sends only it).
+        let primary = profile.primaryDomain ?? profile.domains.first
+        let reason = primary.flatMap { reasons[$0] }?.label ?? ""
         return PlanRequest(
-            domains: ranked.prefix(3).map {
-                let d = $0
-                return .init(domain: d.rawValue, words: words[d] ?? "", isPrimary: d == profile.primaryDomain,
-                             sentence: words[d] ?? "",
-                             scene: scenes.first { $0.domain == d }?.label ?? "",
-                             reason: reasons[d]?.label ?? "")
-            },
+            domains: primary.map {
+                [.init(domain: $0.rawValue, words: moonshot, isPrimary: true,
+                       sentence: moonshot, scene: "", reason: reason)]
+            } ?? [],
             baseline: profile.baselineRaw,
             nextPiece: profile.nextPiece,
             aspiration: profile.why,
@@ -113,7 +121,11 @@ enum PlanService {
             localHour: Calendar.current.component(.hour, from: .now),
             whenItGets: profile.whenItGets.map(\.label),
             feelAfter: profile.feelAfter?.label ?? "",
-            triedBefore: profile.triedBefore.map(\.label)
+            triedBefore: profile.triedBefore.map(\.label),
+            moonshot: moonshot,
+            milestones: milestones.map(wire),
+            currentMilestone: milestones.current.map(wire),
+            reason: reason
         )
     }
 
@@ -188,8 +200,20 @@ enum PlanService {
     }
 
     #if DEBUG
-    /// The mockup's plan, for whichever of those goals the fixture has.
+    /// The mockup's plan, for whichever of those goals the fixture has. A
+    /// moonshot fixture gets three steps toward its current milestone.
     static func stub(for body: PlanRequest) -> ServedPlan {
+        if !body.moonshot.isEmpty, let d = body.domains.first.flatMap({ ActivityDomain(rawValue: $0.domain) }) {
+            let canned: [(String, Int, String)] = [
+                ("Finish the App Store listing", 20, "after your 3pm class"),
+                ("Record the 30-second preview", 25, "after dinner"),
+                ("Send TestFlight to 5 friends", 10, "with your morning coffee"),
+            ]
+            return ServedPlan(steps: canned.map {
+                ServedStep(domain: d, step: PlannedStep(title: $0.0, cue: $0.2, suggestedMinutes: $0.1, kind: .oneoff),
+                           why: "")
+            }, shield: [d: ShieldLine(wish: "You wanted to launch BrainDiet.", go: "Go finish the App Store listing.")])
+        }
         let canned: [ActivityDomain: (String, Int, String)] = [
             .building: ("Finish the App Store listing", 20, "after your 3pm class"),
             .reading:  ("Read 15 pages of Dune", 25, "once you're in bed"),

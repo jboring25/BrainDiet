@@ -4,9 +4,16 @@ import SwiftData
 // MARK: - Adjust plan — deliberately low-prominence goal editing (spec-v2.6).
 //
 // NOT surfaced on the Reclaim tab. Reached only from Settings, and gated by light
-// friction: changing goals resets your steps (a confirm), so users can't keep
-// swapping goals down to something easier. Re-runs the deterministic planner from
-// the (edited) answers and replaces the persisted plan.
+// friction: changing the plan resets your steps (a confirm), so users can't keep
+// swapping goals down to something easier.
+//
+// ⭐ ONE MOONSHOT (2026-10-10): edits the moonshot text and its road (title,
+// date, done). The domain grids are gone: there is one goal, and its domain is
+// the plan server's read of the moonshot. Saving rebuilds the single goal with
+// the heuristic floor, then asks the plan server for steps aimed at the
+// current milestone (first not done) and folds them in. A legacy multi-goal
+// profile opens with its primary goal's words as the moonshot; saving turns
+// it into a moonshot profile.
 
 struct AdjustPlanView: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,9 +21,10 @@ struct AdjustPlanView: View {
 
     let profile: UserProfile
 
-    @State private var domains: [ActivityDomain]
-    @State private var primary: ActivityDomain?
+    @State private var moonshot: String
+    @State private var milestones: [Milestone]
     @State private var showConfirm = false
+    @State private var saving = false
     /// ⭐ 2026-08-06 — the bounded "in your own words" slots. Always exactly
     /// `DreamDetails.maxCount` in the EDITOR (empty slots render as prompts);
     /// `DreamDetails.normalise` drops the blanks on save.
@@ -25,15 +33,12 @@ struct AdjustPlanView: View {
 
     init(profile: UserProfile) {
         self.profile = profile
-        _domains = State(initialValue: profile.domains)
-        _primary = State(initialValue: profile.primaryDomain)
+        _moonshot = State(initialValue: profile.moonshotText)
+        let road = profile.milestones.filled
+        _milestones = State(initialValue: road.isEmpty ? [Milestone(title: "", by: "")] : road)
         var slots = profile.dreamDetails
         while slots.count < DreamDetails.maxCount { slots.append("") }
         _details = State(initialValue: slots)
-    }
-
-    private var columns: [GridItem] {
-        [GridItem(.flexible(), spacing: Theme.Space.md), GridItem(.flexible(), spacing: Theme.Space.md)]
     }
 
     var body: some View {
@@ -44,40 +49,31 @@ struct AdjustPlanView: View {
                     VStack(alignment: .leading, spacing: Theme.Space.xl) {
                         StepHeader(
                             title: "Adjust your plan",
-                            subtitle: "Change what you're pouring your time into. This rebuilds your steps."
+                            subtitle: "Change your moonshot or the road to it. This rebuilds your steps."
                         )
 
-                        group("WHAT MATTERS") {
-                            LazyVGrid(columns: columns, spacing: Theme.Space.md) {
-                                ForEach(ActivityDomain.allCases) { domain in
-                                    OBOptionCard(
-                                        symbol: domain.symbol,
-                                        label: domain.label,
-                                        tint: domain.tint,
-                                        isSelected: domains.contains(domain)
-                                    ) { toggle(domain) }
-                                }
-                            }
+                        group("YOUR MOONSHOT") {
+                            TextField(String(localized: "The biggest thing you'd go after"),
+                                      text: Binding(get: { moonshot },
+                                                    set: { moonshot = String($0.prefix(MoonshotExamples.maxLength)) }),
+                                      axis: .vertical)
+                                .font(BDFont.serif(size: 19, relativeTo: .title3))
+                                .foregroundStyle(Color.bdTextPrimary)
+                                .lineLimit(2...6)
+                                .padding(Theme.Space.md)
+                                .background(Color.bdSurface,
+                                            in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
+                                    .strokeBorder(Color.bdCardBorder, lineWidth: 1.5))
                         }
 
-                        if domains.count > 1 {
-                            group("MATTERS MOST") {
-                                LazyVGrid(columns: columns, spacing: Theme.Space.md) {
-                                    ForEach(domains) { domain in
-                                        OBOptionCard(
-                                            symbol: domain.symbol,
-                                            label: domain.label,
-                                            tint: domain.tint,
-                                            isSelected: primary == domain
-                                        ) { withAnimation(Theme.Motion.snappy) { primary = domain } }
-                                    }
-                                }
-                            }
+                        group("THE ROAD THERE") {
+                            AdjustRoadEditor(milestones: $milestones)
                         }
 
                         detailsSection
 
-                        BDPrimaryButton(title: "Save changes", isEnabled: canSave) {
+                        BDPrimaryButton(title: saving ? "Rebuilding…" : "Save changes", isEnabled: canSave) {
                             showConfirm = true
                         }
                     }
@@ -85,6 +81,7 @@ struct AdjustPlanView: View {
                     .padding(.vertical, Theme.Space.lg)
                 }
                 .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
                 // DEBUG seam (2026-08-06): BD_OPEN_ADJUST=bottom lands on the
                 // "in your own words" section, which otherwise sits below the
                 // fold and can't be captured by the screenshot harness.
@@ -98,7 +95,7 @@ struct AdjustPlanView: View {
                 }
             }
             .confirmationDialog(
-                "Changing your goals resets your steps.",
+                "Changing your plan resets your steps.",
                 isPresented: $showConfirm,
                 titleVisibility: .visible
             ) {
@@ -110,59 +107,56 @@ struct AdjustPlanView: View {
         }
     }
 
-    private var canSave: Bool {
-        !domains.isEmpty && primary != nil && domains.contains(primary!)
-    }
+    private var trimmed: String { moonshot.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-    private func toggle(_ d: ActivityDomain) {
-        if let i = domains.firstIndex(of: d) {
-            domains.remove(at: i)
-            if primary == d { primary = nil }
-        } else {
-            domains.append(d)
-        }
-        if domains.count == 1 { primary = domains.first }
-    }
+    private var canSave: Bool { !saving && trimmed.count >= MoonshotExamples.minLength }
 
-    // MARK: Rebuild — re-derive the plan from edited answers, replace persisted goals.
+    // MARK: Rebuild — one goal from the edited moonshot + road.
 
     private func rebuild() async {
-        guard let primary else { return }
-        let ranked = [primary] + domains.filter { $0 != primary }
+        saving = true
+        defer { saving = false }
+        let domain = profile.primaryDomain ?? profile.domains.first ?? .building
+        let road = milestones.filled
+        let wasLegacy = !profile.hasMoonshot
+
+        // Write the edit first: the plan request is built from the profile.
+        profile.moonshot = trimmed
+        profile.milestones = road
+        profile.goalWords = [domain: trimmed]
+        if let r = profile.goalReasons[domain] { profile.goalReasons = [domain: r] }
+        // A legacy short ("training") does not read as "Go get ___.".
+        if wasLegacy { profile.goalShorts = [:] }
+        profile.domainsRaw = domain.rawValue
+        profile.primaryDomainRaw = domain.rawValue
+        profile.goalIDsRaw = domain.legacyGoalID
+        profile.dreamDetails = details   // setter normalises: trims, caps, drops blanks
+
         let answers = OnboardingAnswers(
             hijackers: profile.hijackers,
             timeLost: ShortFormBand.allCases.first { $0.baselineMinutes == profile.baselineJunkMinutes } ?? .oneToTwo,
-            domains: ranked,
-            primaryDomain: primary,
+            domains: [domain],
+            primaryDomain: domain,
             aspiration: profile.why,
             blocker: profile.blocker ?? .distracted,
-            // ⭐ From the EDITOR's slots, not the persisted row — the whole point
-            // of this screen is that what you just typed shapes the plan you're
-            // about to get. Reading `profile.dreamDetails` here would rebuild
-            // against the previous save and quietly ignore this edit.
-            dreamDetails: DreamDetails.normalise(details)
+            // ⭐ From the EDITOR, not the persisted row: what you just typed
+            // shapes the plan you are about to get.
+            dreamDetails: DreamDetails.normalise([trimmed, road.current?.title ?? ""] + details)
         )
-        let planner = GoalPlannerFactory.make()
-        let plan = await planner.makePlan(from: answers)
+        var plan = MoonshotPlan.focus(HeuristicGoalPlanner.plan(from: answers), moonshot: trimmed, short: "")
+        if let served = await PlanService.plan(for: profile) {
+            plan = plan.merging(served)
+            profile.shieldLines = served.shield
+        }
 
         // Replace the persisted plan.
         for g in (try? modelContext.fetch(FetchDescriptor<Goal>())) ?? [] { modelContext.delete(g) }
         for s in (try? modelContext.fetch(FetchDescriptor<GoalStep>())) ?? [] { modelContext.delete(s) }
         plan.persist(into: modelContext)
-
-        // Keep the profile's derived fields in sync.
-        profile.domainsRaw = ranked.map(\.rawValue).joined(separator: ",")
-        profile.primaryDomainRaw = primary.rawValue
-        profile.goalIDsRaw = {
-            var ids: [String] = []
-            for d in ranked where !ids.contains(d.legacyGoalID) { ids.append(d.legacyGoalID) }
-            return ids.joined(separator: ",")
-        }()
         profile.planIdentityLine = plan.identityLine.trimmingCharacters(in: .whitespacesAndNewlines)
-        profile.dreamDetails = details   // setter normalises: trims, caps, drops blanks
 
         try? modelContext.save()
-        Log.app.info("Plan adjusted: \(plan.goals.count, privacy: .public) goals rebuilt.")
+        Log.app.info("Plan adjusted: moonshot rebuilt (\(road.count, privacy: .public) milestones).")
         dismiss()
     }
 

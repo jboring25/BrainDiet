@@ -70,7 +70,8 @@ struct TodaysFocus {
         let hour = Calendar.current.component(.hour, from: now)
         var ranked: [(score: Double, focus: TodaysFocus)] = []
 
-        for goal in goals {
+        // ⭐ ONE GOAL (moonshot, 2026-10-10): only the primary is served.
+        for goal in goals.theOneGoal {
             guard let domain = ActivityDomain(rawValue: goal.domain) else { continue }
             for (index, step) in goal.orderedSteps.enumerated()
             where !doneToday.contains(step.id) && !isRetired(step, in: goal, everDone: everDone) {

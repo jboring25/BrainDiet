@@ -61,8 +61,7 @@ struct OnboardingView: View {
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
-                    // Per-goal builder steps repeat, so the goal is part of the identity.
-                    .id("\(vm.step.rawValue)-\(vm.step.isPerGoal ? vm.builderIndex : 0)")
+                    .id(vm.step.rawValue)
 
                 if showsBottomCTA {
                     bottomCTA
@@ -143,14 +142,12 @@ struct OnboardingView: View {
             TriedBeforeStepView(vm: vm)
         case .emptyTimeInsight:
             EmptyTimeInsightStepView(vm: vm)
-        case .goalScenes:
-            GoalScenesStepView(vm: vm)
-        case .goalSentence:
-            GoalSentenceStepView(vm: vm)
-        case .goalSharpen:
-            GoalSharpenStepView(vm: vm)
-        case .goalWhy:
-            GoalWhyStepView(vm: vm)
+        case .moonshotWrite:
+            MoonshotWriteStepView(vm: vm)
+        case .moonshotRoad:
+            MoonshotRoadStepView(vm: vm)
+        case .moonshotWhy:
+            MoonshotWhyStepView(vm: vm)
         case .baseline:
             BaselineStepView(vm: vm)
         case .timeAndDay:

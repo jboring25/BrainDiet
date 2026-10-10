@@ -64,8 +64,19 @@ final class PlateDropController {
     var isOverPlate = false
     /// The row that vacated, so its slot can render as an empty recess.
     var liftedRowID: UUID?
+    /// A drop that just landed, so the ball can finish shrinking into the
+    /// brain's own serving where it fell (`LandedServingBall`). Cleared by it.
+    struct Landing: Equatable {
+        let id = UUID()
+        let point: CGPoint
+        let handoff: CGFloat
+    }
+    var landing: Landing?
 
     var isDragging: Bool { payload != nil }
+
+    /// How far the dragged ball has shrunk toward the brain's serving size.
+    var ballHandoff: CGFloat { DragBallSize.handoff(point: point, cultureRect: cultureRect) }
 
     /// Card centre in Home space, mid-drag.
     private var cardCentre: CGSize { translation }
@@ -128,6 +139,7 @@ final class PlateDropController {
     func end() -> PlateDraggable? {
         defer { clear() }
         lastDrop = isOverPlate ? brainPoint(for: point) : nil
+        if isOverPlate { landing = Landing(point: point, handoff: ballHandoff) }
         return isOverPlate ? payload : nil
     }
 
@@ -249,18 +261,94 @@ extension View {
 struct ServingBall: View {
     /// Radius in points (the brain's 17 units × its scale).
     var radius: CGFloat
+    /// Where the soft glow fades out. Nil = the brain's own 3.4 × radius.
+    var glowRadius: CGFloat? = nil
     var body: some View {
+        let glow = glowRadius ?? radius * 3.4
         ZStack {
             Circle()
                 .fill(RadialGradient(colors: [Color(hex: "#7DB68B").opacity(0.34), Color(hex: "#7DB68B").opacity(0)],
-                                     center: .center, startRadius: 0, endRadius: radius * 3.4))
-                .frame(width: radius * 6.8, height: radius * 6.8)
+                                     center: .center, startRadius: 0, endRadius: glow))
+                .frame(width: glow * 2, height: glow * 2)
             Circle().fill(Color(hex: "#7DB68B").opacity(0.95))
                 .overlay(Circle().strokeBorder(Color(hex: "#3E7A4E").opacity(0.65), lineWidth: 1.8))
                 .frame(width: radius * 2, height: radius * 2)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+// MARK: - ⭐ The DRAGGED ball (Jack, 2026-10-10: "way too small on the commit screen").
+//
+// The brain's own serving is 17 brain units: ~3pt radius in the commit brain
+// (300x200) and ~4.7pt on Home's (300 tall), a speck under a fingertip. In the
+// hand the ball reads at finger size (16pt core, glow out to 26pt, ~44pt across
+// as seen) all the way to the outline. Over the last stretch, from the outline
+// in toward the brain's middle, it shrinks to the brain's true serving size,
+// and a drop that lands before that finishes shrinks the rest of the way in
+// place (`LandedServingBall`), so the brain takes over a ball the same size as
+// the one it draws. No pop. (Keyed to depth, not to `morph`: the morph
+// saturates ~64pt from the centre, which is OUTSIDE the commit brain's
+// outline, so a morph-keyed shrink was a speck again before it got there.)
+
+enum DragBallSize {
+    static let core: CGFloat = 16
+    static let glow: CGFloat = 26
+
+    /// The brain's own serving radius in points for a culture rect.
+    static func brainRadius(in cultureRect: CGRect) -> CGFloat {
+        guard !cultureRect.isEmpty else { return 3.5 }
+        return 17 * CultureCloudGeometry.transform(in: cultureRect.size).a
+    }
+
+    /// 0 = finger size, 1 = brain size: a smoothstep from half the brain's
+    /// height out from its centre (about the outline) to a tenth of it.
+    static func handoff(point: CGPoint, cultureRect: CGRect) -> CGFloat {
+        guard !cultureRect.isEmpty else { return 0 }
+        let d = hypot(point.x - cultureRect.midX, point.y - cultureRect.midY)
+        let h = cultureRect.height
+        let t = max(0, min(1, (h * 0.5 - d) / (h * 0.4)))
+        return t * t * (3 - 2 * t)
+    }
+}
+
+/// The ball under the finger. `handoff` 0 = finger size, 1 = the brain's
+/// own serving (see `DragBallSize`).
+struct DraggedServingBall: View {
+    let handoff: CGFloat
+    let cultureRect: CGRect
+
+    var body: some View {
+        let h = handoff
+        let brain = DragBallSize.brainRadius(in: cultureRect)
+        ServingBall(radius: DragBallSize.core + (brain - DragBallSize.core) * h,
+                    glowRadius: DragBallSize.glow + (brain * 3.4 - DragBallSize.glow) * h)
+    }
+}
+
+/// A drop that landed: the ball finishes shrinking to the brain's serving at
+/// the drop spot, then fades as the brain's own serving takes over.
+struct LandedServingBall: View {
+    let landing: PlateDropController.Landing
+    let cultureRect: CGRect
+    var onDone: () -> Void = {}
+
+    @State private var settled = false
+    @State private var faded = false
+
+    var body: some View {
+        DraggedServingBall(handoff: settled ? 1 : landing.handoff, cultureRect: cultureRect)
+            .opacity(faded ? 0 : 1)
+            .position(landing.point)
+            .allowsHitTesting(false)
+            .task(id: landing.id) {
+                withAnimation(.easeOut(duration: 0.2)) { settled = true }
+                try? await Task.sleep(for: .milliseconds(170))
+                withAnimation(.easeOut(duration: 0.25)) { faded = true }
+                try? await Task.sleep(for: .milliseconds(280))
+                onDone()
+            }
     }
 }
 
