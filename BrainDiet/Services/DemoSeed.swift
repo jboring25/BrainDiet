@@ -114,6 +114,13 @@ enum DemoSeed {
                 Milestone(title: "Get 1,000 people using it", by: "Feb 1"),
                 Milestone(title: "Get 10,000 people using it", by: "Jun 1"),
             ]
+            profile.moonshotFinish = "1 million people"
+        }
+        // `BD_SEED_MOONSHOT=done`: every stop reached, the next one is the moonshot.
+        if ProcessInfo.processInfo.environment["BD_SEED_MOONSHOT"] == "done" {
+            profile.moonshot = "Build an app that 1 million people use"
+            profile.moonshotFinish = "1 million people"
+            profile.milestones = [Milestone(title: "Get 500,000 people using it", by: "Jun 1", done: true)]
         }
         // Screenshot jump for the Menu's "Block my feeds" card.
         if let raw = ProcessInfo.processInfo.environment["BD_FEED_SCHEDULE"] {

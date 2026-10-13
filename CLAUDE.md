@@ -1,3 +1,6 @@
+> **⭐ The finish line moves (Jack approved 2026-10-12, design/milestone/).** "I hit it" (Becoming milestone hero + Home "Next:" line) opens `FinishLineView`: current milestone marked done, server mode `extend` adds ONE new stop at the end (or `atFinish`), steps rebuild via `PlanRebuild.run` (shared with Adjust plan). No stops ahead = next stop is the moonshot; reaching it → mode `bigger` prefills a bigger moonshot, `road` lays the new one. `Milestone.id` is NOT persisted (new UUID every decode) — never key UI on it across reads. Debug: `BD_SEED_MOONSHOT=1|done`, `BD_SHOW_FINISH=1`, `BD_PLAN_STUB=1`.
+> **Protect my first hour (2026-10-12):** `FeedWindow.firstHourFrom` = wake time; feeds shut wake→+60 daily on top of the schedule; monitor mirrors it in `MonitorFeedWindow`.
+
 # BrainDiet
 
 > **⭐ MOCKUPS START FROM THE REAL APP (Jack, 2026-10-07, "make it permanent").**

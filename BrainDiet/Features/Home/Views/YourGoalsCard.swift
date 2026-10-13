@@ -50,6 +50,9 @@ struct YourGoalsCard: View {
 
     /// The user's own committed sentence ("Reading every night.").
     let identityLine: String
+    /// The milestone the steps aim at (moonshot profiles), with "I hit it".
+    var nextStop: String? = nil
+    var onHitIt: () -> Void = {}
     let rows: [Row]
     /// The engine's suggestion, when it is one of these steps — that row becomes
     /// the primary one. Nil (dessert, defaults) leaves every row equal and the
@@ -85,6 +88,18 @@ struct YourGoalsCard: View {
                 .lineSpacing(1)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 5)
+
+            if let nextStop {
+                HStack(spacing: 8) {
+                    (Text("Next: ").foregroundStyle(Color.bdTextSecondary)
+                     + Text(nextStop).foregroundStyle(Color.bdTextPrimary))
+                        .font(BDFont.body(.semiBold, size: 13, relativeTo: .footnote))
+                        .lineLimit(2)
+                    Spacer(minLength: 4)
+                    HitItButton(action: onHitIt)
+                }
+                .padding(.top, 8)
+            }
 
             Rectangle()
                 .fill(Color.bdCardBorder)

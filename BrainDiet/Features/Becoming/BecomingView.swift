@@ -319,7 +319,7 @@ struct BecomingView: View {
 
     private func milestoneHero(_ m: BecomingViewModel.MilestoneProgress) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Your next milestone")
+            Text(profiles.first?.isAtMoonshot == true ? "Your moonshot" : "Your next milestone")
                 .font(BDFont.body(.bold, size: 10, relativeTo: .caption2))
                 .kerning(1.4)
                 .textCase(.uppercase)
@@ -343,12 +343,19 @@ struct BecomingView: View {
 
             // Steps first, then the date, then whether the date MOVED — the only
             // thing on this page that says the last week actually mattered.
-            (Text("\(m.done) of \(m.total) steps")
-                .foregroundStyle(Color.bdTextSecondary)
-             + Text(m.projected.map { " · at this pace \($0.formatted(.dateTime.month(.abbreviated).day()))" } ?? "")
-                .foregroundStyle(Color.bdTextPrimary))
-                .font(BDFont.body(.semiBold, size: 12.5, relativeTo: .footnote))
-                .padding(.top, 10)
+            HStack(alignment: .center, spacing: 8) {
+                (Text("\(m.done) of \(m.total) steps")
+                    .foregroundStyle(Color.bdTextSecondary)
+                 + Text(m.projected.map { " · at this pace \($0.formatted(.dateTime.month(.abbreviated).day()))" } ?? "")
+                    .foregroundStyle(Color.bdTextPrimary))
+                    .font(BDFont.body(.semiBold, size: 12.5, relativeTo: .footnote))
+                Spacer(minLength: 0)
+                // ⭐ The finish line moves (2026-10-12).
+                if profiles.first?.hasMoonshot == true {
+                    HitItButton { router.showFinishLine = true }
+                }
+            }
+            .padding(.top, 10)
 
             if let shift = vm.milestonePaceShift {
                 (Text(shift.sooner
@@ -362,7 +369,7 @@ struct BecomingView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: This week — what the feed did not get, and where it went instead.

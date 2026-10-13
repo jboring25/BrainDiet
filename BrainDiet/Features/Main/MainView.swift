@@ -165,6 +165,9 @@ struct MainView: View {
         // from Home's "Reaching for a scroll?" card (and, in DEBUG, the
         // intercept). Every branch either starts the SAME live session or lets
         // the user pass cleanly.
+        .fullScreenCover(isPresented: $router.showFinishLine) {
+            if let p = profiles.first { FinishLineView(profile: p) }
+        }
         .fullScreenCover(isPresented: $router.showTriage) {
             TriageView(
                 initialChoice: triageInitialChoice,

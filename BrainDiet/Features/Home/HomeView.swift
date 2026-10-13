@@ -427,6 +427,10 @@ struct HomeView: View {
     private var goalsCard: some View {
         YourGoalsCard(
             identityLine: dreamLine,
+            nextStop: profiles.first.flatMap { p in
+                p.hasMoonshot ? (p.milestones.current?.title ?? p.finishLabel) : nil
+            },
+            onHitIt: { router.showFinishLine = true },
             rows: goalRows,
             suggestedStepID: suggestedGoalStepID,
             ctaTitle: plate.suggestion?.category.ctaTitle ?? "",

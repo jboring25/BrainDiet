@@ -441,6 +441,7 @@ final class OnboardingViewModel {
         profile.goalReasons = goalReasons.filter { goalWordDomains.contains($0.key) }
         profile.moonshot = trimmedMoonshot
         profile.milestones = milestones.filled
+        profile.moonshotFinish = roadFinish
         let short = moonshotShort.trimmingCharacters(in: .whitespacesAndNewlines)
         profile.goalShorts = short.isEmpty || primaryDomain == nil ? [:] : [primaryDomain!: short]
 

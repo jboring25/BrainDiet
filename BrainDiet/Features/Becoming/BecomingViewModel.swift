@@ -353,6 +353,7 @@ struct BecomingViewModel {
         // ⭐ One moonshot (2026-10-10): the user's own current milestone, the
         // one the steps aim at, wins over the domain's stock milestone.
         if let m = ctx.profile?.milestones.current { return m.title }
+        if let p = ctx.profile, p.isAtMoonshot { return p.finishLabel }
         guard let domain = primaryGoal.flatMap({ ActivityDomain(rawValue: $0.domain) })
         else { return String(localized: "First milestone") }
         return domain.milestone.title

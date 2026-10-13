@@ -132,30 +132,7 @@ struct AdjustPlanView: View {
         profile.goalIDsRaw = domain.legacyGoalID
         profile.dreamDetails = details   // setter normalises: trims, caps, drops blanks
 
-        let answers = OnboardingAnswers(
-            hijackers: profile.hijackers,
-            timeLost: ShortFormBand.allCases.first { $0.baselineMinutes == profile.baselineJunkMinutes } ?? .oneToTwo,
-            domains: [domain],
-            primaryDomain: domain,
-            aspiration: profile.why,
-            blocker: profile.blocker ?? .distracted,
-            // ⭐ From the EDITOR, not the persisted row: what you just typed
-            // shapes the plan you are about to get.
-            dreamDetails: DreamDetails.normalise([trimmed, road.current?.title ?? ""] + details)
-        )
-        var plan = MoonshotPlan.focus(HeuristicGoalPlanner.plan(from: answers), moonshot: trimmed, short: "")
-        if let served = await PlanService.plan(for: profile) {
-            plan = plan.merging(served)
-            profile.shieldLines = served.shield
-        }
-
-        // Replace the persisted plan.
-        for g in (try? modelContext.fetch(FetchDescriptor<Goal>())) ?? [] { modelContext.delete(g) }
-        for s in (try? modelContext.fetch(FetchDescriptor<GoalStep>())) ?? [] { modelContext.delete(s) }
-        plan.persist(into: modelContext)
-        profile.planIdentityLine = plan.identityLine.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        try? modelContext.save()
+        await PlanRebuild.run(profile: profile, context: modelContext, details: details)
         Log.app.info("Plan adjusted: moonshot rebuilt (\(road.count, privacy: .public) milestones).")
         dismiss()
     }

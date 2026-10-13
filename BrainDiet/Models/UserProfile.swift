@@ -122,6 +122,8 @@ final class UserProfile {
     // reads its PRIMARY goal's words as the moonshot (`moonshotText`).
     /// The moonshot in their words.
     var moonshot: String = ""
+    /// The road's last row ("1 million people"), from the road call.
+    var moonshotFinish: String = ""
     /// JSON array of `Milestone`, in order. The steps aim at the first not done.
     var milestonesRaw: String = ""
 

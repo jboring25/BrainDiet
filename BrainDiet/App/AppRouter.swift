@@ -36,6 +36,15 @@ final class AppRouter {
     /// cleared by ProtectTabView the moment it's applied.
     var pendingServing: PlateServing?
 
+    /// "I hit it" (2026-10-12): the finish-line moment, over any tab.
+    var showFinishLine: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["BD_SHOW_FINISH"] == "1"
+        #else
+        return false
+        #endif
+    }()
+
     /// The route-by-why triage flow (2026-07-23) — presented over Home from the
     /// "Reaching for a scroll?" entry card (and, in DEBUG, the intercept). Fully
     /// in-app, no Family Controls entitlement needed. MainView owns the cover.
