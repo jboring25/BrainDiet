@@ -126,7 +126,7 @@ struct SettingsView: View {
                                 }
                             }
                             row(icon: "hand.raised.fill", title: "Privacy policy", value: nil) {
-                                if let url = URL(string: "https://braindiet.netlify.app/privacy-policy.html") {
+                                if let url = URL(string: "https://braindietapp.com/privacy-policy.html") {
                                     openURL(url)
                                 }
                             }

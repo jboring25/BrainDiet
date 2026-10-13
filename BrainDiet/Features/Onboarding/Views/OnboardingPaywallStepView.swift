@@ -106,10 +106,14 @@ struct OnboardingPaywallStepView: View {
     /// "Launch BrainDiet on the App Store.\nKeep the time it needs."
     private var headline: String {
         let domain = vm.primaryDomain ?? vm.selectedDomains.first
-        guard let domain, let clause = Self.firstClause(GoalSentenceText.display(vm.goalWords[domain] ?? "")) else {
-            return personalizedHeadline
+        let keep = "\n" + String(localized: "Keep the time it needs.")
+        if let domain, let clause = Self.firstClause(GoalSentenceText.display(vm.goalWords[domain] ?? "")) {
+            return clause + keep
         }
-        return clause + "\n" + String(localized: "Keep the time it needs.")
+        // A long moonshot: the road's short phrase, the line the shield speaks.
+        let short = vm.moonshotShort.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !short.isEmpty { return String(localized: "Go get \(short).") + keep }
+        return personalizedHeadline
     }
 
     /// The first clause of their goal: split on " and ", ",", " then ", capped
@@ -120,16 +124,10 @@ struct OnboardingPaywallStepView: View {
             if let r = t.range(of: sep, options: .caseInsensitive) { t = String(t[..<r.lowerBound]) }
         }
         t = t.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
-        if t.count > 40 {
-            var out = ""
-            for w in t.split(separator: " ") {
-                let next = out.isEmpty ? String(w) : out + " " + w
-                if next.count > 40 { break }
-                out = next
-            }
-            t = out.isEmpty ? String(t.prefix(40)) : out
-        }
-        guard t.count >= 3 else { return nil }
+        // Never chop their words mid-thought (pre-App Store audit, 2026-10-13:
+        // "Build BrainDiet into the app that gets a."). Too long = nil, and the
+        // caller uses the short phrase instead.
+        guard t.count >= 3, t.count <= 52 else { return nil }
         return t.prefix(1).uppercased() + t.dropFirst() + "."
     }
 
@@ -367,7 +365,7 @@ struct OnboardingPaywallStepView: View {
             }
 
             // The quiet free path + Restore, one calm row under the CTA.
-            HStack(spacing: Theme.Space.lg) {
+            HStack(spacing: Theme.Space.md) {
                 Group {
                     Button(action: skip) {
                         Text("Not now")
@@ -389,13 +387,23 @@ struct OnboardingPaywallStepView: View {
                     // A restore is never a NEW trial — no cancel-reminder step.
                     Task { await pvm.restore(using: store) { isPro in if isPro { onComplete(false) } } }
                 } label: {
-                    Text(pvm.isRestoring ? "Restoring…" : "Restore Purchases")
+                    Text(pvm.isRestoring ? "Restoring…" : "Restore")
                         .font(.bdCaption)
                         .foregroundStyle(Color.bdTextSecondary)
                         .frame(minHeight: Theme.Size.minTouch)
                 }
                 .buttonStyle(.plain)
                 .disabled(pvm.isRestoring)
+
+                // Guideline 3.1.2: a subscription paywall must link Terms and
+                // Privacy. This one never did (pre-App Store audit, 2026-10-13).
+                // Same row as Restore: the screen does not scroll.
+                Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                    .font(.bdCaption)
+                    .foregroundStyle(Color.bdTextSecondary)
+                Link("Privacy", destination: URL(string: "https://braindietapp.com/privacy-policy.html")!)
+                    .font(.bdCaption)
+                    .foregroundStyle(Color.bdTextSecondary)
             }
             .frame(maxWidth: .infinity)
             // (No extra "cancel anytime" caption — the pinned billing line

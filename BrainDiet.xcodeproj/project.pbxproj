@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3E9BC058174E0967A017862C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FEC33E9405FBD9AC6679A8BE /* PrivacyInfo.xcprivacy */; };
+		BD4AA622F97DEE99777A4A02 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FEC33E9405FBD9AC6679A8BE /* PrivacyInfo.xcprivacy */; };
+		DD2C98B95199CD7903CC3C80 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 89C60BD73B98D5CC05E300DC /* PrivacyInfo.xcprivacy */; };
 		0696BF777D557CDF15F5F6B7 /* BrainDietShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81F166A20AF946B8BE9D4E13 /* BrainDietShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4EB5859A231B516B04AABBFD /* ShieldConfigurationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED79F7C5BD9BE72C545EA36 /* ShieldConfigurationProvider.swift */; };
 		6423B52BE98C630081D0279C /* BrainDietShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -60,6 +63,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FEC33E9405FBD9AC6679A8BE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = BrainDietShield/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		89C60BD73B98D5CC05E300DC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = BrainDietMonitor/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		13A8C4FB599E11C2CC172AD7 /* ShieldActionProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShieldActionProvider.swift; path = BrainDietShield/ShieldActionProvider.swift; sourceTree = "<group>"; };
 		3E6F406068B9EAD377BD7326 /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeviceActivityMonitorExtension.swift; path = BrainDietMonitor/DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
 		78EB1CBC5C5292B208083717 /* BrainDietShieldConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BrainDietShieldConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				3E6F406068B9EAD377BD7326 /* DeviceActivityMonitorExtension.swift */,
+				89C60BD73B98D5CC05E300DC /* PrivacyInfo.xcprivacy */,
 			);
 			name = BrainDietMonitor;
 			sourceTree = SOURCE_ROOT;
@@ -141,6 +147,7 @@
 			children = (
 				FED79F7C5BD9BE72C545EA36 /* ShieldConfigurationProvider.swift */,
 				13A8C4FB599E11C2CC172AD7 /* ShieldActionProvider.swift */,
+				FEC33E9405FBD9AC6679A8BE /* PrivacyInfo.xcprivacy */,
 			);
 			name = BrainDietShield;
 			sourceTree = SOURCE_ROOT;
@@ -301,6 +308,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BD4AA622F97DEE99777A4A02 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -308,6 +316,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD2C98B95199CD7903CC3C80 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,6 +331,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3E9BC058174E0967A017862C /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,7 +400,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";
@@ -415,7 +425,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
@@ -440,7 +450,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
@@ -464,7 +474,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
@@ -489,7 +499,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
@@ -634,7 +644,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -665,7 +675,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -697,7 +707,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 61;
+				CURRENT_PROJECT_VERSION = 62;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";

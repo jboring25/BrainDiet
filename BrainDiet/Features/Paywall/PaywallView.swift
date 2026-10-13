@@ -373,7 +373,7 @@ struct PaywallView: View {
                 // Privacy = our hosted policy. Both MUST resolve — App Review
                 // taps these on any subscription paywall.
                 legalLink("Terms", "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
-                legalLink("Privacy", "https://braindiet.netlify.app/privacy-policy.html")
+                legalLink("Privacy", "https://braindietapp.com/privacy-policy.html")
             }
         }
         .frame(maxWidth: .infinity)

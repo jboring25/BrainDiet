@@ -227,12 +227,9 @@ struct HomeView: View {
                                     .stageIn(phase.atLeastMeaning)
                             }
 
-                            // Route-by-why entry (2026-07-23) — the entitlement-
-                            // free path: tap before you scroll, we ask why, hand
-                            // you the matched response. Sits right under the
-                            // serving so it's visible for every real user.
-                            TriageEntryCard { router.showTriage = true }
-                                .stageIn(phase.atLeastMeaning)
+                            // ⛔️ "Reaching for a scroll?" CUT (Jack, 2026-10-13):
+                            // "the action is the answer." Asking why before
+                            // handing over the step was mental masturbation.
                         }
 
                         // ⛔️ TODAY'S PLATE REMOVED (Jack, 2026-08-18).
