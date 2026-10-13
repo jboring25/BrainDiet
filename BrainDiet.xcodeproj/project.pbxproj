@@ -400,7 +400,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";
@@ -425,7 +425,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
@@ -450,7 +450,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
@@ -474,7 +474,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldConfig-Info.plist";
@@ -499,7 +499,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietMonitor/BrainDietMonitor.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = BrainDietMonitor/Info.plist;
@@ -644,7 +644,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -675,7 +675,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDiet/BrainDiet.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -707,7 +707,7 @@
 				CODE_SIGN_ENTITLEMENTS = BrainDietShield/BrainDietShield.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEVELOPMENT_TEAM = YHD3BD92S8;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "BrainDietShield/ShieldAction-Info.plist";

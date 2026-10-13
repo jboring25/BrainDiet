@@ -837,10 +837,8 @@ struct HomeView: View {
         }
     }
 
-    /// Coded seam: the small completion chime (haptic-first order preserved).
-    /// No audio asset ships yet — when one lands, play it here via AVAudioPlayer
-    /// with `.ambient` category so it respects silent mode.
-    private func playChimeSeam() { /* seam — intentionally silent */ }
+    /// ⛔️ BrainDiet plays no sound (Jack, 2026-10-13). Haptics only.
+    private func playChimeSeam() {}
 
     /// Coded seam: the food-group fly-on (Bible §5, step 3). DISABLED until the
     /// greens-cutout render exists (`design/plate-concepts/gemini-render-prompts.md`).

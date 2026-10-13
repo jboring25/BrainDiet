@@ -143,9 +143,9 @@ struct HomeHeroView: View {
                 return
             }
             flarePulse = false
-            // The sting fires on EVERY serve, Reduce Motion or not — the reward
-            // is the sound; motion is the garnish.
-            ServeSound.shared.play(.serve)
+            // ⛔️ NO SOUND, anywhere (Jack, 2026-10-13: "The sound sounds cheap,
+            // and I want it gone from everywhere"). The success haptic in
+            // HomeView.report() is the reward.
 
             guard !reduceMotion else { return }
 
