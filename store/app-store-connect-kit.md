@@ -8,7 +8,9 @@ an app without Screen Time and was deleted, not kept.
 - Description rewritten for the one-moonshot app (shield → goal → Do it now, schedules, first hour, passes in-app).
 - App Review notes rewritten: Do it now DOES lock every app except Phone + the allow-list (with End early and an automatic release); Go to BrainDiet uses openParentalControlsApp (iOS 26.5+); AI data disclosed.
 - Screenshots: 6 new 1290×2796 in `marketing/appstore-v2/` (old 5 backed up in `marketing/appstore-v1-backup/`).
-- Build 63 attached. Export compliance: no non-exempt encryption.
+- Hard paywall (Jack, 2026-10-13): trial or purchase required, no free tier; review notes say so and ask for a Sandbox account.
+- Copyright set ("2026 Jack Boring"); privacy URL → braindietapp.com; support FAQ corrected (it also said "everything stays on your device").
+- Latest build attached (see journal). Export compliance: no non-exempt encryption.
 - Privacy policy (braindietapp.com/privacy-policy.html) corrected 2026-10-13: lists exactly what goes to Claude.
 
 ## Manual (Jack, in the App Store Connect web UI; the API can't do these)
