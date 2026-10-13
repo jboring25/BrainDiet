@@ -25,13 +25,13 @@ import Foundation
 import ManagedSettings
 import DeviceActivity
 import FamilyControls
-import UserNotifications
 
 // ⭐ TWO DOORS (Jack, 2026-10-12, design/block-screen/). Taken from Opal: the
 // shield never lets you straight through. "Feed my brain" starts the step's
 // Do it now lock right here; "Go to BrainDiet" sends a notification into the
-// app (iOS gives a shield no way to open an app), where the goal is put in
+// app, where the goal is put in
 // front of you and a pass can be spent. Passes are no longer on the shield.
+// (Build 58: opens the app directly on iOS 26.5+, no notification.)
 
 private enum ShieldActionKeys {
     static let suite         = "group.com.jackboring.braindiet.shared"
@@ -90,10 +90,20 @@ final class ShieldActionProvider: ShieldActionDelegate {
         respond(action, token: nil, completionHandler)
     }
 
-    /// ⭐ BUILD 55 ON DEVICE: "Go to BrainDiet does not work." The response
-    /// went back the instant the button was pressed, and iOS tears the
-    /// extension down on `.close`, so the notification request (async) never
-    /// landed. Now the response waits for the notification to be added.
+    /// ⭐ "GO TO BRAINDIET" OPENS THE APP (Jack, 2026-10-12, build 58).
+    /// The notification route is gone ("the banner doesn't really do
+    /// anything, so remove it"). iOS 26.5 added
+    /// `ShieldActionResponse.openParentalControlsApp`, which launches this app
+    /// straight from the shield. The 26.4 SDK we build with doesn't declare
+    /// it, so it is reached by raw value (none 0, close 1, defer 2, open 3).
+    /// Below 26.5 that raw value doesn't exist, init returns nil, and the
+    /// shield just closes; the face screen still shows if they open the app.
+    private static var openApp: ShieldActionResponse? {
+        guard ProcessInfo.processInfo.isOperatingSystemAtLeast(
+            OperatingSystemVersion(majorVersion: 26, minorVersion: 5, patchVersion: 0)) else { return nil }
+        return ShieldActionResponse(rawValue: 3)
+    }
+
     private func respond(_ action: ShieldAction, token: Data?,
                          _ done: @escaping (ShieldActionResponse) -> Void) {
         let d = defaults
@@ -106,12 +116,13 @@ final class ShieldActionProvider: ShieldActionDelegate {
             d?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
             rotateCopy()
             if startLock() { done(.close); return }
+            // Couldn't arm the lock here: open the app, where the face screen
+            // starts it with one tap.
             markFacePending(token: token)
-            notify(title: "Feed my brain",
-                   body: "Tap to start your step. The timer starts when you open BrainDiet.") { done(.close) }
+            done(Self.openApp ?? .close)
         case .secondaryButtonPressed:
             markFacePending(token: token)
-            notify(title: "BrainDiet", body: "Your goal is waiting. Tap to open.") { done(.close) }
+            done(Self.openApp ?? .close)
         @unknown default:
             done(.defer)
         }
@@ -167,41 +178,6 @@ final class ShieldActionProvider: ShieldActionDelegate {
         defaults?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.facePendingAt)
         if let token { defaults?.set(token, forKey: ShieldActionKeys.faceToken) }
         else { defaults?.removeObject(forKey: ShieldActionKeys.faceToken) }
-    }
-
-    /// Posts now, then calls `done` once iOS has the request (or after 2s).
-    /// The outcome is written to the App Group so the app can log it.
-    private func notify(title: String, body: String, done: @escaping () -> Void) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        let lock = NSLock()
-        var finished = false
-        let finish = { (status: String) in
-            lock.lock(); defer { lock.unlock() }
-            guard !finished else { return }
-            finished = true
-            self.defaults?.set(status, forKey: "face.notifyStatus")
-            done()
-        }
-        let center = UNUserNotificationCenter.current()
-        center.getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized
-                    || settings.authorizationStatus == .provisional
-                    || settings.authorizationStatus == .ephemeral else {
-                finish("notAuthorized(\(settings.authorizationStatus.rawValue))")
-                return
-            }
-            // A short trigger, not nil: a request added from a dying
-            // extension with no trigger has been seen to drop.
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-            center.add(UNNotificationRequest(identifier: "bd.shield.face.\(Date().timeIntervalSince1970)",
-                                             content: content, trigger: trigger)) { error in
-                finish(error.map { "error: \($0.localizedDescription)" } ?? "ok")
-            }
-        }
-        DispatchQueue.global().asyncAfter(deadline: .now() + 2) { finish("timeout") }
     }
 
     /// Next interrupt speaks the next line. Clearing first makes iOS redraw.

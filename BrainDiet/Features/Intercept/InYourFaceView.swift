@@ -56,11 +56,6 @@ struct InYourFaceView: View {
             .accessibilityLabel("Close")
         }
         .sensoryFeedback(.success, trigger: passed)
-        .task {
-            Log.app.info("Face shown; shield notify status: \(FaceRequest.lastNotifyStatus, privacy: .public)")
-            // Someone who reached this without the banner has never been asked.
-            await NotificationService.requestIfUndetermined()
-        }
     }
 
     // MARK: The goal

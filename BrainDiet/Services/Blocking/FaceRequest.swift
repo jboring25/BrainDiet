@@ -3,8 +3,8 @@ import Foundation
 // MARK: - The shield → app hand-off (Jack, 2026-10-12, design/block-screen/).
 //
 // "Go to BrainDiet" on a shield stamps `face.pendingAt` (and the covered app's
-// token) in the App Group and posts a notification. Tapping it, or simply
-// opening the app soon after, shows the face screen. Taken once.
+// token) in the App Group and opens the app (iOS 26.5+). The app shows the
+// face screen when it comes up inside the window. Taken once.
 
 enum FaceRequest {
     /// How long a tap on the shield still means "show me my goal".
@@ -26,8 +26,6 @@ enum FaceRequest {
 
     static func clearToken() { defaults?.removeObject(forKey: BlockingConfig.kFaceToken) }
 
-    /// What the shield action reported when it tried to post the banner.
-    static var lastNotifyStatus: String { defaults?.string(forKey: "face.notifyStatus") ?? "none" }
 }
 
 /// What the shield's "Feed my brain" starts. Mirrored in the shield action
