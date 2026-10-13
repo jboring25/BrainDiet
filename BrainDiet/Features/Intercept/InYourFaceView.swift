@@ -40,8 +40,9 @@ struct InYourFaceView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             Color.bdBackground.ignoresSafeArea()
-            if passed { passedBody } else { faceBody }
-            footer
+            // After a pass there is nothing left to choose (Jack, 2026-10-13:
+            // "There really doesn't need to be a button down there").
+            if passed { passedBody } else { faceBody; footer }
         }
         .overlay(alignment: .topTrailing) {
             Button { close() } label: {
@@ -158,7 +159,7 @@ struct InYourFaceView: View {
         VStack(spacing: 14) {
             Button(action: doTheWork) {
                 VStack(spacing: 2) {
-                    Text(passed ? "Actually, do the work" : "Do the work")
+                    Text("Do the work")
                         .font(BDFont.body(.bold, size: 17, relativeTo: .headline))
                     if let f = focus {
                         Text("\(f.step.title) · \(f.step.suggestedMinutes) min")
