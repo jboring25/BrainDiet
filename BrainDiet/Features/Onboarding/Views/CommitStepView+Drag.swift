@@ -77,7 +77,8 @@ extension CommitStepView {
         let landing = UINotificationFeedbackGenerator()
         landing.prepare()
         landing.notificationOccurred(.success)
-        ServeSound.shared.play(.serve)
+        // No sound (Jack, 2026-10-13: "the commit sound, the da da da, remove
+        // it. The sound really adds nothing."). The haptic carries it.
 
         if let point {
             culture.feed(at: point)

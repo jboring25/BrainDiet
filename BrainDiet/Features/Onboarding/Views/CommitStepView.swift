@@ -71,7 +71,7 @@ struct CommitStepView: View {
                 .foregroundStyle(Color.bdTextPrimary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, Theme.Space.xl)
+                .padding(.bottom, Theme.Space.sm)
 
             brain
 
@@ -113,8 +113,11 @@ struct CommitStepView: View {
     // MARK: The brain — the same organism as Home, fed at the drop point.
 
     private var brain: some View {
+        // Hero-sized (Jack, 2026-10-13: "the brain is way too small... the drag
+        // feels not hero-y enough"). Full width, twice the old 300×200.
         CultureCloudView(model: culture)
-            .frame(width: 300, height: 200)
+            .frame(maxWidth: .infinity)
+            .frame(height: 400)
             // Taps on the brain must not feed it outside the commit path.
             .allowsHitTesting(false)
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { drop.cultureRect = $0 }
