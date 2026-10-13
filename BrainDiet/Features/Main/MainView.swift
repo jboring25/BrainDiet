@@ -54,6 +54,15 @@ struct MainView: View {
         )
     }
 
+    /// Home's one focus, computed the same way, for the shield and the face.
+    private var shieldFocus: TodaysFocus? {
+        let dayStart = Calendar.current.startOfDay(for: .now)
+        return TodaysFocus.pick(goals: goals,
+                                doneToday: Set(sessions.lazy.filter { $0.startedAt >= dayStart }.compactMap(\.stepID)),
+                                everDone: Set(sessions.compactMap(\.stepID)),
+                                skips: MenuExposure.skips(sessions: sessions))
+    }
+
     /// ⭐ ONE GOAL (the moonshot, 2026-10-10): the shield speaks only it. A
     /// legacy multi-goal profile rotates nothing either: its primary is the moonshot.
     private var shieldDomains: [ActivityDomain] {
@@ -159,7 +168,22 @@ struct MainView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { blocking.expireDoItNowIfNeeded() }
+            guard phase == .active else { return }
+            // A lock started from the shield while we were away.
+            blocking.reloadDoItNow()
+            blocking.expireDoItNowIfNeeded()
+            if blocking.doItNow == nil, FaceRequest.takePending() { router.showFace = true }
+        }
+        .onAppear {
+            if blocking.doItNow == nil, FaceRequest.takePending() { router.showFace = true }
+        }
+        // ⭐ "Go to BrainDiet" from a shield (Jack, 2026-10-12).
+        .fullScreenCover(isPresented: $router.showFace) {
+            if let p = profiles.first { InYourFaceView(profile: p, focus: shieldFocus) }
+        }
+        // What the shield's "Feed my brain" starts: the same step Home offers.
+        .task(id: shieldFocus.map { "\($0.step.id)\($0.step.suggestedMinutes)" } ?? "none") {
+            ShieldNextStep(focus: shieldFocus).write()
         }
         // The route-by-why triage flow (2026-07-23) — entitlement-free, opened
         // from Home's "Reaching for a scroll?" card (and, in DEBUG, the

@@ -48,6 +48,17 @@ enum BlockingConfig {
     static let kDoItNowTitle = "doItNow.title"
     /// The whole session (app-only), so the lock survives a relaunch.
     static let kDoItNowSession = "doItNow.session"
+
+    // "Go to BrainDiet" (Jack, 2026-10-12): the shield sends you into the app
+    // to face your goal; a pass is only spent there.
+    /// Epoch seconds the user tapped "Go to BrainDiet" on a shield.
+    static let kFacePendingAt = "face.pendingAt"
+    /// Encoded ApplicationToken of the app that shield was covering.
+    static let kFaceToken = "face.token"
+    /// JSON `ShieldNextStep`: what "Feed my brain" on the shield starts.
+    static let kShieldNextStep = "shield.nextStep"
+    /// One-off activity whose end re-shields the app a pass opened.
+    static let passActivity = "BrainDietPass"
     /// DeviceActivityEvent name for "junk cap reached".
     static let junkCapEvent = "junkCapReached"
     /// DeviceActivityEvent name prefix for the automatic USAGE meters — a series

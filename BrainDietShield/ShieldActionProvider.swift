@@ -23,114 +23,167 @@ import Foundation
 
 #if canImport(ManagedSettings) && BRAINDIET_FAMILY_CONTROLS
 import ManagedSettings
+import DeviceActivity
+import FamilyControls
+import UserNotifications
+
+// ⭐ TWO DOORS (Jack, 2026-10-12, design/block-screen/). Taken from Opal: the
+// shield never lets you straight through. "Feed my brain" starts the step's
+// Do it now lock right here; "Go to BrainDiet" sends a notification into the
+// app (iOS gives a shield no way to open an app), where the goal is put in
+// front of you and a pass can be spent. Passes are no longer on the shield.
 
 private enum ShieldActionKeys {
     static let suite         = "group.com.jackboring.braindiet.shared"
     static let lastProtectAt = "shield.lastProtectAt"
     static let junkStore     = "BrainDietJunk"
     static let cursor        = "shield.cursor"
+    // Mirrors BlockingConfig (separate target, duplicated on purpose).
     static let doItNowEndsAt = "doItNow.endsAt"
+    static let doItNowTitle  = "doItNow.title"
+    static let doItNowSession = "doItNow.session"
+    static let doItNowStore  = "BrainDietDoItNow"
+    static let doItNowActivity = "BrainDietDoItNow"
+    static let allowSelection = "blocking.allowSelectionData"
+    static let nextStep      = "shield.nextStep"
+    static let facePendingAt = "face.pendingAt"
+    static let faceToken     = "face.token"
 }
 
-// Mirrors InterceptPass in the app (separate target → duplicated on purpose,
-// exactly like MonitorConfig and ShieldKeys). Keep the key strings identical.
-private enum PassKeys {
-    static let allowance = 3
-    static let window    = 3 * 60.0
-    static let day       = "pass.day"
-    static let spent     = "pass.spent"
-    static let expires   = "pass.expiresAt"
+/// Mirrors the app's `ShieldNextStep`.
+private struct NextStep: Decodable {
+    let title: String
+    let domainRaw: String
+    let goalID: UUID?
+    let stepID: UUID?
+    let minutes: Int
+}
 
-    static func todayKey(_ now: Date = Date()) -> String {
-        var cal = Calendar.current
-        cal.timeZone = .current
-        let c = cal.dateComponents([.year, .month, .day], from: now)
-        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-    }
-
-    /// Spend one pass, or return false when the day's allowance is gone.
-    static func spend() -> Bool {
-        guard let d = UserDefaults(suiteName: ShieldActionKeys.suite) else { return false }
-        let key = todayKey()
-        if d.string(forKey: day) != key { d.set(key, forKey: day); d.set(0, forKey: spent) }
-        let used = d.integer(forKey: spent)
-        guard used < allowance else { return false }
-        d.set(used + 1, forKey: spent)
-        d.set(Date().addingTimeInterval(window).timeIntervalSince1970, forKey: expires)
-        return true
-    }
+/// Mirrors the app's `DoItNowSession` field for field, so the app decodes it.
+private struct LockSession: Encodable {
+    let title: String
+    let domainRaw: String
+    let goalID: UUID?
+    let stepID: UUID?
+    let minutes: Int
+    let startedAt: Date
+    let endsAt: Date
+    let shielded: Bool
 }
 
 final class ShieldActionProvider: ShieldActionDelegate {
 
+    private var defaults: UserDefaults? { UserDefaults(suiteName: ShieldActionKeys.suite) }
+
     override func handle(action: ShieldAction, for application: ApplicationToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        // ⭐ THE PASS (2026-08-27). The only context where we can actually open
-        // the door, because only here do we hold the token to un-shield. The
-        // extension owns the same ManagedSettingsStore the app writes, so
-        // removing this one token IS the door opening; `.defer` then dismisses
-        // the shield UI onto an app that is no longer blocked.
-        if action == .secondaryButtonPressed {
-            guard PassKeys.spend() else {
-                // Allowance gone. The config extension stops drawing the button
-                // once that happens, so this is only reachable in a race —
-                // never leave the user pressing a control that does nothing.
-                completionHandler(.close)
-                return
-            }
-            let store = ManagedSettingsStore(named: .init(ShieldActionKeys.junkStore))
-            var apps = store.shield.applications ?? []
-            apps.remove(application)
-            store.shield.applications = apps.isEmpty ? nil : apps
-            completionHandler(.defer)
-            return
-        }
-        completionHandler(response(for: action))
+        completionHandler(respond(action, token: try? JSONEncoder().encode(application)))
     }
 
     override func handle(action: ShieldAction, for webDomain: WebDomainToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        completionHandler(response(for: action))
+        completionHandler(respond(action, token: nil))
     }
 
     override func handle(action: ShieldAction, for category: ActivityCategoryToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        completionHandler(response(for: action))
+        completionHandler(respond(action, token: nil))
     }
 
-    // MARK: Choice → response.
-
-    private func response(for action: ShieldAction) -> ShieldActionResponse {
+    private func respond(_ action: ShieldAction, token: Data?) -> ShieldActionResponse {
+        let d = defaults
+        // Do it now's "Back to it": just close.
+        if (d?.double(forKey: ShieldActionKeys.doItNowEndsAt) ?? 0) > Date().timeIntervalSince1970 {
+            return .close
+        }
         switch action {
         case .primaryButtonPressed:
-            let d = UserDefaults(suiteName: ShieldActionKeys.suite)
-            // Do it now's "Back to it": just close. The rotation and the
-            // protect stamp belong to the junk intercept, not to the lock.
-            if (d?.double(forKey: ShieldActionKeys.doItNowEndsAt) ?? 0) > Date().timeIntervalSince1970 {
-                return .close
-            }
-            // Chose real life: stamp the intent, then leave the feed.
             d?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
-            // Next interrupt speaks to the next goal. Re-assigning the same
-            // shield set asks iOS to redraw it rather than reuse the last one.
-            d?.set((d?.integer(forKey: ShieldActionKeys.cursor) ?? 0) + 1,
-                   forKey: ShieldActionKeys.cursor)
-            let store = ManagedSettingsStore(named: .init(ShieldActionKeys.junkStore))
-            // Build 40 on device: re-assigning the same set did not redraw (the
-            // second open showed the first goal again). Clearing first makes
-            // it a real change.
-            let apps = store.shield.applications
-            store.shield.applications = nil
-            store.shield.applications = apps
+            if !startLock() {
+                notify(title: "Feed my brain",
+                       body: "Tap to start your step. The timer starts when you open BrainDiet.")
+                markFacePending(token: token)
+            }
+            rotateCopy()
             return .close
         case .secondaryButtonPressed:
-            // Only reachable for web/category shields, where there is no
-            // application token to lift. Nothing to open, so close cleanly
-            // rather than deferring onto a screen that is still blocked.
+            markFacePending(token: token)
+            notify(title: "BrainDiet", body: "Your goal is waiting. Tap to open.")
             return .close
         @unknown default:
             return .defer
         }
+    }
+
+    // MARK: Feed my brain — the Do it now lock, started from the shield.
+
+    /// Same lock the app starts: every app but the allow-list, a one-off
+    /// interval so the monitor releases it. False = could not arm the release,
+    /// so nothing is locked (a lock with no end would trap the phone).
+    private func startLock() -> Bool {
+        guard let d = defaults,
+              let data = d.data(forKey: ShieldActionKeys.nextStep),
+              let step = try? JSONDecoder().decode(NextStep.self, from: data)
+        else { return false }
+        let now = Date()
+        let minutes = max(1, step.minutes)
+        let ends = now.addingTimeInterval(TimeInterval(minutes * 60))
+
+        let cal = Calendar.current
+        let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let start = min(now, ends.addingTimeInterval(-(15 * 60 + 30)))
+        let activity = DeviceActivityName(ShieldActionKeys.doItNowActivity)
+        let center = DeviceActivityCenter()
+        center.stopMonitoring([activity])
+        do {
+            try center.startMonitoring(activity, during: DeviceActivitySchedule(
+                intervalStart: cal.dateComponents(parts, from: start),
+                intervalEnd: cal.dateComponents(parts, from: ends), repeats: false))
+        } catch {
+            return false
+        }
+
+        let session = LockSession(title: step.title, domainRaw: step.domainRaw, goalID: step.goalID,
+                                  stepID: step.stepID, minutes: minutes, startedAt: now,
+                                  endsAt: ends, shielded: true)
+        d.set(try? JSONEncoder().encode(session), forKey: ShieldActionKeys.doItNowSession)
+        d.set(ends.timeIntervalSince1970, forKey: ShieldActionKeys.doItNowEndsAt)
+        d.set(step.title, forKey: ShieldActionKeys.doItNowTitle)
+
+        let allowed = d.data(forKey: ShieldActionKeys.allowSelection)
+            .flatMap { try? JSONDecoder().decode(FamilyActivitySelection.self, from: $0) }?
+            .applicationTokens ?? []
+        let lock = ManagedSettingsStore(named: .init(ShieldActionKeys.doItNowStore))
+        lock.shield.applicationCategories = .all(except: allowed)
+        lock.shield.webDomainCategories = .all()
+        return true
+    }
+
+    // MARK: Go to BrainDiet
+
+    private func markFacePending(token: Data?) {
+        defaults?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.facePendingAt)
+        if let token { defaults?.set(token, forKey: ShieldActionKeys.faceToken) }
+        else { defaults?.removeObject(forKey: ShieldActionKeys.faceToken) }
+    }
+
+    private func notify(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        UNUserNotificationCenter.current().add(UNNotificationRequest(
+            identifier: "bd.shield.face", content: content, trigger: nil))
+    }
+
+    /// Next interrupt speaks the next line. Clearing first makes iOS redraw.
+    private func rotateCopy() {
+        let d = defaults
+        d?.set((d?.integer(forKey: ShieldActionKeys.cursor) ?? 0) + 1, forKey: ShieldActionKeys.cursor)
+        let store = ManagedSettingsStore(named: .init(ShieldActionKeys.junkStore))
+        let apps = store.shield.applications
+        store.shield.applications = nil
+        store.shield.applications = apps
     }
 }
 #else

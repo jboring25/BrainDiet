@@ -338,5 +338,35 @@ final class RealScreenTimeGateway: ScreenTimeGateway {
         activityCenter.stopMonitoring([.init(BlockingConfig.doItNowActivity)])
         Log.app.info("Blocking: Do it now released")
     }
+
+    // MARK: A pass from the face screen (2026-10-12)
+
+    /// Only the app the shield was covering opens. A category shield would
+    /// still cover it, so the token is carved out of that too.
+    func openForPass(token: Data, until: Date) {
+        guard let app = try? JSONDecoder().decode(ApplicationToken.self, from: token) else {
+            Log.app.error("Blocking: pass token did not decode")
+            return
+        }
+        var apps = junkStore.shield.applications ?? []
+        apps.remove(app)
+        junkStore.shield.applications = apps.isEmpty ? nil : apps
+        if case .specific(let cats, let except)? = junkStore.shield.applicationCategories {
+            junkStore.shield.applicationCategories = .specific(cats, except: except.union([app]))
+        }
+        let activity = DeviceActivityName(BlockingConfig.passActivity)
+        activityCenter.stopMonitoring([activity])
+        let cal = Calendar.current
+        let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let start = until.addingTimeInterval(-TimeInterval(FeedWindow.minimumMinutes * 60 + 30))
+        do {
+            try activityCenter.startMonitoring(activity, during: DeviceActivitySchedule(
+                intervalStart: cal.dateComponents(parts, from: start),
+                intervalEnd: cal.dateComponents(parts, from: until), repeats: false))
+            Log.app.info("Blocking: pass open until \(until, privacy: .public)")
+        } catch {
+            Log.app.error("Blocking: pass interval failed: \(String(describing: error), privacy: .public)")
+        }
+    }
 }
 #endif

@@ -268,6 +268,20 @@ final class BlockingService {
         if s.shielded { gateway.endDoItNow(); redrawStandingShield() }
     }
 
+    /// The shield can start a lock while the app sleeps; pick it up on return.
+    func reloadDoItNow() {
+        guard !isDebugDoItNow, let s = DoItNowSession.load(), s != doItNow else { return }
+        doItNow = s
+    }
+
+    /// "Use a pass" on the face screen. False when none are left or there is
+    /// no app to open (a web or category shield sent them).
+    func spendFacePass(token: Data?) -> Bool {
+        guard let token, let until = InterceptPass.spend() else { return false }
+        gateway.openForPass(token: token, until: until)
+        return true
+    }
+
     /// The question is answered (either way) or the lock ended early.
     func endDoItNow() {
         let wasShielded = doItNow?.shielded ?? false

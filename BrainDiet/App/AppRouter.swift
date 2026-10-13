@@ -36,6 +36,15 @@ final class AppRouter {
     /// cleared by ProtectTabView the moment it's applied.
     var pendingServing: PlateServing?
 
+    /// "Go to BrainDiet" on a shield (2026-10-12): the goal, in your face.
+    var showFace: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["BD_SHOW_FACE"] != nil
+        #else
+        return false
+        #endif
+    }()
+
     /// "I hit it" (2026-10-12): the finish-line moment, over any tab.
     var showFinishLine: Bool = {
         #if DEBUG

@@ -31,32 +31,6 @@ import UIKit
 // exactly like MonitorConfig for the DeviceActivityMonitor).
 // Mirrors InterceptPass in the app (separate target → duplicated on purpose,
 // exactly like MonitorConfig). Keep the key strings identical.
-private enum PassKeys {
-    static let allowance = 3
-    static let day   = "pass.day"
-    static let spent = "pass.spent"
-
-    /// The pass button's label, or nil when none may be offered.
-    ///
-    /// ⭐ RETURNING NIL DRAWS NO BUTTON, AND THAT IS THE POINT. Build 15 on
-    /// device: a secondary button that could not do its job read as broken.
-    /// A shield action can only answer `.close` or `.defer`, so there is no way
-    /// to render a refusal that looks deliberate. The button therefore exists
-    /// only while it works, and disappears when the allowance is spent.
-    static func label() -> String? {
-        guard let d = UserDefaults(suiteName: ShieldKeys.suite) else { return nil }
-        var cal = Calendar.current
-        cal.timeZone = .current
-        let c = cal.dateComponents([.year, .month, .day], from: Date())
-        let key = String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-        let used = d.string(forKey: day) == key ? d.integer(forKey: spent) : 0
-        let left = allowance - used
-        guard left > 0 else { return nil }
-        return left == 1 ? "Let me in · last pass today"
-                         : "Let me in · \(left) passes left"
-    }
-}
-
 private enum ShieldKeys {
     static let suite     = "group.com.jackboring.braindiet.shared"
     static let headline  = "shield.headline"
@@ -69,6 +43,7 @@ private enum ShieldKeys {
     // Do it now (mirrors BlockingConfig, 2026-10-08).
     static let doItNowEndsAt = "doItNow.endsAt"
     static let doItNowTitle  = "doItNow.title"
+    static let nextStep      = "shield.nextStep"
 
     /// The running Do it now step's title, or nil when no lock is live.
     static func doItNowStep(_ d: UserDefaults?) -> String? {
@@ -145,8 +120,12 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
             body     = v["body"] ?? body
             symbolName = v["symbol"] ?? symbolName
         }
-        let primary   = d?.string(forKey: ShieldKeys.primary)   ?? "Feed my brain"
-        let secondary = d?.string(forKey: ShieldKeys.secondary) ?? "Not now"
+        // ⭐ TWO DOORS (Jack, 2026-10-12): "Feed my brain" starts the step's
+        // timer right here; "Go to BrainDiet" is the only way through, and a
+        // pass is only ever spent in the app, in front of the goal.
+        let minutes = (d?.data(forKey: ShieldKeys.nextStep))
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }?["minutes"] as? Int
+        let primary = minutes.map { "Feed my brain · \($0) min" } ?? "Feed my brain"
 
         // Doctrine: the shield carries NO marketing copy — "Your brain eats too."
         // lives only on the PlanShareCard. The subtitle is the bridge, nothing else.
@@ -164,7 +143,6 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
         // minutes. `PassKeys.label()` is nil once the day's passes are gone, and
         // a nil label means the button is never drawn — so the rule that killed
         // it the first time is still enforced, by construction.
-        let passLabel = PassKeys.label()
 
         return ShieldConfiguration(
             backgroundBlurStyle: .systemUltraThinMaterialDark,
@@ -174,7 +152,7 @@ final class ShieldConfigurationProvider: ShieldConfigurationDataSource {
             subtitle: .init(text: subtitleText, color: ShieldPalette.inkSoft),
             primaryButtonLabel: .init(text: primary, color: ShieldPalette.onSage),
             primaryButtonBackgroundColor: ShieldPalette.sage,
-            secondaryButtonLabel: passLabel.map { .init(text: $0, color: ShieldPalette.inkSoft) }
+            secondaryButtonLabel: .init(text: "Go to BrainDiet", color: ShieldPalette.inkSoft)
             // ⛔️ THE RULE THAT KILLED THE FIRST SECONDARY BUTTON STILL STANDS.
             // Build 15, on device: "the button at the bottom that says Not now,
             // I don't know why that's there, because when I click it, nothing

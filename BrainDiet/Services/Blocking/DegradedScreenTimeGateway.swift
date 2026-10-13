@@ -52,4 +52,7 @@ final class DegradedScreenTimeGateway: ScreenTimeGateway {
     func endDoItNow() {
         Log.app.info("Blocking: endDoItNow no-op (degraded)")
     }
+    func openForPass(token: Data, until: Date) {
+        Log.app.info("Blocking: openForPass no-op (degraded)")
+    }
 }

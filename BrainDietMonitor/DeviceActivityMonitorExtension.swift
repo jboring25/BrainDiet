@@ -37,6 +37,7 @@ private enum MonitorConfig {
     static let feedActivityPrefix = "BrainDietFeed."
     static let doItNowActivity = "BrainDietDoItNow"
     static let doItNowStoreName = "BrainDietDoItNow"
+    static let passActivity = "BrainDietPass"
     static let kFeedWindow = "blocking.feedWindow"
     static let kAllowSelectionData = "blocking.allowSelectionData"
     static let kDoItNowEndsAt = "doItNow.endsAt"
@@ -92,6 +93,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         let name = activity.rawValue
         if name.hasPrefix(MonitorConfig.feedActivityPrefix) { syncFeedShield(); return }
         if name == MonitorConfig.doItNowActivity { reapplyDoItNowIfLive(); return }
+        // A pass's interval starts in the past (Apple's 15-minute floor); its
+        // start must not touch anything, only its end re-shields.
+        if name == MonitorConfig.passActivity { return }
         // New day → clear yesterday's cap shield; the user starts fresh. The new
         // day's usage total starts absent and accrues as meter thresholds fire.
         store.shield.applications = nil
@@ -102,6 +106,8 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
         let name = activity.rawValue
         if name.hasPrefix(MonitorConfig.feedActivityPrefix) { syncFeedShield(); return }
+        // A pass ran out: redraw the full shield (the opened app included).
+        if name == MonitorConfig.passActivity { syncFeedShield(); return }
         if name == MonitorConfig.doItNowActivity { releaseDoItNowIfOver() }
     }
 

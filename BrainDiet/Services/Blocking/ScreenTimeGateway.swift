@@ -84,4 +84,8 @@ protocol ScreenTimeGateway: AnyObject {
     func startDoItNow(allow: BlockingSelection, endsAt: Date)
     /// Lift the Do it now shield and stop its activity.
     func endDoItNow()
+
+    /// A pass spent on the face screen: lift the shield for this one app
+    /// until `until`; the monitor puts it back at the end even if we're gone.
+    func openForPass(token: Data, until: Date)
 }
