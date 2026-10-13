@@ -105,6 +105,16 @@ enum DemoSeed {
                 : .now
         )
         context.insert(profile)
+        // `BD_SEED_MOONSHOT=1`: a one-moonshot profile (2026-10-12), so Home and
+        // Becoming can be shot the way a new user sees them.
+        if ProcessInfo.processInfo.environment["BD_SEED_MOONSHOT"] == "1" {
+            profile.moonshot = "Build an app that 1 million people use"
+            profile.milestones = [
+                Milestone(title: "Ship the first version to the App Store", by: "Nov 15"),
+                Milestone(title: "Get 1,000 people using it", by: "Feb 1"),
+                Milestone(title: "Get 10,000 people using it", by: "Jun 1"),
+            ]
+        }
         // Screenshot jump for the Menu's "Block my feeds" card.
         if let raw = ProcessInfo.processInfo.environment["BD_FEED_SCHEDULE"] {
             profile.feedScheduleRaw = raw
