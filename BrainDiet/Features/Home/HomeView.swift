@@ -29,6 +29,11 @@ struct HomeView: View {
     /// DEBUG seam (2026-08-06): `BD_OPEN_ADJUST=1` opens Settings on appear so
     /// the screenshot harness can reach the sheets behind it (see
     /// SettingsView's matching seam).
+    /// Drag-to-scroll (Jack, 2026-10-13): from the bottom of Home a lifted
+    /// card could never reach the brain, because the ScrollView is frozen while
+    /// a drag holds the touch. Hovering near the top edge scrolls up for you.
+    @State private var scrollPos = ScrollPosition()
+    @State private var scrollY: CGFloat = 0
     @State private var showSettings = {
         #if DEBUG
         return ProcessInfo.processInfo.environment["BD_OPEN_ADJUST"] != nil
@@ -255,8 +260,18 @@ struct HomeView: View {
                     .padding(.bottom, Theme.Space.xxl)
                 }
                 .scrollIndicators(.hidden)
+                .scrollPosition($scrollPos)
+                .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, y in
+                    scrollY = y
+                }
+                .task(id: drop.isDragging) { await edgeScroll() }
                 .onPreferenceChange(PlateRectKey.self) { drop.plateRect = $0 }
-                .onPreferenceChange(CultureRectKey.self) { drop.cultureRect = $0 }
+                .onPreferenceChange(CultureRectKey.self) {
+                    drop.cultureRect = $0
+                    // The brain moved under a held finger (edge scroll): re-ask
+                    // whether the card is over it, so the drop and the haptic agree.
+                    if drop.isDragging { drop.update(translation: drop.translation) }
+                }
                 .safeAreaInset(edge: .top, spacing: 0) {
                     headerRow
                         .padding(.horizontal, Metrics.screenX)
@@ -525,6 +540,20 @@ struct HomeView: View {
         heroDropPoint = drop.lastDrop
         report(item)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { heroDropPoint = nil }
+    }
+
+    /// While a card is held in the top band, scroll up toward the brain,
+    /// faster the closer the finger is to the edge. Stops at the top.
+    private func edgeScroll() async {
+        let band: CGFloat = 230, maxStep: CGFloat = 16
+        while drop.isDragging, !Task.isCancelled {
+            let y = drop.point.y
+            if y < band, scrollY > 0 {
+                let step = maxStep * min(1, (band - y) / band)
+                scrollPos.scrollTo(y: max(0, scrollY - step))
+            }
+            try? await Task.sleep(for: .milliseconds(16))
+        }
     }
 
     /// The one thing, ranked. Recomputed as sessions land so it never offers

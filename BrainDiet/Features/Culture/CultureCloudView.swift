@@ -34,14 +34,9 @@ struct CultureCloudView: View {
                     advance(to: now)
                     draw(ctx, size: size)
                 }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onEnded { value in
-                            let t = CultureCloudGeometry.transform(in: geo.size)
-                            model.feed(from: value.location.applying(t.inverted()))
-                        }
-                )
+                // No tap-to-feed (Jack, 2026-10-13: "when I just touch the brain,
+                // it doesn't fire... only when you drag something into it").
+                // The brain feeds only through a drop (`PlateDropController`).
             }
         }
     }
