@@ -295,7 +295,7 @@ struct OnboardingPaywallStepView: View {
 
     private var transparentBilling: some View {
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
-            Text("No surprises. Ever.")
+            Text("No hidden charges.")
                 .font(BDFont.body(.medium, size: 15, relativeTo: .subheadline))
                 .foregroundStyle(Color.bdTextPrimary)
             Text(pvm.transparentBillingLine)

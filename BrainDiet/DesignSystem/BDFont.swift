@@ -55,8 +55,10 @@ enum BDFont {
     private static let allFiles: [(name: String, ext: String)] = [
         ("Manrope-Regular", "ttf"), ("Manrope-Medium", "ttf"), ("Manrope-SemiBold", "ttf"),
         ("Manrope-Bold", "ttf"), ("Manrope-ExtraBold", "ttf"),
-        ("YoungSerif-Regular", "ttf"),
-        ("CabinetGrotesk-Extrabold", "otf"), ("CabinetGrotesk-Bold", "otf")
+        ("YoungSerif-Regular", "ttf")
+        // Cabinet Grotesk files REMOVED 2026-10-13: its Fontshare EULA forbids
+        // putting the font files on a public server, and this repo is public.
+        // `grotesk(_:)` already rendered Young Serif, so nothing visible changes.
     ]
 
     /// Call once at launch. Idempotent (re-registration errors are harmless).

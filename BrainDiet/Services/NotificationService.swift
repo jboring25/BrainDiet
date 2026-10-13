@@ -127,8 +127,8 @@ enum NotificationService {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Your free trial ends soon")
         content.body = daysBefore <= 1
-            ? String(localized: "Your BrainDiet trial ends tomorrow. Keep your plan, or cancel in 2 taps. Your call.")
-            : String(localized: "\(daysBefore) days left in your free trial. Keep your plan, or cancel in 2 taps. Your call.")
+            ? String(localized: "Your BrainDiet trial ends tomorrow. Keep your plan, or cancel anytime in Settings. Your call.")
+            : String(localized: "\(daysBefore) days left in your free trial. Keep your plan, or cancel anytime in Settings. Your call.")
         content.sound = .default
 
         let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fire)

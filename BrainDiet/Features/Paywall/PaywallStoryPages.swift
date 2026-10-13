@@ -417,7 +417,7 @@ struct PaywallTimelinePage: View {
                     row(.leaf, .bdLeaf, .bdLeafTint, String(localized: "Today"),
                         String(localized: "Full access, free for \(PaywallPricing.trialDays) days."), true)
                     row(.bell, .bdLeaf, .bdLeafTint, String(localized: "Day \(PaywallPricing.trialDays - 1)"),
-                        String(localized: "We remind you before you're charged."), true)
+                        String(localized: "Turn on a reminder before you're charged."), true)
                     row(.sparkle, .bdHoneyText, .bdHoneyTint, String(localized: "Day \(PaywallPricing.trialDays)"),
                         String(localized: "Your plan begins, \(PaywallPricing.weeklyDisplay)/week."), false)
                 } else {

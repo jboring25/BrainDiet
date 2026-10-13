@@ -40,12 +40,12 @@ final class PaywallViewModel {
         guard trialEligible else {
             // Returning user: no trial exists for them, so no trial word.
             return String(
-                format: String(localized: "%1$@/week, billed today. Cancel anytime in 2 taps: Settings ▸ Subscriptions."),
+                format: String(localized: "%1$@/week, billed today. Cancel anytime in Settings ▸ Subscriptions."),
                 PaywallPricing.weeklyDisplay
             )
         }
         return String(
-            format: String(localized: "%1$d days free, then %2$@/week. Cancel anytime in 2 taps. We'll remind you before the trial ends."),
+            format: String(localized: "%1$d days free, then %2$@/week. Cancel anytime in Settings."),
             PaywallPricing.trialDays, PaywallPricing.weeklyDisplay
         )
     }

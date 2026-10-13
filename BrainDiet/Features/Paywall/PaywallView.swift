@@ -225,7 +225,7 @@ struct PaywallView: View {
                 timelineRow(
                     marker: "bell.fill",
                     title: "Day \(PaywallPricing.trialDays - 1)",
-                    line: "We remind you. No surprises.",
+                    line: "Turn on a reminder if you like.",
                     filled: true, isLast: false
                 )
                 timelineRow(
