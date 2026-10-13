@@ -39,7 +39,9 @@ final class BlockingService {
         // persisted, never touches the system shield.
         if let raw = ProcessInfo.processInfo.environment["BD_DOITNOW"] {
             let over = raw == "timesup"
-            doItNow = DoItNowSession(title: String(localized: "Read 10 pages of Atomic Habits"),
+            // BD_DOITNOW_TITLE overrides the step (App Store screenshots).
+            let title = ProcessInfo.processInfo.environment["BD_DOITNOW_TITLE"] ?? "Read 10 pages of Atomic Habits"
+            doItNow = DoItNowSession(title: title,
                                      domainRaw: ActivityDomain.reading.rawValue,
                                      goalID: nil, stepID: nil, minutes: 20,
                                      startedAt: over ? Date().addingTimeInterval(-20 * 60) : Date(),
