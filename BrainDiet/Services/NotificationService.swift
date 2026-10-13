@@ -43,6 +43,20 @@ enum NotificationService {
         return granted
     }
 
+    /// Ask whenever iOS has never shown the prompt, whatever our own flag says.
+    /// (2026-10-12: Jack's phone had no BrainDiet row in Settings, so the
+    /// shield's "Go to BrainDiet" banner could never show.)
+    @discardableResult
+    static func requestIfUndetermined() async -> Bool {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard settings.authorizationStatus == .notDetermined else { return await isAuthorized() }
+        UserDefaults.standard.set(true, forKey: didRequestKey)
+        let granted = (try? await UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound])) ?? false
+        Log.app.info("Notification permission requested (undetermined): granted=\(granted, privacy: .public)")
+        return granted
+    }
+
     // MARK: (a) Daily plan nudge — 20:00, repeating
 
     /// Schedules (replacing any previous) the 20:00 daily nudge pointed at the

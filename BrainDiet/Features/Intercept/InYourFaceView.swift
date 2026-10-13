@@ -59,7 +59,7 @@ struct InYourFaceView: View {
         .task {
             Log.app.info("Face shown; shield notify status: \(FaceRequest.lastNotifyStatus, privacy: .public)")
             // Someone who reached this without the banner has never been asked.
-            await NotificationService.requestPermissionAfterFirstWin()
+            await NotificationService.requestIfUndetermined()
         }
     }
 

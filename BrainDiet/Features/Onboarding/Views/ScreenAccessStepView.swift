@@ -99,7 +99,7 @@ struct ScreenAccessStepView: View {
             vm.screenTimeAuthorized = blocking.isAuthorized
             // ⭐ (Jack, 2026-10-12) Ask for notifications with the blocking
             // setup: "Go to BrainDiet" on a shield reaches you by notification.
-            if blocking.isAuthorized { await NotificationService.requestPermissionAfterFirstWin() }
+            if blocking.isAuthorized { await NotificationService.requestIfUndetermined() }
             isRequesting = false
             vm.advance()
         }

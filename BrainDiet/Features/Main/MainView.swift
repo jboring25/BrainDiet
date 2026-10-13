@@ -177,6 +177,11 @@ struct MainView: View {
         .onAppear {
             if blocking.doItNow == nil, FaceRequest.takePending() { router.showFace = true }
         }
+        // The shield reaches you by notification; anyone already blocking who
+        // was never asked (onboarded before 2026-10-12) gets asked once here.
+        .task {
+            if blocking.isAuthorized { await NotificationService.requestIfUndetermined() }
+        }
         // ⭐ "Go to BrainDiet" from a shield (Jack, 2026-10-12).
         .fullScreenCover(isPresented: $router.showFace) {
             if let p = profiles.first { InYourFaceView(profile: p, focus: shieldFocus) }
