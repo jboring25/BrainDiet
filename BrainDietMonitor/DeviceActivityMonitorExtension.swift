@@ -66,12 +66,14 @@ private struct MonitorFeedWindow: Decodable {
     let start: Int
     let end: Int
     let weekdays: [Int]
+    let firstHourFrom: Int?
 
     func contains(_ date: Date) -> Bool {
         if schedule == "always" { return true }
         let c = Calendar.current.dateComponents([.weekday, .hour, .minute], from: date)
         let w = c.weekday ?? 1
         let m = (c.hour ?? 0) * 60 + (c.minute ?? 0)
+        if let f = firstHourFrom, (m - f + 1440) % 1440 < 60 { return true }
         if end > start { return weekdays.contains(w) && m >= start && m < end }
         let previous = w == 1 ? 7 : w - 1
         return (weekdays.contains(w) && m >= start) || (weekdays.contains(previous) && m < end)

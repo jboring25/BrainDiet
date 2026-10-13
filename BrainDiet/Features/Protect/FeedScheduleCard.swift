@@ -60,7 +60,7 @@ struct FeedScheduleSheet: View {
     @Environment(\.modelContext) private var modelContext
     @State private var editing: Edge?
 
-    private enum Edge: String, Identifiable { case start, end; var id: String { rawValue } }
+    private enum Edge: String, Identifiable { case start, end, wake; var id: String { rawValue } }
 
     var body: some View {
         ScrollView {
@@ -86,6 +86,17 @@ struct FeedScheduleSheet: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
+                FirstHourRow(isOn: $profile.firstHourBlock, from: wake,
+                             coveredByAlways: profile.feedSchedule == .always)
+                    .padding(.top, 14)
+                if profile.firstHourBlock {
+                    OBValueRow(label: String(localized: "I'm up at"), value: FeedWindow.clock(wake)) {
+                        editing = .wake
+                    }
+                    .padding(.top, Theme.Space.sm)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
                 BDPrimaryButton(title: "Done") { save(); dismiss() }
                     .padding(.top, 26)
             }
@@ -96,11 +107,18 @@ struct FeedScheduleSheet: View {
         .background(Color.bdBackground.ignoresSafeArea())
         .onDisappear(perform: save)
         .sheet(item: $editing) { edge in
-            FeedTimeSheet(title: edge == .start ? "Block from" : "Until",
-                          minutes: edge == .start ? $profile.feedCustomStart : $profile.feedCustomEnd)
+            FeedTimeSheet(title: edge == .start ? "Block from" : edge == .end ? "Until" : "Up at",
+                          minutes: edge == .start ? $profile.feedCustomStart
+                                 : edge == .end ? $profile.feedCustomEnd : wakeBinding)
                 .presentationDetents([.height(340)])
                 .presentationDragIndicator(.visible)
         }
+    }
+
+    /// Older profiles never stored a wake time; 7:30 matches onboarding's default.
+    private var wake: Int { profile.wakeMinutes >= 0 ? profile.wakeMinutes : 450 }
+    private var wakeBinding: Binding<Int> {
+        Binding(get: { wake }, set: { profile.wakeMinutes = $0 })
     }
 
     private var customEditor: some View {

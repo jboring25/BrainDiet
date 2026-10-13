@@ -60,6 +60,10 @@ struct ReachAndScheduleStepView: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
+                FirstHourRow(isOn: $vm.firstHourBlock, from: vm.wakeMinutes,
+                             coveredByAlways: vm.feedSchedule == .always)
+                    .padding(.top, 14)
+
                 Spacer(minLength: Theme.Space.lg)
             }
         }

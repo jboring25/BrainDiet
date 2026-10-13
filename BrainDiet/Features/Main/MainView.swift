@@ -229,7 +229,8 @@ struct MainView: View {
         guard let p = profiles.first else { return "" }
         return [String(p.familySelectionData?.hashValue ?? 0), p.feedScheduleRaw,
                 String(p.feedCustomStart), String(p.feedCustomEnd), p.feedCustomWeekdaysRaw,
-                String(p.allowSelectionData?.hashValue ?? 0)].joined(separator: "|")
+                String(p.allowSelectionData?.hashValue ?? 0),
+                String(p.firstHourBlock), String(p.wakeMinutes)].joined(separator: "|")
     }
 
     /// The serving "I did it" reports: the same shape the focus card's drag

@@ -25,6 +25,12 @@ struct FeedWindow: Codable, Equatable, Sendable {
     var end: Int
     /// Days the window STARTS on. 1 = Sunday … 7 = Saturday (Calendar.weekday).
     var weekdays: [Int]
+    /// "Protect my first hour" (Jack, 2026-10-12): the wake time, in minutes
+    /// after midnight. The feeds stay shut for the hour after it, every day,
+    /// ON TOP of the schedule. Nil = off. Optional so older saved JSON decodes.
+    var firstHourFrom: Int? = nil
+
+    static let firstHourMinutes = 60
 
     static let always = FeedWindow(schedule: .always, start: 0, end: 0, weekdays: Array(1...7))
 
@@ -61,6 +67,7 @@ struct FeedWindow: Codable, Equatable, Sendable {
         let c = calendar.dateComponents([.weekday, .hour, .minute], from: date)
         let w = c.weekday ?? 1
         let m = (c.hour ?? 0) * 60 + (c.minute ?? 0)
+        if let f = firstHourFrom, (m - f + 1440) % 1440 < Self.firstHourMinutes { return true }
         if !crossesMidnight { return weekdays.contains(w) && m >= start && m < end }
         let previous = w == 1 ? 7 : w - 1
         return (weekdays.contains(w) && m >= start) || (weekdays.contains(previous) && m < end)
@@ -70,15 +77,27 @@ struct FeedWindow: Codable, Equatable, Sendable {
     func nextStart(after date: Date, calendar: Calendar = .current) -> Date? {
         guard !isAlways else { return nil }
         let today = calendar.startOfDay(for: date)
+        var best: Date?
         for offset in 0...7 {
             guard let day = calendar.date(byAdding: .day, value: offset, to: today),
                   weekdays.contains(calendar.component(.weekday, from: day)),
                   let at = calendar.date(byAdding: .minute, value: start, to: day),
                   at > date
             else { continue }
-            return at
+            best = at
+            break
         }
-        return nil
+        if let f = firstHourFrom {
+            for offset in 0...1 {
+                guard let day = calendar.date(byAdding: .day, value: offset, to: today),
+                      let at = calendar.date(byAdding: .minute, value: f, to: day),
+                      at > date
+                else { continue }
+                if best == nil || at < best! { best = at }
+                break
+            }
+        }
+        return best
     }
 
     // MARK: DeviceActivity segments
@@ -118,7 +137,19 @@ struct FeedWindow: Codable, Equatable, Sendable {
             s.weekday = r.day
             e.weekday = r.day
             return Segment(name: "\(BlockingConfig.feedActivityPrefix)\(i)", start: s, end: e)
-        }
+        } + firstHourSegments
+    }
+
+    /// The first hour, every day. Still under the feed prefix, so the monitor
+    /// treats its edges like any other and asks `contains`.
+    private var firstHourSegments: [Segment] {
+        guard let f = firstHourFrom else { return [] }
+        let from = ((f % 1440) + 1440) % 1440
+        let to = min(from + Self.firstHourMinutes, Self.lastMinute)
+        guard to - from >= Self.minimumMinutes else { return [] }
+        return [Segment(name: "\(BlockingConfig.feedActivityPrefix)firstHour",
+                        start: DateComponents(hour: from / 60, minute: from % 60),
+                        end: DateComponents(hour: to / 60, minute: to % 60))]
     }
 
     // MARK: Words
@@ -126,7 +157,13 @@ struct FeedWindow: Codable, Equatable, Sendable {
     /// "Weekdays · 9am–5pm", "Every night · 10pm–8am", "Always".
     var summary: String {
         if isAlways { return String(localized: "Always on") }
-        return "\(daysLabel) · \(Self.clock(start))–\(Self.clock(end))"
+        let base = "\(daysLabel) · \(Self.clock(start))–\(Self.clock(end))"
+        return firstHourFrom == nil ? base : "\(base) · " + String(localized: "First hour")
+    }
+
+    /// "7:30–8:30am".
+    static func firstHourRange(_ from: Int) -> String {
+        "\(clock(from).replacingOccurrences(of: "am", with: "").replacingOccurrences(of: "pm", with: ""))–\(clock((from + firstHourMinutes) % 1440))"
     }
 
     private var daysLabel: String {
@@ -145,7 +182,8 @@ struct FeedWindow: Codable, Equatable, Sendable {
     /// "Open until 9am", "Open until tomorrow 10pm", "Open until Monday 9am".
     func openUntilLine(now: Date = .now, calendar: Calendar = .current) -> String? {
         guard let next = nextStart(after: now, calendar: calendar) else { return nil }
-        let time = Self.clock(start)
+        let at = calendar.dateComponents([.hour, .minute], from: next)
+        let time = Self.clock((at.hour ?? 0) * 60 + (at.minute ?? 0))
         if calendar.isDate(next, inSameDayAs: now) { return String(localized: "Open until \(time)") }
         if calendar.isDateInTomorrow(next) { return String(localized: "Open until tomorrow \(time)") }
         let day = calendar.weekdaySymbols[calendar.component(.weekday, from: next) - 1]
@@ -167,7 +205,9 @@ extension FeedSchedule: Codable {}
 extension UserProfile {
     /// The saved answer as an enforceable window.
     var feedWindow: FeedWindow {
-        FeedWindow(schedule: feedSchedule, customStart: feedCustomStart,
-                   customEnd: feedCustomEnd, customWeekdays: feedCustomWeekdays)
+        var w = FeedWindow(schedule: feedSchedule, customStart: feedCustomStart,
+                           customEnd: feedCustomEnd, customWeekdays: feedCustomWeekdays)
+        if firstHourBlock { w.firstHourFrom = wakeMinutes >= 0 ? wakeMinutes : 450 }
+        return w
     }
 }

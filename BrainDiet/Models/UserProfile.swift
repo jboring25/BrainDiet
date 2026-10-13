@@ -94,6 +94,9 @@ final class UserProfile {
     var feedCustomStart: Int = 1260
     var feedCustomEnd: Int = 420
     var feedCustomWeekdaysRaw: String = "1,2,3,4,5,6,7"
+    /// "Protect my first hour" (2026-10-12): feeds shut for the hour after
+    /// `wakeMinutes`, every day, on top of the schedule.
+    var firstHourBlock: Bool = false
     /// JSON map ActivityDomain.rawValue → {"wish","go"} from PlanService. When a
     /// domain has a line here the shield speaks it instead of the stock copy.
     var shieldLinesRaw: String = ""

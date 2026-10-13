@@ -165,3 +165,51 @@ struct DayAnchorChip: View {
         .padding(Theme.Space.screenX)
     }
 }
+
+/// "Protect my first hour" (Jack, 2026-10-12): the feeds stay shut for the
+/// hour after waking, every day, on top of whatever schedule is picked. One
+/// row in the OBValueRow shell, a leaf switch, and the reason in one line.
+struct FirstHourRow: View {
+    @Binding var isOn: Bool
+    /// Wake time, minutes after midnight.
+    let from: Int
+    /// "Always" already blocks all day; say so instead of promising more.
+    var coveredByAlways: Bool = false
+
+    var body: some View {
+        HStack(spacing: Theme.Space.md) {
+            Image(systemName: "sunrise.fill")
+                .font(.body)
+                .foregroundStyle(Color.bdLeafDeep)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Protect my first hour")
+                    .font(BDFont.body(.semiBold, size: 16, relativeTo: .body))
+                    .foregroundStyle(Color.bdTextPrimary.opacity(0.9))
+                Text(detail)
+                    .font(BDFont.body(.regular, size: 13, relativeTo: .footnote))
+                    .foregroundStyle(Color.bdTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Toggle("", isOn: $isOn.animation(Theme.Motion.snappy))
+                .labelsHidden()
+                .tint(Color.bdLeaf)
+        }
+        .padding(.horizontal, Theme.Space.lg)
+        .padding(.vertical, 12)
+        .frame(minHeight: Theme.Size.minTouch + Theme.Space.sm)
+        .background(Color.bdSurface,
+                    in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
+                .strokeBorder(isOn ? Color.bdLeaf.opacity(0.5) : Color.bdCardBorder, lineWidth: 1.5)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var detail: String {
+        if coveredByAlways { return String(localized: "It sets your whole day. Always already covers it.") }
+        return String(localized: "It sets your whole day. Feeds shut \(FeedWindow.firstHourRange(from)).")
+    }
+}

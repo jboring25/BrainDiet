@@ -138,6 +138,13 @@ final class OnboardingViewModel {
     var feedCustomEnd: Int = 7 * 60
     /// Calendar weekdays, 1 = Sunday.
     var feedCustomWeekdays: Set<Int> = Set(1...7)
+    /// "Protect my first hour". Until they touch it, it follows their own
+    /// answer: on when the phone gets them "right when I wake up".
+    var firstHourChoice: Bool? = nil
+    var firstHourBlock: Bool {
+        get { firstHourChoice ?? whenItGets.contains(.wake) }
+        set { firstHourChoice = newValue }
+    }
     /// Shield lines PlanService wrote; persisted with the profile.
     var shieldLines: [ActivityDomain: ShieldLine] = [:]
     /// What the menu hero serves, in order. Set once the plan is final.
@@ -424,6 +431,7 @@ final class OnboardingViewModel {
         profile.feedCustomStart = feedCustomStart
         profile.feedCustomEnd = feedCustomEnd
         profile.feedCustomWeekdaysRaw = feedCustomWeekdays.sorted().map(String.init).joined(separator: ",")
+        profile.firstHourBlock = firstHourBlock
         profile.shieldLines = shieldLines
         // v3 pain sweep.
         profile.whenItGetsRaw = orderedWhenItGets.map(\.rawValue).joined(separator: ",")
