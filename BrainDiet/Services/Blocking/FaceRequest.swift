@@ -25,6 +25,9 @@ enum FaceRequest {
     static var token: Data? { defaults?.data(forKey: BlockingConfig.kFaceToken) }
 
     static func clearToken() { defaults?.removeObject(forKey: BlockingConfig.kFaceToken) }
+
+    /// What the shield action reported when it tried to post the banner.
+    static var lastNotifyStatus: String { defaults?.string(forKey: "face.notifyStatus") ?? "none" }
 }
 
 /// What the shield's "Feed my brain" starts. Mirrored in the shield action

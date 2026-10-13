@@ -97,6 +97,9 @@ struct ScreenAccessStepView: View {
             // Carry the real outcome forward so `advance()` knows whether the
             // app-picker step has anything to show.
             vm.screenTimeAuthorized = blocking.isAuthorized
+            // ⭐ (Jack, 2026-10-12) Ask for notifications with the blocking
+            // setup: "Go to BrainDiet" on a shield reaches you by notification.
+            if blocking.isAuthorized { await NotificationService.requestPermissionAfterFirstWin() }
             isRequesting = false
             vm.advance()
         }

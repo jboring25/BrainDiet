@@ -77,41 +77,43 @@ final class ShieldActionProvider: ShieldActionDelegate {
 
     override func handle(action: ShieldAction, for application: ApplicationToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        completionHandler(respond(action, token: try? JSONEncoder().encode(application)))
+        respond(action, token: try? JSONEncoder().encode(application), completionHandler)
     }
 
     override func handle(action: ShieldAction, for webDomain: WebDomainToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        completionHandler(respond(action, token: nil))
+        respond(action, token: nil, completionHandler)
     }
 
     override func handle(action: ShieldAction, for category: ActivityCategoryToken,
                          completionHandler: @escaping (ShieldActionResponse) -> Void) {
-        completionHandler(respond(action, token: nil))
+        respond(action, token: nil, completionHandler)
     }
 
-    private func respond(_ action: ShieldAction, token: Data?) -> ShieldActionResponse {
+    /// ⭐ BUILD 55 ON DEVICE: "Go to BrainDiet does not work." The response
+    /// went back the instant the button was pressed, and iOS tears the
+    /// extension down on `.close`, so the notification request (async) never
+    /// landed. Now the response waits for the notification to be added.
+    private func respond(_ action: ShieldAction, token: Data?,
+                         _ done: @escaping (ShieldActionResponse) -> Void) {
         let d = defaults
-        // Do it now's "Back to it": just close.
         if (d?.double(forKey: ShieldActionKeys.doItNowEndsAt) ?? 0) > Date().timeIntervalSince1970 {
-            return .close
+            done(.close)
+            return
         }
         switch action {
         case .primaryButtonPressed:
             d?.set(Date().timeIntervalSince1970, forKey: ShieldActionKeys.lastProtectAt)
-            if !startLock() {
-                notify(title: "Feed my brain",
-                       body: "Tap to start your step. The timer starts when you open BrainDiet.")
-                markFacePending(token: token)
-            }
             rotateCopy()
-            return .close
+            if startLock() { done(.close); return }
+            markFacePending(token: token)
+            notify(title: "Feed my brain",
+                   body: "Tap to start your step. The timer starts when you open BrainDiet.") { done(.close) }
         case .secondaryButtonPressed:
             markFacePending(token: token)
-            notify(title: "BrainDiet", body: "Your goal is waiting. Tap to open.")
-            return .close
+            notify(title: "BrainDiet", body: "Your goal is waiting. Tap to open.") { done(.close) }
         @unknown default:
-            return .defer
+            done(.defer)
         }
     }
 
@@ -167,13 +169,39 @@ final class ShieldActionProvider: ShieldActionDelegate {
         else { defaults?.removeObject(forKey: ShieldActionKeys.faceToken) }
     }
 
-    private func notify(title: String, body: String) {
+    /// Posts now, then calls `done` once iOS has the request (or after 2s).
+    /// The outcome is written to the App Group so the app can log it.
+    private func notify(title: String, body: String, done: @escaping () -> Void) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
-        UNUserNotificationCenter.current().add(UNNotificationRequest(
-            identifier: "bd.shield.face", content: content, trigger: nil))
+        let lock = NSLock()
+        var finished = false
+        let finish = { (status: String) in
+            lock.lock(); defer { lock.unlock() }
+            guard !finished else { return }
+            finished = true
+            self.defaults?.set(status, forKey: "face.notifyStatus")
+            done()
+        }
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized
+                    || settings.authorizationStatus == .provisional
+                    || settings.authorizationStatus == .ephemeral else {
+                finish("notAuthorized(\(settings.authorizationStatus.rawValue))")
+                return
+            }
+            // A short trigger, not nil: a request added from a dying
+            // extension with no trigger has been seen to drop.
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            center.add(UNNotificationRequest(identifier: "bd.shield.face.\(Date().timeIntervalSince1970)",
+                                             content: content, trigger: trigger)) { error in
+                finish(error.map { "error: \($0.localizedDescription)" } ?? "ok")
+            }
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) { finish("timeout") }
     }
 
     /// Next interrupt speaks the next line. Clearing first makes iOS redraw.
