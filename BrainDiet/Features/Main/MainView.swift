@@ -14,6 +14,7 @@ struct MainView: View {
     @Environment(AppRouter.self) private var router
     @Environment(PlateEngine.self) private var plateEngine
     @Environment(BlockingService.self) private var blocking
+    @Environment(StoreService.self) private var store
     @Environment(\.usageProvider) private var usageProvider
     @Query private var profiles: [UserProfile]
     @Query private var sessions: [ProtectSession]
@@ -126,6 +127,11 @@ struct MainView: View {
         // either on the Menu re-arms the window activities and hands the
         // monitor the new answer, the same way a new app selection does.
         .task(id: blockingKey) {
+            // Hard paywall: nothing stays blocked without a subscription.
+            if store.hasCheckedEntitlement && !store.isEntitled {
+                blocking.releaseForNoSubscription()
+                return
+            }
             guard let profile = profiles.first else { return }
             blocking.loadAllowList(encoded: profile.allowSelectionData)
             guard profile.familySelectionData != nil else {
@@ -185,23 +191,8 @@ struct MainView: View {
         .task(id: shieldFocus.map { "\($0.step.id)\($0.step.suggestedMinutes)" } ?? "none") {
             ShieldNextStep(focus: shieldFocus).write()
         }
-        // The route-by-why triage flow (2026-07-23) — entitlement-free, opened
-        // from Home's "Reaching for a scroll?" card (and, in DEBUG, the
-        // intercept). Every branch either starts the SAME live session or lets
-        // the user pass cleanly.
         .fullScreenCover(isPresented: $router.showFinishLine) {
             if let p = profiles.first { FinishLineView(profile: p) }
-        }
-        .fullScreenCover(isPresented: $router.showTriage) {
-            TriageView(
-                initialChoice: triageInitialChoice,
-                onLetThrough: { router.showTriage = false },
-                onServe: { short in
-                    router.showTriage = false
-                    startServingFromTriage(short: short)
-                },
-                onDismiss: { router.showTriage = false }
-            )
         }
         .onAppear {
             #if DEBUG
@@ -223,12 +214,6 @@ struct MainView: View {
             if ProcessInfo.processInfo.environment["BD_SHOW_PAYWALL"] == "1" {
                 showPaywall = true
             }
-            // Screenshot helper: land straight in the triage flow (BD_SHOW_TRIAGE),
-            // optionally on a screen-2 branch (BD_TRIAGE_CHOICE=bored|anxious|habit).
-            if ProcessInfo.processInfo.environment["BD_SHOW_TRIAGE"] == "1" {
-                syncPlateEngine()
-                router.showTriage = true
-            }
             #endif
         }
         #if DEBUG
@@ -236,13 +221,7 @@ struct MainView: View {
             InterceptPreviewView(
                 content: interceptContent,
                 onResolve: { showIntercept = false },
-                // Keep the intercept consistent with Home: its "Feed my brain"
-                // routes into the SAME route-by-why triage flow (not a direct
-                // session start). DEBUG surface, but one behavior.
-                onProtect: {
-                    showIntercept = false
-                    DispatchQueue.main.async { router.showTriage = true }
-                }
+                onProtect: { showIntercept = false }
             )
         }
         #endif
@@ -257,7 +236,8 @@ struct MainView: View {
         return [String(p.familySelectionData?.hashValue ?? 0), p.feedScheduleRaw,
                 String(p.feedCustomStart), String(p.feedCustomEnd), p.feedCustomWeekdaysRaw,
                 String(p.allowSelectionData?.hashValue ?? 0),
-                String(p.firstHourBlock), String(p.wakeMinutes)].joined(separator: "|")
+                String(p.firstHourBlock), String(p.wakeMinutes),
+                String(store.hasCheckedEntitlement), String(store.isEntitled)].joined(separator: "|")
     }
 
     /// The serving "I did it" reports: the same shape the focus card's drag
@@ -278,20 +258,6 @@ struct MainView: View {
         router.pendingReport = item
     }
 
-    /// DEBUG: which screen-2 branch to open the triage flow on (screenshots).
-    private var triageInitialChoice: TriageChoice? {
-        #if DEBUG
-        switch ProcessInfo.processInfo.environment["BD_TRIAGE_CHOICE"] {
-        case "bored":   return .bored
-        case "anxious": return .anxious
-        case "habit":   return .habit
-        case "need":    return .need
-        default:        return nil
-        }
-        #else
-        return nil
-        #endif
-    }
 
     // MARK: Loop stitching (critique ask #6) — the intercept's primary choice
     // lands in the SAME live session flow as Home's CTA and the Menu's Start:
@@ -329,22 +295,6 @@ struct MainView: View {
         if let serving = engineServing() { router.pendingServing = serving }
         router.selectedTab = .protect
     }
-
-    /// Triage → the SAME live session. `short` (the habit branch's 10-minute
-    /// version) re-sizes the same activity to a quick, honestly-labeled block.
-    private func startServingFromTriage(short: Bool) {
-        syncPlateEngine()
-        if var serving = engineServing() {
-            if short {
-                serving = PlateServing(
-                    id: serving.id, title: serving.title, detail: serving.detail,
-                    category: serving.category, minutes: 10,
-                    goalID: nil, stepID: nil, activityID: serving.activityID)
-            }
-            router.pendingServing = serving
-        }
-        router.selectedTab = .protect
-    }
 }
 
 // MARK: - BDTabBar — the appetite tab bar (2026-07-18).
@@ -357,8 +307,7 @@ private struct BDTabBar: View {
     @Binding var selection: AppRouter.Tab
 
     var body: some View {
-        // Appetite labels: Home · Menu · Becoming (Feed→Menu, Growth→Becoming,
-        // 2026-07-18). The mounted screens are unchanged — tab identity only.
+        // Home · Blocking · Becoming (Menu → Blocking 2026-10-13, the food pass).
         HStack(spacing: 0) {
             item(.home, "Home", .record)
             item(.protect, "Blocking", .shieldCheck)

@@ -368,5 +368,16 @@ final class RealScreenTimeGateway: ScreenTimeGateway {
             Log.app.error("Blocking: pass interval failed: \(String(describing: error), privacy: .public)")
         }
     }
+
+    // MARK: Hard paywall release (2026-10-13)
+
+    func releaseEverything() {
+        for name in [BlockingConfig.focusStoreName, BlockingConfig.junkStoreName,
+                     BlockingConfig.capStoreName, BlockingConfig.doItNowStoreName] {
+            ManagedSettingsStore(named: .init(name)).clearAllSettings()
+        }
+        activityCenter.stopMonitoring()
+        Log.app.info("Blocking: everything released (no subscription)")
+    }
 }
 #endif

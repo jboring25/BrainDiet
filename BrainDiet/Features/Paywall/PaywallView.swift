@@ -44,6 +44,9 @@ import SwiftData
 // ─────────────────────────────────────────────────────────────────────────
 
 struct PaywallView: View {
+    /// The post-onboarding gate (hard paywall, 2026-10-13): no close button,
+    /// no swipe-down. Purchase or Restore is the way through.
+    var hard = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
@@ -106,17 +109,18 @@ struct PaywallView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                // Clearly reachable close — never hidden.
+                // Clearly reachable close, except on the hard gate.
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { dismiss() } label: {
+                    if !hard { Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.bdBodyStrong)
                             .foregroundStyle(Color.bdTextSecondary)
                     }
-                    .accessibilityLabel("Close")
+                    .accessibilityLabel("Close") }
                 }
             }
         }
+        .interactiveDismissDisabled(hard)
         .onAppear {
             guard !revealed else { return }
             if reduceMotion { revealed = true }
@@ -325,9 +329,11 @@ struct PaywallView: View {
                 // The CTA states what THIS tap does. Lifetime charges today and
                 // has no trial, so it must never read "start N days free".
                 title: !vm.selectedPlan.isRecurring
-                    ? LocalizedStringResource("Buy once — \(PaywallPricing.lifetimeDisplay)")
+                    ? LocalizedStringResource("Buy once · \(PaywallPricing.lifetimeDisplay)")
                     : (vm.trialEligible
-                        ? LocalizedStringResource("Start \(PaywallPricing.trialDays) days for \(PaywallPricing.freeDisplay)")
+                        // 3.1.2 (pre-submission, 2026-10-13): no "$0.00" on
+                        // the button; the billed price stays the loudest number.
+                        ? LocalizedStringResource("Start \(PaywallPricing.trialDays)-day free trial")
                         : LocalizedStringResource("Unlock BrainDiet")),
                 trailingSymbol: "chevron.right",
                 isEnabled: !vm.isPurchasing

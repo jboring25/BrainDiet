@@ -116,7 +116,7 @@ extension ActivityDomain {
                     String(localized: "One chapter of \(o)"),
                     String(localized: "\(m) minutes of \(o)")]
         case .fitness:
-            return [String(localized: "\(o) — \(m) minutes"),
+            return [String(localized: "\(o) · \(m) minutes"),
                     String(localized: "The first set of \(o)"),
                     String(localized: "Start \(o), stop whenever")]
         case .music:

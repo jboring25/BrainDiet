@@ -23,7 +23,7 @@ struct BrainPlan {
     /// Reclaimed minutes/day the plan aims to return vs. baseline (the promise).
     let reclaimedMinutes: Int
 
-    let restDay: String            // e.g. "Sundays — rest, no shame"
+    let restDay: String            // e.g. "Sundays: rest, no shame"
 
     var hook: String { "Made to bring you closer to \(goalNoun)." }
 

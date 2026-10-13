@@ -128,6 +128,17 @@ struct BrainDietApp: App {
         if hasCompletedOnboarding && !forceOnboarding {
             MainView()
                 .environment(router)
+                // ⭐ HARD PAYWALL (Jack, 2026-10-13): no subscription, no app.
+                // Covers anyone who skipped on an older build, a lapsed trial,
+                // a cancellation or a refund. Waits for the first entitlement
+                // answer so a paying user never sees it flash.
+                .overlay {
+                    if store.hasCheckedEntitlement && !store.isEntitled {
+                        PaywallView(hard: true)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.easeOut(duration: 0.25), value: store.isEntitled)
         } else {
             OnboardingView(onComplete: {
                 // The dismissible Pro paywall now lives INSIDE onboarding

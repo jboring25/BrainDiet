@@ -192,6 +192,15 @@ final class BlockingService {
         gateway.clearPersistentShield()
     }
 
+    /// No subscription: nothing stays blocked (hard paywall, 2026-10-13).
+    /// Subscribing again re-arms through MainView's blocking task.
+    func releaseForNoSubscription() {
+        DoItNowSession.remove()
+        doItNow = nil
+        guard isAuthorized else { return }
+        gateway.releaseEverything()
+    }
+
     // MARK: Scheduled daily cap
 
     func armDailyCap(minutes: Int) {

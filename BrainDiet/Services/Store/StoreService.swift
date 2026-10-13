@@ -36,6 +36,21 @@ final class StoreService {
 
     /// The one flag the app gates on.
     private(set) var isPro = false
+    /// ⭐ HARD PAYWALL (Jack, 2026-10-13: "a hard paywall that has a trial,
+    /// no free tier"). False until the first entitlement check finishes, so a
+    /// paying user is never flashed the gate while RevenueCat answers.
+    private(set) var hasCheckedEntitlement = false
+
+    /// What every gate reads. DEBUG runs launched with any BD_ key (screenshot
+    /// and review captures) are treated as subscribed unless BD_SHOW_GATE=1.
+    var isEntitled: Bool {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        if env["BD_SHOW_GATE"] == "1" { return false }
+        if env.keys.contains(where: { $0.hasPrefix("BD_") }) { return true }
+        #endif
+        return isPro
+    }
     /// Live store products (lifetime first). Empty until loaded / when unavailable.
     private(set) var products: [Product] = []
     private(set) var isLoading = false
@@ -283,6 +298,7 @@ final class StoreService {
             }
         }
         isPro = pro
+        hasCheckedEntitlement = true
         // Entitlement changes (purchase, restore, refund) can flip trial
         // eligibility — re-ask rather than trust a stale yes.
         if !products.isEmpty { await refreshIntroEligibility() }
@@ -290,6 +306,7 @@ final class StoreService {
 
     private func applyCustomerInfo(_ info: CustomerInfo) {
         isPro = info.entitlements[RevenueCatConfig.entitlementID]?.isActive == true
+        hasCheckedEntitlement = true
     }
 
     /// Renewals, refunds, Ask-to-Buy resolutions and family sharing arrive here.

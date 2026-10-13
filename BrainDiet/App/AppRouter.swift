@@ -54,11 +54,6 @@ final class AppRouter {
         #endif
     }()
 
-    /// The route-by-why triage flow (2026-07-23) — presented over Home from the
-    /// "Reaching for a scroll?" entry card (and, in DEBUG, the intercept). Fully
-    /// in-app, no Family Controls entitlement needed. MainView owns the cover.
-    var showTriage = false
-
     /// ⭐ A serving the Menu wants reported. Home performs it, so the celebration
     /// and the brain-feed happen where the brain is — the user taps on the Menu
     /// and lands on Home watching it get eaten (Jack, 2026-09-13).

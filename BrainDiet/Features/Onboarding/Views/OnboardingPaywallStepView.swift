@@ -237,22 +237,8 @@ struct OnboardingPaywallStepView: View {
         HStack {
             BrandWordmark(tone: .onDark, size: 13)
             Spacer()
-            // ⭐ 2026-07-22 UX audit: the glyph's frame had no contentShape, so
-            // only the small "X" itself was hittable, and it sat tight against
-            // the status area — an easy mis-tap. Now a real 44×44 target (the
-            // glyph is unchanged) with breathing room under the top edge.
-            Button(action: skip) {
-                Image(systemName: "xmark")
-                    .font(.bdBodyStrong)
-                    .foregroundStyle(Color.bdTextSecondary)
-                    .frame(width: Theme.Size.minTouch, height: Theme.Size.minTouch)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Close")
-            .opacity(exitsVisible ? 1 : 0)
-            .allowsHitTesting(exitsVisible)
-            .accessibilityHidden(!exitsVisible)
+            // ⛔️ No close (Jack, 2026-10-13): hard paywall with a trial, no
+            // free tier. The way through is the trial, a purchase, or Restore.
         }
         .padding(.top, Theme.Space.md)
     }
@@ -366,22 +352,6 @@ struct OnboardingPaywallStepView: View {
 
             // The quiet free path + Restore, one calm row under the CTA.
             HStack(spacing: Theme.Space.md) {
-                Group {
-                    Button(action: skip) {
-                        Text("Not now")
-                            .font(.bdCaption)
-                            .foregroundStyle(Color.bdTextSecondary)
-                            .frame(minHeight: Theme.Size.minTouch)
-                    }
-                    .buttonStyle(.plain)
-
-                    Text("·")
-                        .font(.bdCaption)
-                        .foregroundStyle(Color.bdTextSecondary.opacity(0.5))
-                }
-                .opacity(exitsVisible ? 1 : 0)
-                .allowsHitTesting(exitsVisible)
-                .accessibilityHidden(!exitsVisible)
 
                 Button {
                     // A restore is never a NEW trial — no cancel-reminder step.

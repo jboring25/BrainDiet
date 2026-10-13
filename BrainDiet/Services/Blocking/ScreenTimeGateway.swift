@@ -88,4 +88,8 @@ protocol ScreenTimeGateway: AnyObject {
     /// A pass spent on the face screen: lift the shield for this one app
     /// until `until`; the monitor puts it back at the end even if we're gone.
     func openForPass(token: Data, until: Date)
+
+    /// No subscription (hard paywall, 2026-10-13): lift every shield and stop
+    /// every schedule, so nobody is left blocked behind a paywall.
+    func releaseEverything()
 }
