@@ -689,7 +689,7 @@ struct BecomingView: View {
 
     private var firstServingInvite: some View {
         card {
-            Text("Your first serving starts the count.")
+            Text("Your first step starts the count.")
                 .font(BDFont.body(.bold, size: 15, relativeTo: .subheadline))
                 .foregroundStyle(Color.bdTextPrimary)
             Text("Everything on this page is built from what you actually do. Nothing is invented.")
@@ -701,7 +701,7 @@ struct BecomingView: View {
             Button {
                 withAnimation(Theme.Motion.smooth) { router.selectedTab = .protect }
             } label: {
-                Text("See the menu")
+                Text("See your steps")
                     .font(BDFont.body(.bold, size: 14, relativeTo: .subheadline))
                     .foregroundStyle(Color.bdTextOnAccent)
                     .frame(maxWidth: .infinity, minHeight: Theme.Size.minTouch)

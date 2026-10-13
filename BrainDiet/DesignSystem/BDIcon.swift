@@ -28,6 +28,7 @@ enum BDPh: String {
     case monitorPlay
     case newspaper
     case chatCircle
+    case shieldCheck
     case moonStars, palette, pencilLine, sneakerMove, sparkle, treeEvergreen, usersThree
 
     enum Weight: String { case duotone, fill }

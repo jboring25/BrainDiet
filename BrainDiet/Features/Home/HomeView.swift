@@ -725,14 +725,14 @@ struct HomeView: View {
             // and it reverts to the plain greeting the moment anything has been
             // plated, which is exactly when the lesson stops being needed.
             return reduceMotion
-                ? plain("\(greeting) · first serving ready when you are")
+                ? plain("\(greeting) · first step ready when you are")
                 : plain("\(greeting) · drag anything you've done into your brain")
         }
         let time = goldTime(BDMealTray.display(plate.protectedMinutesToday))
         if plate.completeness >= 1 {
-            return time + plain(String(localized: " protected · the kitchen is closed. Go live."))
+            return time + plain(String(localized: " protected · today is done. Go live."))
         }
-        return time + plain(String(localized: " protected · enough for one more serving"))
+        return time + plain(String(localized: " protected · enough for one more step"))
     }
 
     private var greeting: String {
@@ -775,13 +775,13 @@ struct HomeView: View {
     private var protectionText: String {
         if plate.junkAppCount > 0 {
             return plate.junkAppCount == 1
-                ? String(localized: "Empty calories off the menu · 1 app")
-                : String(localized: "Empty calories off the menu · \(plate.junkAppCount) apps")
+                ? String(localized: "1 app blocked")
+                : String(localized: "\(plate.junkAppCount) apps blocked")
         }
         if plate.protectedMinutesToday > 0 {
-            return String(localized: "\(BDMealTray.display(plate.protectedMinutesToday)) protected today · the table is held for you")
+            return String(localized: "\(BDMealTray.display(plate.protectedMinutesToday)) protected today")
         }
-        return String(localized: "The table is held automatically. No timers.")
+        return String(localized: "Blocking runs on its own. No timers.")
     }
 
     // MARK: The celebration (Bible §5 / PLATE-ENGINE §4) — visuals AFTER state.

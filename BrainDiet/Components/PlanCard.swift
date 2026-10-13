@@ -134,7 +134,7 @@ struct PlanCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
-                Text("Serving size · one day")
+                Text("One day")
                     .font(BDFont.body(.bold, size: 11.5, relativeTo: .caption2))
                     .foregroundStyle(Color.bdTextSecondary)
             }
@@ -273,7 +273,7 @@ struct PlanCard: View {
         .frame(maxWidth: .infinity)
         .background(Color.bdLeafTint)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("A full plate: \(totalText) a day")
+        .accessibilityLabel("Your day: \(totalText) a day")
     }
 
     /// Honest sum of the printed servings — "2h 00m", or "45m" under an hour.

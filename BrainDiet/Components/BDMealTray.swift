@@ -148,7 +148,7 @@ struct BDMealTray: View {
     // to show a remainder for Slop. We now report what actually happened and say
     // nothing about permission: the number is the whole message.
     private func overBudgetLine(_ budget: JunkBudget) -> some View {
-        Text(String(localized: "\(Self.display(budget.spentMinutes)) of slop today. Tomorrow's a fresh plate."))
+        Text(String(localized: "\(Self.display(budget.spentMinutes)) of slop today. Tomorrow starts fresh."))
             .font(BDFont.body(.regular, size: 12, relativeTo: .caption))
             .foregroundStyle(Color.bdTextSecondary)
             .monospacedDigit()

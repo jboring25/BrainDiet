@@ -162,7 +162,7 @@ struct BlockedAppsView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .lastTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Off the menu")
+                    Text("Blocked")
                         .font(BDFont.body(.bold, size: 10, relativeTo: .caption2))
                         .kerning(1.4)
                         .textCase(.uppercase)
@@ -349,7 +349,7 @@ struct BlockedAppsView: View {
     private var onTheMenu: some View {
         Group {
             VStack(spacing: 0) {
-                SectionRule(title: "on the menu")
+                SectionRule(title: "your steps")
                     .padding(.top, 14)
                     .padding(.bottom, 10)
 

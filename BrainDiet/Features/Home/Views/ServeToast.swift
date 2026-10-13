@@ -24,13 +24,13 @@ struct ServeToast: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(Color.bdInk.opacity(0.90), in: Capsule())
-            .accessibilityLabel(Text("Served. \(celebration.title)"))
+            .accessibilityLabel(Text("Fed. \(celebration.title)"))
     }
 
-    /// "Served · that's one" while the plate still has room, and the category is
+    /// "Fed · that's one" while the plate still has room, and the category is
     /// never named here — the row that was just plated already said it.
     private var label: String {
-        String(localized: "Served · that's one")
+        String(localized: "Fed · that's one")
     }
 }
 

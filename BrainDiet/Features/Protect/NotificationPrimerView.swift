@@ -17,7 +17,7 @@ struct NotificationPrimerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.lg) {
-            Text("Want a dinner bell?")
+            Text("Want a nightly nudge?")
                 .font(BDFont.display(.semiBold, size: 28, relativeTo: .title))
                 .foregroundStyle(Color.bdTextPrimary)
                 .padding(.top, Theme.Space.lg)
@@ -91,7 +91,7 @@ struct DinnerBellPreviewBanner: View {
                         .font(.bdCaption)
                         .foregroundStyle(Color.bdTextSecondary.opacity(0.7))
                 }
-                Text("Dinner for your brain")
+                Text("Tonight's step")
                     .font(BDFont.body(.semiBold, size: 15, relativeTo: .subheadline))
                     .foregroundStyle(Color.bdTextPrimary)
                 Text("\(stepTitle) · \(stepMinutes)m? The time is yours the moment you take it.")
@@ -112,7 +112,7 @@ struct DinnerBellPreviewBanner: View {
                 .shadow(color: Theme.Shadow.cardColor, radius: Theme.Shadow.cardRadius / 2, y: 6)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Preview of the daily reminder: Dinner for your brain. \(stepTitle), \(stepMinutes) minutes? The time is yours the moment you take it.")
+        .accessibilityLabel("Preview of the daily reminder: Tonight's step. \(stepTitle), \(stepMinutes) minutes? The time is yours the moment you take it.")
     }
 }
 

@@ -361,7 +361,7 @@ private struct BDTabBar: View {
         // 2026-07-18). The mounted screens are unchanged — tab identity only.
         HStack(spacing: 0) {
             item(.home, "Home", .record)
-            item(.protect, "Menu", .forkKnife)
+            item(.protect, "Blocking", .shieldCheck)
             item(.becoming, "Becoming", .plant)
         }
         .padding(.top, 10)

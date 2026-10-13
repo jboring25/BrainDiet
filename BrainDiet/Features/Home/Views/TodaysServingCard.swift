@@ -71,7 +71,7 @@ struct TodaysServingCard: View {
     }
 
     private var title: String {
-        serving?.title ?? String(localized: "Plate complete")
+        serving?.title ?? String(localized: "Done for today")
     }
 
     /// ⭐ THE FOOD WORD IS GONE (Jack, build 15 on device: the language "leans
@@ -145,11 +145,11 @@ struct SetPlateCard: View {
                     .overlay(BDPhIcon(icon: .forkKnife, size: 20, color: .bdLeaf))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Let's set your plate")
+                    Text("Let's set up your steps")
                         .font(BDFont.display(.extraBold, size: 16, relativeTo: .body))
                         .foregroundStyle(Color.bdTextPrimary)
                         .lineLimit(1)
-                    Text("A few questions put your first serving here.")
+                    Text("A few questions put your first step here.")
                         .font(BDFont.body(.semiBold, size: 12.5, relativeTo: .footnote))
                         .foregroundStyle(Color.bdTextSecondary)
                         .lineLimit(1)
@@ -158,7 +158,7 @@ struct SetPlateCard: View {
             }
 
             Button(action: onSetup) {
-                Text("Set my plate")
+                Text("Set up my steps")
                     .font(BDFont.body(.bold, size: 15, relativeTo: .subheadline))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)

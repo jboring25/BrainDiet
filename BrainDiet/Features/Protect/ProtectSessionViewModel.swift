@@ -197,7 +197,7 @@ final class ProtectSessionViewModel {
     }
     /// "A SERVING OF READING · 50M" — the completion eyebrow (food voice).
     var completionEyebrow: String {
-        String(localized: "A serving of \(selectedActivity.gerund) · \(completedMinutes)m")
+        String(localized: "\(completedMinutes)m of \(selectedActivity.gerund)")
             .uppercased(with: .current)
     }
     /// The identity line beneath — the plan goal's when tagged, else the activity's.

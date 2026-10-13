@@ -228,7 +228,7 @@ struct TriageView: View {
                 VStack(spacing: 0) {
                     Spacer(minLength: 0)
                     branchHeadline("Feel any", emphasis: "different?")
-                    Text("Even a small serving beats the scroll right now.")
+                    Text("Even a small step beats the scroll right now.")
                         .font(BDFont.body(.semiBold, size: 14.5, relativeTo: .subheadline))
                         .foregroundStyle(Color.bdTextSecondary)
                         .multilineTextAlignment(.center)

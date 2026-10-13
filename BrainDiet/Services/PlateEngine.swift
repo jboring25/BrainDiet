@@ -331,14 +331,14 @@ final class PlateEngine {
     /// 4 · What insight should be shown?
     func insight(now: Date = .now) -> String {
         let missing = missingCategories
-        if missing.isEmpty { return String(localized: "Balanced day. The kitchen is closed.") }
+        if missing.isEmpty { return String(localized: "Balanced day. You're done.") }
         if missing.count == 1, let s = suggestion {
-            return String(localized: "One serving left: \(s.minutes) minutes finishes today's meal.")
+            return String(localized: "One step left: \(s.minutes) minutes finishes today.")
         }
         if TimeBlock(for: now) == .evening || TimeBlock(for: now) == .night {
-            return String(localized: "Evening: finish the plate before the kitchen closes.")
+            return String(localized: "Evening: one more step before bed.")
         }
-        return String(localized: "\(missing[0].label) is missing from today's plate.")
+        return String(localized: "No \(missing[0].label.lowercased()) yet today.")
     }
 
     /// Nourishing minutes protected today (time is an ingredient, never the reward).

@@ -287,7 +287,7 @@ private struct StageIn: ViewModifier {
         BDBackground(intensity: .standard)
         HomeHeroView(
             headline: "Your brain is hungry.",
-            secondary: Text("Nothing served yet. Your first serving is ready.")
+            secondary: Text("Nothing yet today. Your first step is ready.")
                 .foregroundColor(.bdTextSecondary),
             nourishment: 0,
             phase: .settled

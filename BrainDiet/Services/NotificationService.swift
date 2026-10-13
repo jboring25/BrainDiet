@@ -66,7 +66,7 @@ enum NotificationService {
     static func scheduleDailyPlanNudge(stepTitle: String, minutes: Int) async {
         guard await isAuthorized() else { return }
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Dinner for your brain")
+        content.title = String(localized: "Tonight's step")
         content.body = String(localized: "\(stepTitle) · \(minutes)m? The time is yours the moment you take it.")
         content.sound = .default
 
@@ -92,7 +92,7 @@ enum NotificationService {
 
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Your brain hasn't been fed today")
-        content.body = String(localized: "One small serving before bed? Even 25m counts.")
+        content.body = String(localized: "One small step before bed? Even 25m counts.")
         content.sound = .default
 
         let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
