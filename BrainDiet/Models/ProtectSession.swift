@@ -62,6 +62,10 @@ final class ProtectSession {
     // session that existed before this field was one the app actually enforced.
     var sourceRaw: String = ProtectSessionSource.protected.rawValue
 
+    /// What they typed for a self-report ("Cold-emailed 5 founders"), in
+    /// their own words (2026-10-13). Empty for timed sessions.
+    var note: String = ""
+
     var source: ProtectSessionSource {
         get { ProtectSessionSource(rawValue: sourceRaw) ?? .protected }
         set { sourceRaw = newValue.rawValue }

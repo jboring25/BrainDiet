@@ -38,6 +38,8 @@ struct PlateDraggable: Equatable {
     let icon: BDPh
     let tint: Color
     let ink: Color
+    /// A typed self-report, kept on the session (2026-10-13).
+    var note: String = ""
 }
 
 @MainActor

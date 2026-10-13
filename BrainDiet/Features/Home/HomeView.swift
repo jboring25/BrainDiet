@@ -66,7 +66,13 @@ struct HomeView: View {
     @State private var drop = PlateDropController()
     @State private var heroDropPoint: CGPoint?
     @State private var focusCardCentre: CGPoint = .zero
-    @State private var showReportSheet = false
+    @State private var showReportSheet: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["BD_SHOW_REPORT"] == "1"
+        #else
+        return false
+        #endif
+    }()
     /// One Home-wide coordinate space so the plate rect and the drag translation
     /// are measured against the same origin.
     private static let space = "homePlate"
@@ -356,8 +362,9 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showReportSheet) {
-                ReportSomethingSheet(planActivityIDs: goalRows.map(\.domain.activityID),
-                                     onReport: report(_:))
+                ReportSomethingSheet(primaryGoal: goals.first(where: \.isPrimary) ?? goals.first,
+                                     moonshot: profiles.first?.moonshotText ?? "",
+                                     onReport: typedReport(_:))
             }
         }
         .task {
@@ -535,6 +542,29 @@ struct HomeView: View {
                        icon: .leaf, tint: f.domain.tint, ink: .bdTextPrimary)
     }
 
+    /// "Add something you did" (2026-10-13): no drag, so the ball lands on a
+    /// random spot inside the brain once the sheet is out of the way, the same
+    /// landing a drop plays.
+    private func typedReport(_ item: PlateDraggable) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+            let r = drop.cultureRect
+            var spot: CGPoint?
+            if !r.isEmpty {
+                for _ in 0..<24 {
+                    let p = CGPoint(x: r.minX + r.width * .random(in: 0.25...0.75),
+                                    y: r.minY + r.height * .random(in: 0.25...0.7))
+                    if drop.brainPoint(for: p) != nil { spot = p; break }
+                }
+            }
+            if let spot {
+                heroDropPoint = drop.brainPoint(for: spot)
+                drop.landing = .init(point: spot, handoff: DragBallSize.handoff(point: spot, cultureRect: r))
+            }
+            report(item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { heroDropPoint = nil }
+        }
+    }
+
     /// A drag that landed: the brain feeds at the drop spot, then the report runs.
     private func dropReport(_ item: PlateDraggable) {
         heroDropPoint = drop.lastDrop
@@ -595,6 +625,7 @@ struct HomeView: View {
                                      goalID: item.goalID,
                                      stepID: item.stepID,
                                      source: .reported)
+        session.note = item.note
         modelContext.insert(session)
         do { try modelContext.save() }
         catch { Log.app.error("Reported serving save FAILED: \(error.localizedDescription, privacy: .public)") }
